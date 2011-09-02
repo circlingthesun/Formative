@@ -14,7 +14,7 @@ using namespace std;
 
 //typedef int(Dict::* tesseract::DictFunc)(void *void_dawg_args, int char_index, const void *word, bool word_end)
 
-static PyObject *
+/*static PyObject *
 formative_cv_ocr(PyObject *self, PyObject *args)
 {
     IplImage* orig;
@@ -37,17 +37,17 @@ formative_cv_ocr(PyObject *self, PyObject *args)
     cvCvtColor(pic, g_pic, CV_RGB2GRAY);
 
     
-    //tesseract::TessBaseAPI api;
-    //api.Init("/usr/local/share", "eng", 0, 0, false);
+    tesseract::TessBaseAPI api;
+    api.Init("/usr/local/share", "eng", 0, 0, false);
     //api.SetPageSegMode(tesseract::PSM_SINGLE_WORD); // PSM_SINGLE_WORD PSM_AUTO
     //api.SetPageSegMode(tesseract::PSM_AUTO);
     
-    /*api.SetImage( (const unsigned char*) g_pic->data.ptr,
+    api.SetImage( (const unsigned char*) g_pic->data.ptr,
         w,
         h,
         1, //image->depth,
         w
-    );*/
+    );
     
     PyObject* return_list = PyList_New(PyList_Size(list));
     if (return_list == NULL){
@@ -76,26 +76,26 @@ formative_cv_ocr(PyObject *self, PyObject *args)
         PyList_SetItem(return_list, i, item);
         //delete text;
         
-        /*cvRectangle (
-                    g_pic,
-                    cvPoint(x,y),
-                    cvPoint(x+w,y+h),
-                    cvScalarAll(0),
-                    1, //thinkness
-                    1 // Type
-        );*/
+        //cvRectangle (
+        //           g_pic,
+        //            cvPoint(x,y),
+        //            cvPoint(x+w,y+h),
+        //            cvScalarAll(0),
+        //            1, //thinkness
+        //            1 // Type
+        //);
         
     }
     
-    /*cvShowImage( "Example", g_pic );
-    cvWaitKey( 0 );
-    cvDestroyWindow("Example");*/
+    //cvShowImage( "Example", g_pic );
+    //cvWaitKey( 0 );
+    //cvDestroyWindow("Example");
     
     cvReleaseImage(&orig);
     cvReleaseImage(&image);
     
     return return_list;
-}
+}*/
 
 
 static PyObject *
