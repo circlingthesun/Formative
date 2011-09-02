@@ -6,3 +6,5 @@ env
 PaperBank.egg-info
 docs/_build
 data/sessions
+*.so
+build
