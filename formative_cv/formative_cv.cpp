@@ -158,7 +158,7 @@ formative_cv_parse(PyObject *self, PyObject *args)
 
 
 PyMethodDef methods[] = {
-    {"ocr", formative_cv_ocr, METH_VARARGS, "OCR image"},
+    //{"ocr", formative_cv_ocr, METH_VARARGS, "OCR image"},
     {"parse", formative_cv_parse, METH_VARARGS, "Parse image"},
     {NULL, NULL, 0, NULL}
 };
