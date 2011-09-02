@@ -24,11 +24,11 @@ formative_cv = Extension(
         'formative_cv',
         include_dirs = [
             '/usr/include/opencv',
-            '/usr/local/include/tesseract/',
+            #'/usr/local/include/tesseract/',
             'formative_cv/'
         ],
         libraries = [
-            'tesseract_api',
+            #'tesseract_api',
             'ml',
             'cvaux',
             'highgui',
