@@ -1,12 +1,12 @@
 #include <Python.h>
 
-#include <baseapi.h>
+//#include <baseapi.h>
 #include <cv.h>
 #include <highgui.h>
 #include <stdio.h>
 #include <math.h>
 #include <iostream>
-#include "leptonica/allheaders.h"
+//#include "leptonica/allheaders.h"
 #include "parse.h"
 #include <vector>
 
@@ -37,8 +37,8 @@ formative_cv_ocr(PyObject *self, PyObject *args)
     cvCvtColor(pic, g_pic, CV_RGB2GRAY);
 
     
-    tesseract::TessBaseAPI api;
-    api.Init("/usr/local/share", "eng", 0, 0, false);
+    //tesseract::TessBaseAPI api;
+    //api.Init("/usr/local/share", "eng", 0, 0, false);
     //api.SetPageSegMode(tesseract::PSM_SINGLE_WORD); // PSM_SINGLE_WORD PSM_AUTO
     //api.SetPageSegMode(tesseract::PSM_AUTO);
     
