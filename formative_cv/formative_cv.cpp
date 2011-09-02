@@ -2,7 +2,7 @@
 
 //#include <baseapi.h>
 #include <cv.h>
-#include <highgui.h>
+//#include <highgui.h>
 #include <stdio.h>
 #include <math.h>
 #include <iostream>

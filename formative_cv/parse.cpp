@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <vector>
 #include <cv.h>
-#include <highgui.h>
+//#include <highgui.h>
 #include <cvaux.h>
 #include "unskew.h"
 #include <queue>

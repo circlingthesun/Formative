@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <cv.h>
-#include <highgui.h>
+//#include <highgui.h>
 #include <cvaux.h>
 #include <math.h>
 

@@ -2,7 +2,7 @@
 #define INFORM_UNSKEW
 
 #include <cv.h>
-#include <highgui.h>
+//#include <highgui.h>
 #include <stdio.h>
 #include <math.h>
 
