@@ -42,12 +42,12 @@ formative_cv_ocr(PyObject *self, PyObject *args)
     //api.SetPageSegMode(tesseract::PSM_SINGLE_WORD); // PSM_SINGLE_WORD PSM_AUTO
     //api.SetPageSegMode(tesseract::PSM_AUTO);
     
-    api.SetImage( (const unsigned char*) g_pic->data.ptr,
+    /*api.SetImage( (const unsigned char*) g_pic->data.ptr,
         w,
         h,
         1, //image->depth,
         w
-    );
+    );*/
     
     PyObject* return_list = PyList_New(PyList_Size(list));
     if (return_list == NULL){
