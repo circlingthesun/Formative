@@ -1,0 +1,398 @@
+/*
+* Structure. This is the box model
+*/
+
+body{
+	margin:0;
+	padding:0;
+	font-family: Gill, Helvetica, sans-serif;
+	font-size:0.9em;
+	font-family: Gill, Helvetica, sans-serif;
+	/*background:#ffffff url(bg.png) top center repeat-x;*/
+	color:#303030;
+	line-height:1.2em;
+}
+
+/* Alligns content in the middle */
+#page{
+	color:#000000;
+	margin:0 auto 0 auto;
+	padding:0;
+	width:975px;
+}
+
+#wrapper{
+    float:left;
+    width:943px;
+	background:#ffffff;
+	color:#303030;
+	padding:20px 15px 20px 15px;
+	border-right:solid #cccccc 1px;
+	border-left:solid #cccccc 1px;
+}
+
+#left { float:left; width:150px; margin:0; padding:0 10px 10px 10px; font-size:80%; }
+#right {
+    width:280px; margin:0 20px; padding:0 10px 10px 10px; font-size:80%;
+    border-left:solid #cccccc 1px;
+    position:relative;
+    float:right;
+    
+}
+#middle {
+    margin:0; font-size:80%; padding:0 10px 10px 10px;
+    width:582px;
+    float:left;
+}
+
+#middle-full{
+    margin:0; font-size:80%; padding:0 10px 10px 10px;
+}
+
+#top-right{
+    float:right;
+    width:50;
+    margin:35px 40px 0 0;
+    color:#ffffff;
+	font-size:20px;
+	font-family:"Times New Roman", Times, serif;
+	font-variant: small-caps;
+}
+
+
+#logo{
+	float:left;
+	margin:0;
+}
+
+
+#header{
+	height:134px;
+	margin:0 auto 0 auto;
+	padding:0;
+	width:975px;
+}
+
+/* gradient #01295a - #69abdb */
+
+#header h1{
+	margin:0;
+	float:left;
+	padding:30px 0 0 15px;
+	color:#ffffff;
+	font-size:25px;
+	font-family:"Times New Roman", Times, serif;
+	font-variant: small-caps;
+}
+
+#header a{
+    text-decoration:none;
+    color:#ffffff;
+}
+
+#header p{
+	width:500px;
+	float:right;
+	text-align:center;
+	color:#a0a0a0;
+	margin:0 0 10px 0;
+	font-size:0.8em;
+	line-height:1.2em;
+	background-color:inherit;
+	padding:0;
+}
+
+h3{
+font-size:1.3em;
+margin:0 0 10px 0;
+}
+
+a{
+text-decoration:none;
+color:#286ea0;
+}
+
+a:hover{
+text-decoration:underline;
+/*color:#286ea0;*/
+}
+
+a img{
+border:0;
+}
+
+#footer{
+	clear:both;
+	border-top:4px solid #555555;
+	/*text-align:right;*/
+	color:#000000;
+	font-size:0.7em;
+	height:200px;
+	background:#eeeeee;
+	background:#bbbbbb url(/static/images/grad400h.png) top repeat-x;
+	padding:20px;
+	text-align:right;
+}
+
+#footer a{
+color:#808080;
+text-decoration:none;
+}
+
+#footer a:hover{
+text-decoration:underline;
+}
+
+.left{
+margin:10px 10px 5px 0;
+float:left;
+}
+
+.right{
+margin:10px 0 5px 10px;
+float:right;
+}
+
+.textright{
+text-align:right;
+}
+
+.center{
+text-align:center;
+}
+
+.small{
+font-size:0.8em;
+}
+
+.bold{
+font-weight:bold;
+}
+
+.hide{
+display:none;
+}
+
+
+/* menu-tree ELEMENTS */
+#menu-tree li{
+list-style: none;
+}
+
+#menu-tree {
+  margin:0 0 15px 0;
+  padding-left: 0;
+  float: left;
+  width: 130px;
+}
+#menu-tree ul {
+  margin: 0px 0px 0px 0px;
+  padding: 0px 0px 0px 0px;
+  list-style-type: none;			
+  width: 130px;
+}
+
+#menu-tree a {
+  display: block;
+  margin: 0px 0px 0px 0px;
+  padding: 5px;
+  width: 130px;
+  border-bottom: 1px solid #CCC;
+  text-transform: capitalize;
+  text-decoration: none;
+}
+
+#menu-tree li li a {
+  margin: 0px 0px 0px 15px;
+  width: 115px;
+  text-decoration: none;
+}
+#menu-tree li li li a {
+  margin: 0px 0px 0px 30px;
+  width: 100px;
+  text-decoration: none;
+}
+
+#menu-tree a:hover {
+  background-color: #F5F5F5;
+}
+
+
+
+/*TOP MENU*/
+#navcontainer{
+}
+
+
+#navlist
+{
+list-style: none;
+padding:0;
+margin: 0;
+}
+
+#navlist li
+{
+display: inline;
+padding:0;
+margin: 0;
+}
+
+#navlist li:before { content: "| "; }
+#navlist li:first-child:before { content: ""; }
+
+
+#imageContainer { height:309px; }  
+#imageContainer img { display:none; 	
+			position:absolute;
+			top:0px; left:0px; 	
+			height:309px;  	
+			width:500px; 	
+			opacity: -0.01; }
+			
+#frontpage{
+    float:left;
+    height:309px;
+    width:975px;
+    background:#000000;
+}
+
+#subheader{
+    float:left;
+    width:975px;
+}
+
+
+
+#topmenu li a{
+    margin:0;
+    font:Verdana,Tahoma,Arial,sans-serif;
+}
+
+.tabs li{
+    display:inline;
+    padding: 0 1em 0 1em;
+}
+
+#breadcrumb{
+    padding: 1em 0 0 0;
+}
+
+span.print-link{
+    /*display:block;*/
+}
+
+div.node{
+    margin-top:0;
+}
+
+table.curriculum {
+    /*margin-top:1em;*/
+    min-width:180px;
+}
+
+div.curriculum > table > tr > td{
+    padding-right:10em;
+}
+
+div.curriculum > div{
+    padding-bottom:1em;
+    margin-left:1em;
+}
+
+div#modules > fieldset div.form-item{
+    display:inline;
+}
+
+#applyonline ul{
+    padding-left:2em;
+}
+
+#applyonline li{
+    padding-bottom:0.5em;
+}
+
+div#applyonline .form-item {
+  display:inline;
+}
+
+.container-inline{
+    display:inline;
+}
+
+
+div#submit{
+    float:right;
+}
+
+div.status{
+    background:#CFC;
+    border: 1px solid #0C0;
+    padding: 2px;
+}
+
+div.tabs{
+    padding:4px;
+}
+
+div.tabs li{
+    margin-right:2px;
+    margin-left:2px;
+    border: 1px dashed #cccccc;
+    border-bottom:0;
+}
+
+div.tabs li:hover, div.tabs li:hover a{
+    background:#eeeeee;
+    text-decoration:none;
+}
+
+table tr th {
+    border-bottom-width: 1px;
+    border-bottom-style: ridge; 
+    border-bottom-color: #cccccc;
+    border-collapse: collapse;
+}
+
+
+#flash {
+    background: #ffc;
+    padding: 5px;
+    border: 1px dotted #000;
+    margin-bottom: 20px;
+    margin-left:auto;
+    margin-right:auto;
+}
+#flash p { margin: 0px; padding: 0px; }
+
+#flash-error {
+    background: #FF9494;
+    padding: 5px;
+    border: 1px dotted #000;
+    margin-bottom: 20px;
+    margin-left:auto;
+    margin-right:auto;
+}
+#flash-error p { margin: 0px; padding: 0px; }
+
+.error {
+    font-weight: bold;
+    color: #f00;
+    margin-bottom: 0;
+}
+
+.error ul li{
+    /*display: inline;*/
+}
+
+iframe {
+    border: 0;
+    margin: 0;
+    overflow: hidden;
+}
+
+.edit_links {
+    text-align:right;
+    position:relative;
+    top:-30px;
+}

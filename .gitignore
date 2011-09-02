@@ -1,0 +1,8 @@
+data
+*.pyc
+env
+.DS_Store
+*.egg-info
+PaperBank.egg-info
+docs/_build
+data/sessions
