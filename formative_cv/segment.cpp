@@ -1,177 +1,288 @@
 #include "segment.h"
 
 using namespace std;
-
-inline void scale_seq(CvSeq * seq, double scale){
-    for( int i=0; i< seq->total; ++i ) {
-        CvPoint* p = (CvPoint*)cvGetSeqElem ( seq, i );
-        p->x = p->x*scale;
-        p->y = p->y*scale;
-    }
-}
+using namespace cv;
 
 // Traverse contour tree and mark relevant boxess
-bool get_box_lines(CvSeq* contours, int width, int height, double scale_factor, vector<marker> & result, CvMemStorage* storage, int parent_type = 2){
-    bool is_this_good = false;
-    
-    // Use heuristics
+bool classify(vector<vector<Point> >& contours, vector<Vec4i>& hierarchy,
+        int width, int height, vector<feature> & result){
+
+    printf("classify done\n");
+    // Some heuristics
     int minimum_line_len = width/30;
     int min_box_size = pow((height+width)/120, 2);
+    double horisontal_line_gradient = 0.1;
     
+    // Topological info
+    int parent = -1;
+    FType parent_type = RECT;
+
+    int current = 0;
+    int level = 0;
+
+    int child;
+    int next;
+    bool backtracking = false;
+
     // Traverse countours at same level
-    while(contours){
-        // Find current element
-        marker element;
-        
-        scale_seq(contours, 1/scale_factor);
-        
-        //printf("perim: %f\n", cvContourPerimeter(contours)*0.02);
-        
-        CvSeq * polys = cvApproxPoly(contours, sizeof(CvContour), storage, CV_POLY_APPROX_DP, cvContourPerimeter(contours)*0.02, 0); // Explain algorith why approximation of ..
-        if(polys->total==4 && fabs(cvContourArea(polys, CV_WHOLE_SEQ)) > min_box_size){
+    while(current >= 0){
+        //printf("Level %d\n", level);
+
+        // New feature to be added to results
+        feature element;
+
+        // Set child & sibling & parent
+        child = hierarchy[current][2];
+        next = hierarchy[current][0];
+        parent = hierarchy[current][3];
+
+        // When back tracking up the tree
+        if(backtracking){
+            if(next > 0){
+                current = next;
+                backtracking = false;
+                //printf("start next child\n");
+            }
+            else{
+                current = parent;
+                level--;
+                //printf("start parent\n");
+            }
+            continue;
+        }
+
+        // Set current contour
+        vector<Point> & cont = contours[current];
+
+        // Current contour area
+        double contour_area = fabs(contourArea(Mat(cont)));
+
+        // Squares and rectangles have 4 points
+        if(cont.size()==4 && contour_area > min_box_size){
+            printf("BOX\n");
             // Check for square
-            CvPoint *pt[4];
+            Point pt[4];
             for(int i=0;i<4;i++)
-                pt[i] = (CvPoint*)cvGetSeqElem(polys, i);
+                pt[i] = cont[i];
             
-            // Length of the 1st two lines. Assumes paralellogram
-            float line1 = sqrt( (float)pow((*pt[0]).y-(*pt[1]).y, 2) + (float)pow((*pt[0]).x-(*pt[1]).x, 2) ); 
-            float line2 = sqrt( (float)pow((*pt[1]).y-(*pt[2]).y, 2) + (float)pow((*pt[1]).x-(*pt[2]).x, 2) ); 
+            // Length of the 1st two lines.
+            float line1 = sqrt( (float)pow((pt[0]).y-(pt[1]).y, 2) +
+                    (float)pow((pt[0]).x-(pt[1]).x, 2) ); 
+            float line2 = sqrt( (float)pow((pt[1]).y-(pt[2]).y, 2) +
+                    (float)pow((pt[1]).x-(pt[2]).x, 2) ); 
             
-            // Make line 1 the biggest
+            // Biggest line is line1
             if(line2>line1){
                 float tmpline = line1;
                 line1 = line2;
                 line2 = tmpline;
             }
             
+            // Ratio of the two lines
             float ratio = line1/line2;
+
+            // Heuristic for detecting approximate square
+            // Assumes paralellogram += rectangle/square
             float delta = 0.4;
             
-            if((ratio - 1) < delta){
-                element.type = 3;
+            if((ratio - 1) < delta)
+                element.ftype = SQUARE;
+            else
+                element.ftype = RECT;
+            
+            element.points = cont; // TODO: check if this works as expected
+
+        }
+        
+        // Lines have two points
+        else if(cont.size()==2){
+            printf("LINE\n");
+            Point pt[2];
+            for(int i=0;i<2;i++)
+                pt[i] = cont[i];
+            
+            // Gradient of line
+            float gradient = fabs(((pt[0]).y-(pt[1]).y)/
+                    (float)((pt[0]).x-(pt[1]).x));
+            // Length of line
+            float length = sqrt( (float)pow((pt[0]).y-(pt[1]).y, 2) + 
+                    (float)pow((pt[0]).x-(pt[1]).x, 2) ); 
+ 
+            // Look only for horisontal lines
+            if(gradient < horisontal_line_gradient &&
+                    length > minimum_line_len){
+                element.ftype = LINE;
+                element.points = cont;
+            }
+        }
+
+        // Assume things that have more points are text
+        // Dont add text inside text
+        else if(parent_type != TEXT_BOX){
+            element.ftype = TEXT_BOX;
+            element.points = cont;
+        }
+
+        result.push_back(element);
+         
+        // All the work is done for the contour
+        // Here we decide how to procede on the
+        // next itteration
+
+        // Dont recurse into text contour
+        if(parent_type != TEXT_BOX){
+            if(child > 0){
+                current = child;
+                level++;
+                //printf("next child\n");
+            }
+            else if(next > 0){
+                current = next;
+                //printf("next\n");
             }
             else{
-                element.type = 2;
+                current = parent;
+                backtracking = true;
+                level--;
+                //printf("parent\n");
             }
-            element.poly = polys;
-            
-            is_this_good = true;
         }
-        
-        else if(polys->total==2){
+        else{
+            current = parent;
+            backtracking = true;
+            printf("parent from box\n");
+        }
 
-            CvPoint *pt[2];
-            for(int i=0;i<2;i++)
-                pt[i] = (CvPoint*)cvGetSeqElem(polys, i);
- 
-            float gradient = fabs(((*pt[0]).y-(*pt[1]).y)/(float)((*pt[0]).x-(*pt[1]).x)); // Gradient of line
-            float length = sqrt( (float)pow((*pt[0]).y-(*pt[1]).y, 2) + (float)pow((*pt[0]).x-(*pt[1]).x, 2) ); // Length of line
- 
-            if(gradient < 0.01 && length > minimum_line_len){ // Should prolly set heuristic
-                element.type = 1;
-                element.poly = polys;
-                is_this_good = true;
-            }
-        }
-        
-        else if(parent_type != 0){ // Push things that can be ocred
-            element.type = 0; // ocr
-            element.poly = polys;
-        }
-        else{ // Dont recurse into a possible character object
-            contours = contours->h_next;
-            continue;
-        }
-        
-        bool is_inner_good = false; // Good meaning does it contains a line or box
-        bool inner_empty = true;
-        // Recurse on the sub contours
-        if (contours->v_next){
-            
-            vector<marker> recurse_result;
-            if(result.size())
-                inner_empty = false;
-            is_inner_good = get_box_lines(contours->v_next, width, height, scale_factor, recurse_result, storage, element.type);
-            result.reserve(result.size() + distance(recurse_result.begin(),recurse_result.end()));
-            result.insert(result.end(),recurse_result.begin(),recurse_result.end());
-        }
-        
-        // Push the current contour only if the inner contours does not contain a line or square
-        if(!is_inner_good){
-            if(!inner_empty)
-                element.type = element.type * 2;
-            result.push_back(element);
-        }
-        
-        contours = contours->h_next;
     }    
 
-    return is_this_good;
 }
 
-vector<marker> * segment(IplImage* image, CvMemStorage* storage){
-        
-    // Reference image scale
+vector<feature> * segment(Mat & img_rgb){
+
+    // Create new gray scale image
+    Mat image = Mat(Size(img_rgb.rows,img_rgb.cols), CV_8UC1);
+    cvtColor(img_rgb,image,CV_RGB2GRAY);
+
+    // Reference image scale, this is the size at which
+    // the algorithm has been found to work
     int ref_x = 1262;
     int ref_y = 1772;
     int ref_res = ref_x*ref_y;
     
-    double scale_factor =  sqrt(ref_res) /(double)sqrt(image->width*image->height);
-    int width = image->width*scale_factor;
-    int height = image->height*scale_factor;
+    double scale_factor =  sqrt(ref_res) /(double)sqrt(image.cols*image.rows);
+    int cols = image.cols*scale_factor;
+    int rows = image.rows*scale_factor;
     
-    // Create copies to work with
-    IplImage* copy_image = cvCreateImage(cvSize(width,height), IPL_DEPTH_8U, 1);
-    IplImage* copy_image2 = cvCreateImage(cvSize(width,height), IPL_DEPTH_8U, 1);
-        
+    // Create new resized image
+    Mat resized_img = Mat(Size(rows,cols), CV_8UC1);
+    resize(image, resized_img, Size(rows,cols));
 
-    cvResize(image, copy_image, CV_INTER_AREA);
-        
-    // Smooth/despeckle image    
-    
-    int avg_pix = cvSum(copy_image).val[0]/(double)(width*height);
-    int smooth_box = 1;
+    // Calculate teh degree of smoothing required HACK!
+    int avg_pix = sum(resized_img).val[0]/(double)(cols*rows);
+    int kernel_size = 1;
     if(avg_pix < 190){
-        smooth_box = 7;
+        kernel_size = 7;
     }
-        
-    cvSmooth(copy_image, copy_image2, CV_GAUSSIAN , smooth_box , smooth_box); // Writeup: explain different choices
     
+    // Smooth / despeckle image
+    // Writeup: explain different choices
+    GaussianBlur(resized_img, resized_img, Size(kernel_size, kernel_size), 0,0);
+
     // Clean up via addaptive threshold
-    cvAdaptiveThreshold( copy_image2, copy_image, 255, CV_ADAPTIVE_THRESH_MEAN_C,
-            CV_THRESH_BINARY, 7, 20 ); // How did I get to 20?
+    // Why  ADAPTIVE_THRESH_MEAN_C or ADAPTIVE_THRESH_GAUSSIAN_C
+    // How did I get to 7, 20?
+    adaptiveThreshold(resized_img, resized_img, 255, ADAPTIVE_THRESH_GAUSSIAN_C,
+            THRESH_BINARY, 7, 20);
                       
-    // Dilate with custom kernel
-    //IplConvKernel* kernel = cvCreateStructuringElementEx( 3, 3, 1, 1, CV_SHAPE_CROSS, NULL );
-    //IplConvKernel* kernel = cvCreateStructuringElementEx( 3, 1, 1, 0, CV_SHAPE_RECT, NULL );
-    //cvErode(copy_image, copy_image2, kernel, 1);
-    //cvReleaseStructuringElement(&kernel);
-    
-    cvReleaseImage(&copy_image2);
-    
-    // Invert image
-    cvNot(copy_image, copy_image);
-    
-    cvResize(copy_image, image, 0);
-               
-    // Find contours
-    CvSeq* contours = 0;
-    cvFindContours(
-            copy_image,
-            storage,
-            &contours,
-            sizeof(CvContour),
+    // Invert image so it represents edges?
+    bitwise_not(resized_img, resized_img);
+                   
+    // Find contours...
+
+    vector<vector <Point> > contours;
+    vector<Vec4i> hierarchy;
+
+    findContours(
+            resized_img,
+            contours,
+            hierarchy,
             CV_RETR_TREE, // CV_RETR_CCOMP CV_RETR_EXTERNAL
-            CV_CHAIN_APPROX_NONE //SIMPLE
+            CV_CHAIN_APPROX_NONE
     );
 
-    vector<marker> * result = new vector<marker>();
-    get_box_lines(contours, width, height, scale_factor, *result, storage);
-    
-    cvReleaseImage(&copy_image);
 
+    // Draw them
+    for(int idx = 0; idx >= 0; idx = hierarchy[idx][0] )
+    {
+        Scalar color( rand()&255, rand()&255, rand()&255 );
+        drawContours( img_rgb, contours, idx, color, CV_FILLED, 8, hierarchy );
+    }
+
+    // Eliminate too short or too long contours
+    /*unsigned int cmin= 2; // minimum contour length
+    unsigned int cmax= 100000; // maximum contour length
+    vector<vector<Point> >::iterator itc=contours.begin();
+    while (itc!=contours.end()) {
+        if (itc->size() < cmin || itc->size() > cmax)
+            itc= contours.erase(itc);
+        else
+            ++itc;
+    }*/
+
+
+    // Approximate contours
+    /*itc=contours.begin();
+    while (itc!=contours.end()) {
+        if (itc->size() < cmin || itc->size() > cmax)
+            itc= contours.erase(itc);
+        else
+            ++itc;
+    }*/
+
+    for( unsigned int i=0; i< contours.size(); i++ ) {
+        vector<Point> & points = contours[i];
+
+
+        Mat curve(points, true);
+        double arc_len = arcLength(curve,true);
+
+        vector<Point> approx;
+
+        approxPolyDP(
+            curve,
+            approx,
+            arc_len*0.02,// was 5. accuracy of the approximation
+            true // yes it is a closed shape
+        );
+
+        if(approx.size() > 1){
+            //points.clear();
+            points = approx;
+        }
+    }
+
+
+    // Classify my babies!
+    vector<feature> * result = new vector<feature>();
+    classify(contours, hierarchy, rows, cols, *result);
+
+
+    // Scale my babies back to normal
+    for( unsigned int i=0; i< contours.size(); i++ ) {
+        vector<Point> & points = contours[i];
+
+        for( unsigned  int j=0; j< points.size(); j++ ) {
+            Point & p = points[j];
+            p.x = p.x*(1/scale_factor);
+            p.y = p.y*(1/scale_factor);
+            //printf("%d, %d\n", p.x, p.y );
+        }
+    }
+
+    printf("Draw done\n");
+
+    image.release();
+    resized_img.release();
     return result;
-
 }
 

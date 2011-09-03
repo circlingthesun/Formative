@@ -7,12 +7,13 @@
 #include <cvaux.h>
 #include <math.h>
 
-typedef struct{
-    int type; // 0 = ocr bounding box, 1 = line, 2 = rect, square = 3
-              // filled rect = 4, filled square = 6
-    CvSeq * poly;
-} marker;
+enum FType {TEXT_BOX, LINE, RECT, SQUARE, FILLED_RECT, FILLED_SQUARE };
 
-std::vector<marker> * segment(IplImage* image, CvMemStorage* storage);
+typedef struct{
+    FType ftype;
+    std::vector<cv::Point> points;
+} feature;
+
+std::vector<feature> * segment(cv::Mat & image);
 
 #endif // INFORM_SEGMENT

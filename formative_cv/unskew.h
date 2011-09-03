@@ -6,6 +6,6 @@
 #include <stdio.h>
 #include <math.h>
 
-void unskew(IplImage * img);
+void unskew(cv::Mat mimg);
 
 #endif // INFORM_UNSKEW

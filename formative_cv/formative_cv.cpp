@@ -1,16 +1,21 @@
-#include <Python.h>
-
-//#include <baseapi.h>
-#include <cv.h>
-//#include <highgui.h>
 #include <stdio.h>
 #include <math.h>
-#include <iostream>
-//#include "leptonica/allheaders.h"
-#include "parse.h"
 #include <vector>
+#include <iostream>
+#include <cv.h>
+#include <Python.h>
 
+
+#include "parse.h"
+
+//#include <baseapi.h>
+
+//#include <highgui.h>
+
+
+//#include "leptonica/allheaders.h"
 using namespace std;
+using namespace cv;
 
 //typedef int(Dict::* tesseract::DictFunc)(void *void_dawg_args, int char_index, const void *word, bool word_end)
 
@@ -101,31 +106,29 @@ formative_cv_ocr(PyObject *self, PyObject *args)
 static PyObject *
 formative_cv_parse(PyObject *self, PyObject *args)
 {
-    char *filedata;
+    char *imagedata;
     int len, w, h;
     
-    if (!PyArg_ParseTuple(args, "t#ii", &filedata, &len, &w, &h)){
+    if (!PyArg_ParseTuple(args, "t#ii", &imagedata, &len, &w, &h)){
         PyErr_SetString(PyExc_AttributeError, "call with (imagedata, img_len, w, h");
         return NULL;
     }
     
     
-    // Create new image
-    IplImage* input_img = cvCreateImageHeader(cvSize(w,h), IPL_DEPTH_8U, 3); 
-    cvSetData(input_img,filedata,w*3);
-    
-    //IplImage* parsedimg = parse(input_img);
+    // Create new colour image from data
+    Mat image = Mat( Size(w,h), CV_8UC3, imagedata);
+    Mat parsedimg = image.clone(); // This image may get bastardised
 
-    vector <retbox> * rb = parse(input_img);
-    IplImage* parsedimg = input_img;
+    vector <retbox> * rb = parse(parsedimg);
 
     // Get rid of the padding
-    char* data = (char*)malloc(parsedimg->height*parsedimg->width*3);
-    for(int y = 0; y < parsedimg->height; y++){
-        int y_offset_w = y*parsedimg->widthStep;
-        int y_offset = y*parsedimg->width*3;
-        for(int x = 0; x < parsedimg->width*3; x++){
-            data[y_offset + x] = parsedimg->imageData[y_offset_w + x];
+    char* data = (char*)malloc(parsedimg.rows*parsedimg.cols*3);
+
+    for(int y = 0; y < parsedimg.rows; y++){
+        int y_offset_w = y*parsedimg.step1();
+        int y_offset = y*parsedimg.cols*3;
+        for(int x = 0; x < parsedimg.cols*3; x++){
+            data[y_offset + x] = parsedimg.data[y_offset_w + x];
         }
     }
     
@@ -133,7 +136,7 @@ formative_cv_parse(PyObject *self, PyObject *args)
     
     PyObject* return_list = PyList_New(rb->size());
     if (return_list == NULL){
-        PyErr_SetString(PyExc_AttributeError, "I cannot parse output");
+        PyErr_SetString(PyExc_AttributeError, "Cannot parse output");
         return NULL;
     }
 
@@ -142,16 +145,13 @@ formative_cv_parse(PyObject *self, PyObject *args)
     for(int i=0; i < rb->size(); i++){
         retbox box = rb->at(i);
         PyObject* l = Py_BuildValue("[i,i,i,i,i]", box.x,box.y,box.w,box.h,box.type);
-        //printf("%d %d %d %d %d\n", box.x,box.y,box.w,box.h,box.type);
+        printf("%d %d %d %d %d\n", box.x,box.y,box.w,box.h,box.type);
         PyList_SetItem(return_list, i, l);
     }
     
 
     PyObject* ret = Py_BuildValue("(Os#ii)", return_list, data,
-            len, parsedimg->width, parsedimg->height);
-
-    cvReleaseImageHeader(&input_img);
-    //cvReleaseImage(&parsedimg);
+            len, parsedimg.cols, parsedimg.rows);
     
     return ret;
 }

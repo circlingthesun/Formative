@@ -1,107 +1,42 @@
 #include "unskew.h"
 
-void rotate(IplImage * img, double deg){
-    // Create temporary images
-    IplImage* temp = cvCreateImage(
-		cvGetSize(img),
-		img->depth,
-		img->nChannels
-	);
-	
-	/* Rotate image */
-    
-    double scale = 1;
-    
-    // Rotation center
-    CvPoint2D32f center = cvPoint2D32f(
-        img->width/2,
-        img->height/2
-    );
-    
-    // Create rotation matrix
-    CvMat* rot_mat = cvCreateMat(2,3,CV_32FC1);
-    
-    // Create 2d rotation matrix
-    CvMat* rot = cv2DRotationMatrix(
-        center,
-        deg,
-        scale,
-        rot_mat
-    );
-    
-    // Rotate 
-    cvWarpAffine( img, temp, rot_mat, CV_INTER_LINEAR|CV_WARP_FILL_OUTLIERS, cvScalarAll(255));
-    cvConvertImage(temp, img, 0);
-    
-    cvReleaseMat(&rot);
-    //cvReleaseMat(&rot_mat);
-    cvReleaseImage(&temp);
-}
+using namespace cv;
 
-void unskew(IplImage * img){
+void unskew(Mat & img_rgb){
 
-    // Create temporary images
-    IplImage* temp = cvCreateImage(
-		cvGetSize(img),
-		IPL_DEPTH_8U,
-		1
-	);
-	
-	IplImage* temp2 = cvCreateImage(
-		cvGetSize(img),
-		IPL_DEPTH_8U,
-		1
-	);
-	
-    cvConvertImage(img, temp, 0);
 
-    cvSmooth(temp, temp2, CV_GAUSSIAN , 5 , 5, 0, 0);
-    
-    IplConvKernel* kernel = cvCreateStructuringElementEx( 5 /* cols */, 1, 3, 0,
-                                             CV_SHAPE_RECT, NULL );
+    Mat img_gray = Mat(Size(img_rgb.rows,img_rgb.cols), CV_8UC1);
+    // Create gray scale
+    cvtColor(img_rgb,img_gray,CV_RGB2GRAY);
+    GaussianBlur(img_gray, img_gray, Size(5, 5), 0,0);
         
-    cvReleaseStructuringElement(&kernel);
-    
-    // Open morph image
-    cvMorphologyEx(temp2, temp2, temp, CV_SHAPE_RECT, CV_MOP_OPEN, 5); 
-    
     // Edge detection
-    cvCanny(temp2, temp, 200, 240, 3);
+    Canny(img_rgb, img_rgb, 200, 240, 3);
         
-    // Find lines
-    CvMemStorage* storage = cvCreateMemStorage(0);
+    // Find lines...
     
-    CvSeq* lines = cvHoughLines2(
-        temp,
-        storage,
-        CV_HOUGH_PROBABILISTIC,
-        5, // rho resolution
-        CV_PI/45, // theta resoltion
-        5, // Threshold pixels
-        50, // Min returned
-        5 // Seperation between coolinear points
-    );
+    vector<Vec4i> lines;
+    double rho = 5; // rho resolution
+    double theta = CV_PI/45; // theta resoltion
+    int thresh = 5; // Threshold pixel votes
+    int min_len = 50; // Min line length
+    int max_line_gap = 5; // Seperation between coolinear points
+
+    HoughLinesP( img_gray, lines, rho, theta, thresh, min_len, max_line_gap ); // Needs heuristics
     
-    int i;
-    
-    // Set up counts and initilialize counts to 0
+       
     int cres = 10000; // Resolution at which angles are counted
-    int* counts = (int*)malloc(sizeof(int)*(int)(CV_PI*cres)); // Counts angle counts
-    for(i = 0; i < cres*CV_PI; i++){
-        counts[i] = 0;
-    }
+    vector<int> counts(cres*CV_PI, 0);
     
     // Tollerated deviation angle of a horisontal line
     double delta = CV_PI/3.5; 
     
-    
     // Find horisontal lines candidates
-    for( i = 0; i < lines->total; i++ )
-    {
-        CvPoint* line = (CvPoint*)cvGetSeqElem(lines,i);
-        
+    for( size_t i = 0; i < lines.size(); i++ )
+    {        
         // Slope of the line
-        double slope = (atan((double)(line[1].y - line[0].y) / (double)(line[1].x - line[0].x)));
+        double slope = (atan((double)(lines[i][1] - lines[i][3]) /
+            (double)(lines[i][0] - lines[i][2])));
         
         int is_hor_candidate = slope < delta && slope > -delta;
         // Count for horisontal line candidates
@@ -114,19 +49,24 @@ void unskew(IplImage * img){
         
     int max_pos = -1, max_val = 0;
     
-    for(i = 0; i < cres*CV_PI; i++){
+    for(int i = 0; i < cres*CV_PI; i++){
         if (counts[i] > max_val){
             max_pos = i;
             max_val = counts[i];
         }
     }
     
-    free(counts);
     
-    double rotate_angle = (((double)max_pos/(double)cres)-CV_PI/2)*57.2957795;
-    rotate(img, rotate_angle);
-    printf("Rotate: %f\n", rotate_angle);
-    cvReleaseImage(&temp);
-    cvReleaseImage(&temp2);
+    double rotate_angle = (((double)max_pos/(double)cres)-CV_PI/2)*57.2957795;\
+
+    // Find center 
+    Point2f center(img_rgb.rows/2.0f, img_rgb.cols/2.0f);
+    // Create rotation matrix
+    Mat rot_mat = getRotationMatrix2D(center, rotate_angle, 1);
+    // Rotate
+    warpAffine( img_rgb, img_rgb, rot_mat, Size(),
+            INTER_LINEAR, BORDER_CONSTANT, Scalar(255)); 
+
+    printf("Rotated: %f\n", rotate_angle);
 }
 
