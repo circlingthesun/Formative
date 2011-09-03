@@ -161,10 +161,9 @@ vector<feature> * segment(Mat & img_rgb){
     // the algorithm has been found to work
     int ref_x = 1262;
     int ref_y = 1772;
-    int ref_res = ref_x*ref_y;
     
     // Scale up/down to reference scale size
-    double scale_factor;// =  sqrtf(ref_res) /sqrtf(image.cols*(double)image.rows);
+    double scale_factor;
 
     double x_ra = (double)image.rows/ref_x;
     double y_ra = (double)image.cols/ref_y;
@@ -218,11 +217,11 @@ vector<feature> * segment(Mat & img_rgb){
     vector<vector <Point> > contours;
     vector<Vec4i> hierarchy;
     findContours(
-            resized_img,
-            contours,
-            hierarchy,
-            CV_RETR_TREE, // CV_RETR_CCOMP CV_RETR_EXTERNAL
-            CV_CHAIN_APPROX_NONE
+        resized_img,
+        contours,
+        hierarchy,
+        CV_RETR_TREE, // CV_RETR_CCOMP CV_RETR_EXTERNAL
+        CV_CHAIN_APPROX_NONE
     );
 
 
