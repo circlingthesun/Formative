@@ -35,7 +35,7 @@ class feature_compare{
 
 vector <retbox> * parse(Mat & img_rgb){
     printf("parse\n");
-    //unskew(img_rgb);
+    unskew(img_rgb);
 
     // Segment img_rgb
     vector<feature> * result = segment(img_rgb);
@@ -66,7 +66,7 @@ vector <retbox> * parse(Mat & img_rgb){
             box = boundingRect(Mat(m.points));
         }
         catch(cv::Exception e){
-            printf("EXCEPTION parse: %s\n", e.what());
+            //printf("EXCEPTION parse: %s\n", e.what());
             Mat points = Mat(m.points);
             if (points.isContinuous())
                 printf("points.isContinuous()\n");

@@ -174,8 +174,8 @@ vector<feature> * segment(Mat & img_rgb){
     int rows = image.rows*scale_factor;
     
     // Create new resized image
-    Mat resized_img = Mat(Size(rows,cols), CV_8UC1);
-    resize(image, resized_img, Size(rows,cols));
+    Mat resized_img = Mat(Size(cols,rows), CV_8UC1);
+    resize(image, resized_img, Size(cols,rows));
 
     // Calculate teh degree of smoothing required HACK!
     int avg_pix = sum(resized_img).val[0]/(double)(cols*rows);
@@ -212,11 +212,8 @@ vector<feature> * segment(Mat & img_rgb){
 
 
     // Draw them
-    for(int idx = 0; idx >= 0; idx = hierarchy[idx][0] )
-    {
-        Scalar color( rand()&255, rand()&255, rand()&255 );
-        drawContours( img_rgb, contours, idx, color, CV_FILLED, 8, hierarchy );
-    }
+    Scalar color( 0, 255, 0 );
+    drawContours( img_rgb, contours, -1, color, 2, 8, hierarchy );
 
     // Eliminate too short or too long contours
     /*unsigned int cmin= 2; // minimum contour length
@@ -273,8 +270,8 @@ vector<feature> * segment(Mat & img_rgb){
 
         for( unsigned  int j=0; j< points.size(); j++ ) {
             Point & p = points[j];
-            p.x = p.x*(1/scale_factor);
-            p.y = p.y*(1/scale_factor);
+            p.x = p.x/scale_factor;
+            p.y = p.y/scale_factor;
             //printf("%d, %d\n", p.x, p.y );
         }
     }

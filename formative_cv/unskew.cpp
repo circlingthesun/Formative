@@ -11,7 +11,7 @@ void unskew(Mat & img_rgb){
     GaussianBlur(img_gray, img_gray, Size(5, 5), 0,0);
         
     // Edge detection
-    Canny(img_rgb, img_rgb, 200, 240, 3);
+    Canny(img_gray, img_gray, 200, 240, 3);
         
     // Find lines...
     
@@ -64,8 +64,8 @@ void unskew(Mat & img_rgb){
     // Create rotation matrix
     Mat rot_mat = getRotationMatrix2D(center, rotate_angle, 1);
     // Rotate
-    warpAffine( img_rgb, img_rgb, rot_mat, Size(),
-            INTER_LINEAR, BORDER_CONSTANT, Scalar(255)); 
+    warpAffine( img_rgb.clone(), img_rgb, rot_mat, Size(img_rgb.cols, img_rgb.rows),
+            INTER_LINEAR, BORDER_CONSTANT, Scalar(255, 255, 255)); 
 
     printf("Rotated: %f\n", rotate_angle);
 }
