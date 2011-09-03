@@ -40,13 +40,19 @@ void unskew(Mat & img_rgb){
         
     // Find lines...
     
-    vector<Vec2f> lines;
+    //vector<Vec2f> lines;
+    vector<Vec4i> lines;
     double rho = 5; // rho resolution
     double theta = CV_PI/45; // theta resoltion
-    int thresh = 100; // Threshold pixel votes
+    int thresh = 5; // Threshold pixel votes
+
+    int min_len = 50; // Min line length
+    int max_line_gap = 5; // Seperation between coolinear points
+
 
     // Needs heuristics
-    HoughLines(resized_img, lines, rho, theta, thresh);
+    HoughLinesP( img_gray, lines, rho, theta, thresh, min_len, max_line_gap );
+    //HoughLines(resized_img, lines, rho, theta, thresh);
        
     int cres = 10000; // Resolution at which angles are counted
     int arr_size = (int)(cres*CV_PI);
@@ -58,19 +64,26 @@ void unskew(Mat & img_rgb){
     
     // Tollerated deviation angle of a horisontal line
     // Need to be careful so vertical lines re not detected
-    float delta = CV_PI/3.5;
+    float delta = CV_PI/6; // was 3.5
     float h_angle = CV_PI/2;
     
     // Find horisontal lines candidates
     for( size_t i = 0; i < lines.size(); i++ )
     {        
         // 0 is vertical pi/2 is horisontal
-        float angle = lines[i][1];
+        //float angle = lines[i][1];
+
+        // Change angle to the line angle
+        // range 90
+        //float line_angle = angle-CV_PI/2;
+        // 0 radians is now a horisontal line
+
+        double line_angle = (atan2((double)(lines[i][1] - lines[i][3]),
+            (double)(lines[i][0] - lines[i][2])));
 
         // Count for horisontal line candidates
-        if(abs(angle) > h_angle-delta){
-            angle = CV_PI/2 - angle;
-            int cpos = (int)(((angle+CV_PI/2)*cres)+0.5);
+        if(fabs(line_angle-CV_PI/2) < delta){
+            int cpos = (int)(((line_angle+CV_PI/2)*cres)+0.5);
             counts[cpos]++;
         }
 
@@ -92,6 +105,8 @@ void unskew(Mat & img_rgb){
     double abs_rad = offset_rad- CV_PI/2;
     double rotate_angle = abs_rad *57.2957795;
 
+    printf("Rotating: %f\n", rotate_angle);
+
     // Find center 
     Point2f center(img_rgb.rows/2.0f, img_rgb.cols/2.0f);
     // Create rotation matrix
@@ -101,6 +116,5 @@ void unskew(Mat & img_rgb){
     warpAffine( img_rgb.clone(), img_rgb, rot_mat, Size(img_rgb.cols, img_rgb.rows),
             INTER_LINEAR, BORDER_CONSTANT, Scalar(255, 255, 255)); 
 
-    printf("Rotated: %f\n", rotate_angle);
 }
 
