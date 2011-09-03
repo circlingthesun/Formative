@@ -4,14 +4,39 @@ using namespace cv;
 
 void unskew(Mat & img_rgb){
 
-
+    // Create gray scale img
     Mat img_gray = Mat(Size(img_rgb.rows,img_rgb.cols), CV_8UC1);
-    // Create gray scale
     cvtColor(img_rgb,img_gray,CV_RGB2GRAY);
-    GaussianBlur(img_gray, img_gray, Size(5, 5), 0,0);
+
+    // Reference image scale, this is the size at which
+    // the algorithm has been found to work
+    int ref_x = 1000;
+    int ref_y = 1000;
+    
+    // Scale up/down to reference scale size
+    double scale_factor;
+
+    double x_ra = (double)img_gray.rows/ref_x;
+    double y_ra = (double)img_gray.cols/ref_y;
+
+    if(x_ra > y_ra)
+        scale_factor = x_ra;
+    else
+        scale_factor = y_ra;
+
+    int cols = img_gray.cols/scale_factor+0.5;
+    int rows = img_gray.rows/scale_factor+0.5;
+    
+    // Create new resized image
+    Mat resized_img = Mat(Size(cols,rows), CV_8UC1);
+    resize(img_gray, resized_img, Size(cols,rows));
+
+
+    // Clean up with blur
+    GaussianBlur(resized_img, resized_img, Size(5, 5), 0,0);
         
     // Edge detection
-    Canny(img_gray, img_gray, 200, 240, 3);
+    Canny(resized_img, resized_img, 200, 240, 3);
         
     // Find lines...
     
@@ -22,8 +47,8 @@ void unskew(Mat & img_rgb){
     int min_len = 50; // Min line length
     int max_line_gap = 5; // Seperation between coolinear points
 
-    HoughLinesP( img_gray, lines, rho, theta, thresh, min_len, max_line_gap ); // Needs heuristics
-    
+    // Needs heuristics
+    HoughLinesP( resized_img, lines, rho, theta, thresh, min_len, max_line_gap );
        
     int cres = 10000; // Resolution at which angles are counted
     vector<int> counts(cres*CV_PI, 0);

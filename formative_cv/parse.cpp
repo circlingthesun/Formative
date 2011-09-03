@@ -17,18 +17,13 @@ class feature_compare{
     feature_compare(int w, int h): w(w), h(h){}
     
     bool operator ()(const feature & first, const feature & second) const{
-        try{
-            Rect box1 = boundingRect(Mat(first.points));
-            Rect box2 = boundingRect(Mat(second.points));
 
-            long m1 = box1.y*w + box1.x;
-            long m2 = box2.y*w + box2.x;
-            return m1 < m2;
-        }
-        catch(cv::Exception e){
-            //printf("EXCEPTION compare: %s\n", e.what());
-            return false;
-        }  
+        Rect box1 = boundingRect(Mat(first.points));
+        Rect box2 = boundingRect(Mat(second.points));
+
+        long m1 = box1.y*w + box1.x;
+        long m2 = box2.y*w + box2.x;
+        return m1 < m2;
     }
 };
 
@@ -39,9 +34,6 @@ vector <retbox> * parse(Mat & img_rgb){
 
     // Segment img_rgb
     vector<feature> * result = segment(img_rgb);
-
-
-    printf("Segment resturns: %d\n", result->size());
     
     // Sort results from top left to bottom right
     sort(result->begin(), result->end(), feature_compare(img_rgb.rows, img_rgb.cols));
@@ -62,32 +54,7 @@ vector <retbox> * parse(Mat & img_rgb){
         feature m = *it;  
         Rect box;      
 
-        try{
-            box = boundingRect(Mat(m.points));
-        }
-        catch(cv::Exception e){
-            //printf("EXCEPTION parse: %s\n", e.what());
-            Mat points = Mat(m.points);
-            if (points.isContinuous())
-                printf("points.isContinuous()\n");
-            if (points.depth() == CV_32S)
-                printf("points.depth() == CV_32S\n");
-            if (points.depth() == CV_32F)
-                printf("points.depth() == CV_32F\n");
-            if (points.rows == 1)
-                printf("points.rows == 1\n");
-            if (points.channels() == 2)
-                printf("points.channels() == 2\n");
-            if (points.cols*points.channels() == 2)
-                printf("points.cols*points.channels() == 2\n");
-            for (int i = 0; i < m.points.size(); i++){
-                printf("(%d, %d) ", m.points[i].x, m.points[i].y);
-            }
-            printf(" - size: %d\n", m.points.size());
-
-            continue; // HACK!!
-        }
-
+        box = boundingRect(Mat(m.points));
 
         // Lines
         if( m.ftype == LINE){
@@ -109,6 +76,5 @@ vector <retbox> * parse(Mat & img_rgb){
         }*/
     }
     
-    printf("parse done\n");
     return ret;
 }

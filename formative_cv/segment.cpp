@@ -4,10 +4,9 @@ using namespace std;
 using namespace cv;
 
 // Traverse contour tree and mark relevant boxess
-bool classify(vector<vector<Point> >& contours, vector<Vec4i>& hierarchy,
+void classify(vector<vector<Point> >& contours, vector<Vec4i>& hierarchy,
         int width, int height, vector<feature> & result){
 
-    printf("classify done\n");
     // Some heuristics
     int minimum_line_len = width/30;
     int min_box_size = pow((height+width)/120, 2);
@@ -28,9 +27,6 @@ bool classify(vector<vector<Point> >& contours, vector<Vec4i>& hierarchy,
     while(current >= 0){
         //printf("Level %d\n", level);
 
-        // New feature to be added to results
-        feature element;
-
         // Set child & sibling & parent
         child = hierarchy[current][2];
         next = hierarchy[current][0];
@@ -41,12 +37,10 @@ bool classify(vector<vector<Point> >& contours, vector<Vec4i>& hierarchy,
             if(next > 0){
                 current = next;
                 backtracking = false;
-                //printf("start next child\n");
             }
             else{
                 current = parent;
                 level--;
-                //printf("start parent\n");
             }
             continue;
         }
@@ -54,12 +48,17 @@ bool classify(vector<vector<Point> >& contours, vector<Vec4i>& hierarchy,
         // Set current contour
         vector<Point> & cont = contours[current];
 
+        // New feature to be added to results
+        feature element;
+        element.points = cont;
+        element.ftype = INVALID;
+
         // Current contour area
         double contour_area = fabs(contourArea(Mat(cont)));
 
         // Squares and rectangles have 4 points
         if(cont.size()==4 && contour_area > min_box_size){
-            printf("BOX\n");
+            //printf("BOX\n");
             // Check for square
             Point pt[4];
             for(int i=0;i<4;i++)
@@ -89,14 +88,11 @@ bool classify(vector<vector<Point> >& contours, vector<Vec4i>& hierarchy,
                 element.ftype = SQUARE;
             else
                 element.ftype = RECT;
-            
-            element.points = cont; // TODO: check if this works as expected
-
         }
         
         // Lines have two points
         else if(cont.size()==2){
-            printf("LINE\n");
+            //printf("LINE\n");
             Point pt[2];
             for(int i=0;i<2;i++)
                 pt[i] = cont[i];
@@ -112,18 +108,19 @@ bool classify(vector<vector<Point> >& contours, vector<Vec4i>& hierarchy,
             if(gradient < horisontal_line_gradient &&
                     length > minimum_line_len){
                 element.ftype = LINE;
-                element.points = cont;
             }
         }
 
         // Assume things that have more points are text
-        // Dont add text inside text
-        else if(parent_type != TEXT_BOX){
+        else{
             element.ftype = TEXT_BOX;
             element.points = cont;
         }
 
-        result.push_back(element);
+        // Dont add text inside text
+        if(element.ftype != INVALID){
+            result.push_back(element);
+        }
          
         // All the work is done for the contour
         // Here we decide how to procede on the
@@ -134,17 +131,14 @@ bool classify(vector<vector<Point> >& contours, vector<Vec4i>& hierarchy,
             if(child > 0){
                 current = child;
                 level++;
-                //printf("next child\n");
             }
             else if(next > 0){
                 current = next;
-                //printf("next\n");
             }
             else{
                 current = parent;
                 backtracking = true;
                 level--;
-                //printf("parent\n");
             }
         }
         else{
@@ -160,7 +154,7 @@ bool classify(vector<vector<Point> >& contours, vector<Vec4i>& hierarchy,
 vector<feature> * segment(Mat & img_rgb){
 
     // Create new gray scale image
-    Mat image = Mat(Size(img_rgb.rows,img_rgb.cols), CV_8UC1);
+    Mat image = Mat(Size(img_rgb.cols, img_rgb.rows), CV_8UC1);
     cvtColor(img_rgb,image,CV_RGB2GRAY);
 
     // Reference image scale, this is the size at which
@@ -169,15 +163,25 @@ vector<feature> * segment(Mat & img_rgb){
     int ref_y = 1772;
     int ref_res = ref_x*ref_y;
     
-    double scale_factor =  sqrt(ref_res) /(double)sqrt(image.cols*image.rows);
-    int cols = image.cols*scale_factor;
-    int rows = image.rows*scale_factor;
+    // Scale up/down to reference scale size
+    double scale_factor;// =  sqrtf(ref_res) /sqrtf(image.cols*(double)image.rows);
+
+    double x_ra = (double)image.rows/ref_x;
+    double y_ra = (double)image.cols/ref_y;
+
+    if(x_ra > y_ra)
+        scale_factor = x_ra;
+    else
+        scale_factor = y_ra;
+
+    int cols = image.cols/scale_factor+0.5;
+    int rows = image.rows/scale_factor+0.5;
     
     // Create new resized image
     Mat resized_img = Mat(Size(cols,rows), CV_8UC1);
     resize(image, resized_img, Size(cols,rows));
 
-    // Calculate teh degree of smoothing required HACK!
+    // Calculate the degree of smoothing required HACK!
     int avg_pix = sum(resized_img).val[0]/(double)(cols*rows);
     int kernel_size = 1;
     if(avg_pix < 190){
@@ -193,15 +197,26 @@ vector<feature> * segment(Mat & img_rgb){
     // How did I get to 7, 20?
     adaptiveThreshold(resized_img, resized_img, 255, ADAPTIVE_THRESH_GAUSSIAN_C,
             THRESH_BINARY, 7, 20);
-                      
+    
     // Invert image so it represents edges?
     bitwise_not(resized_img, resized_img);
-                   
+
+    // So lets connect the lines
+    // We use a cross since its assumed that the image has be unskewed
+    Mat cross_struct_el = getStructuringElement(MORPH_CROSS, Size(3,3));
+    //morphologyEx(resized_img, resized_img, MORPH_BLACKHAT,
+    //        cross_struct_el, Point(-1, -1), 10);
+    dilate(resized_img, resized_img, cross_struct_el, Point(-1, -1), 1);
+
+
+    // Bastardise input image so we know whats going on
+    resize(resized_img, image, Size(img_rgb.cols, img_rgb.rows));
+    cvtColor(image, img_rgb, CV_GRAY2RGB);
+
     // Find contours...
 
     vector<vector <Point> > contours;
     vector<Vec4i> hierarchy;
-
     findContours(
             resized_img,
             contours,
@@ -211,34 +226,27 @@ vector<feature> * segment(Mat & img_rgb){
     );
 
 
-    // Draw them
-    Scalar color( 0, 255, 0 );
-    drawContours( img_rgb, contours, -1, color, 2, 8, hierarchy );
-
-    // Eliminate too short or too long contours
-    /*unsigned int cmin= 2; // minimum contour length
-    unsigned int cmax= 100000; // maximum contour length
-    vector<vector<Point> >::iterator itc=contours.begin();
-    while (itc!=contours.end()) {
-        if (itc->size() < cmin || itc->size() > cmax)
-            itc= contours.erase(itc);
-        else
-            ++itc;
-    }*/
-
-
-    // Approximate contours
-    /*itc=contours.begin();
-    while (itc!=contours.end()) {
-        if (itc->size() < cmin || itc->size() > cmax)
-            itc= contours.erase(itc);
-        else
-            ++itc;
-    }*/
-
+    // Scale my babies back to normal
     for( unsigned int i=0; i< contours.size(); i++ ) {
         vector<Point> & points = contours[i];
 
+        for( unsigned  int j=0; j< points.size(); j++ ) {
+            Point & p = points[j];
+            p.x = p.x*scale_factor+0.5;
+            p.y = p.y*scale_factor+0.5;
+        }
+    }
+
+
+    // Draw contours them
+    //Scalar color( 0, 255, 0 );
+    //drawContours( img_rgb, contours, -1, color, 2, 8, hierarchy );
+
+    // Approximate contours
+    vector<vector<Point> >::iterator itc=contours.begin();
+    while (itc!=contours.end()) {
+
+        vector<Point> & points = *itc;
 
         Mat curve(points, true);
         double arc_len = arcLength(curve,true);
@@ -252,31 +260,20 @@ vector<feature> * segment(Mat & img_rgb){
             true // yes it is a closed shape
         );
 
-        if(approx.size() > 1){
+        if(approx.size() > 1 && points.size() > 1){
             //points.clear();
             points = approx;
+            ++itc;
+        }
+        else{
+            // Eliminate too shortcontours
+            itc= contours.erase(itc);
         }
     }
-
 
     // Classify my babies!
     vector<feature> * result = new vector<feature>();
     classify(contours, hierarchy, rows, cols, *result);
-
-
-    // Scale my babies back to normal
-    for( unsigned int i=0; i< contours.size(); i++ ) {
-        vector<Point> & points = contours[i];
-
-        for( unsigned  int j=0; j< points.size(); j++ ) {
-            Point & p = points[j];
-            p.x = p.x/scale_factor;
-            p.y = p.y/scale_factor;
-            //printf("%d, %d\n", p.x, p.y );
-        }
-    }
-
-    printf("Draw done\n");
 
     image.release();
     resized_img.release();

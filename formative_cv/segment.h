@@ -7,7 +7,7 @@
 #include <cvaux.h>
 #include <math.h>
 
-enum FType {TEXT_BOX, LINE, RECT, SQUARE, FILLED_RECT, FILLED_SQUARE };
+enum FType {TEXT_BOX, LINE, RECT, SQUARE, FILLED_RECT, FILLED_SQUARE, INVALID };
 
 typedef struct{
     FType ftype;

@@ -120,19 +120,8 @@ formative_cv_parse(PyObject *self, PyObject *args)
     Mat parsedimg = image.clone(); // This image may get bastardised
 
     vector <retbox> * rb = parse(parsedimg);
-
-    // Get rid of the padding
-    char* data = (char*)malloc(parsedimg.rows*parsedimg.cols*3);
-
-    for(int y = 0; y < parsedimg.rows; y++){
-        int y_offset_w = y*parsedimg.step1();
-        int y_offset = y*parsedimg.cols*3;
-        for(int x = 0; x < parsedimg.cols*3; x++){
-            data[y_offset + x] = parsedimg.data[y_offset_w + x];
-        }
-    }
     
-    
+    uchar* data = parsedimg.data;
     
     PyObject* return_list = PyList_New(rb->size());
     if (return_list == NULL){
@@ -145,7 +134,7 @@ formative_cv_parse(PyObject *self, PyObject *args)
     for(int i=0; i < rb->size(); i++){
         retbox box = rb->at(i);
         PyObject* l = Py_BuildValue("[i,i,i,i,i]", box.x,box.y,box.w,box.h,box.type);
-        printf("%d %d %d %d %d\n", box.x,box.y,box.w,box.h,box.type);
+        //printf("%d %d %d %d %d\n", box.x,box.y,box.w,box.h,box.type);
         PyList_SetItem(return_list, i, l);
     }
     
