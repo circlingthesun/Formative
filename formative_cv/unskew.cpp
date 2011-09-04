@@ -36,26 +36,23 @@ void unskew(Mat & img_rgb){
     GaussianBlur(resized_img, resized_img, Size(5, 5), 0,0);
         
     // Edge detection
-    Canny(resized_img, resized_img, 200, 240, 3);
+    Canny(resized_img, resized_img, 100, 240, 3);
         
     // Find lines...
     
-    //vector<Vec2f> lines;
     vector<Vec4i> lines;
     double rho = 5; // rho resolution
     double theta = CV_PI/45; // theta resoltion
-    int thresh = 5; // Threshold pixel votes
-
-    int min_len = 50; // Min line length
-    int max_line_gap = 5; // Seperation between coolinear points
-
+    int thresh = 30; // Threshold pixel votes
+    int min_len = 30; // Min line length
+    int max_line_gap = 10; // Seperation between coolinear points
 
     // Needs heuristics
-    HoughLinesP( img_gray, lines, rho, theta, thresh, min_len, max_line_gap );
-    //HoughLines(resized_img, lines, rho, theta, thresh);
+    HoughLinesP( resized_img, lines, rho, theta, thresh, min_len, max_line_gap );
        
     int cres = 10000; // Resolution at which angles are counted
     int arr_size = (int)(cres*CV_PI);
+
     int * counts = new int[arr_size];
 
     for(int i=0; i < arr_size; i++){
@@ -63,34 +60,26 @@ void unskew(Mat & img_rgb){
     }
     
     // Tollerated deviation angle of a horisontal line
-    // Need to be careful so vertical lines re not detected
-    float delta = CV_PI/6; // was 3.5
-    float h_angle = CV_PI/2;
+    double delta = CV_PI/3.5; 
     
     // Find horisontal lines candidates
     for( size_t i = 0; i < lines.size(); i++ )
     {        
-        // 0 is vertical pi/2 is horisontal
-        //float angle = lines[i][1];
-
-        // Change angle to the line angle
-        // range 90
-        //float line_angle = angle-CV_PI/2;
-        // 0 radians is now a horisontal line
-
-        double line_angle = (atan2((double)(lines[i][1] - lines[i][3]),
+        // Slope of the line
+        double slope = (atan((double)(lines[i][1] - lines[i][3]) /
             (double)(lines[i][0] - lines[i][2])));
-
+        
+        int is_hor_candidate = slope < delta && slope > -delta;
         // Count for horisontal line candidates
-        if(fabs(line_angle-CV_PI/2) < delta){
-            int cpos = (int)(((line_angle+CV_PI/2)*cres)+0.5);
+        if(is_hor_candidate){
+            int cpos = (int)((slope+CV_PI/2)*cres);
             counts[cpos]++;
         }
 
     }
-    
-    // Find the angle with most support
+        
     int max_pos = -1, max_val = 0;
+    
     for(int i = 0; i < arr_size; i++){
         if (counts[i] > max_val){
             max_pos = i;
@@ -100,21 +89,16 @@ void unskew(Mat & img_rgb){
     
     delete [] counts;
 
-    // Reverse the offset and convert to degrees
-    double offset_rad = max_pos/(double)cres;
-    double abs_rad = offset_rad- CV_PI/2;
-    double rotate_angle = abs_rad *57.2957795;
-
-    printf("Rotating: %f\n", rotate_angle);
+    double rotate_angle = (((double)max_pos/(double)cres)-CV_PI/2)*57.2957795;\
 
     // Find center 
     Point2f center(img_rgb.rows/2.0f, img_rgb.cols/2.0f);
     // Create rotation matrix
     Mat rot_mat = getRotationMatrix2D(center, rotate_angle, 1);
-
     // Rotate
     warpAffine( img_rgb.clone(), img_rgb, rot_mat, Size(img_rgb.cols, img_rgb.rows),
             INTER_LINEAR, BORDER_CONSTANT, Scalar(255, 255, 255)); 
 
+    printf("Rotated: %f\n", rotate_angle);
 }
 
