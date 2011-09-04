@@ -82,7 +82,7 @@ void classify(vector<vector<Point> >& contours, vector<Vec4i>& hierarchy,
 
             // Heuristic for detecting approximate square
             // Assumes paralellogram += rectangle/square
-            float delta = 0.4;
+            float delta = 0.5;
             
             if((ratio - 1) < delta)
                 element.ftype = SQUARE;
@@ -201,6 +201,9 @@ vector<feature> * segment(Mat & img_rgb){
     adaptiveThreshold(resized_img, resized_img, 255, ADAPTIVE_THRESH_MEAN_C,
             THRESH_BINARY, 7, 10);
     
+    // Display purposes
+    Mat copy_img = resized_img.clone();
+
     // Invert image so it represents edges?
     bitwise_not(resized_img, resized_img);
 
@@ -210,7 +213,7 @@ vector<feature> * segment(Mat & img_rgb){
     //dilate(resized_img, resized_img, cross_struct_el);
 
     int depth = 1;
-    int size = 17;
+    int size = 21;
 
     // Horisontal
     Mat hor_line_st(Size(size,1), CV_8U, Scalar(1));
@@ -232,16 +235,24 @@ vector<feature> * segment(Mat & img_rgb){
     morphologyEx(resized_img, ver_img, MORPH_OPEN,
             ver_line_st, Point(-1, -1), depth);
     
+
     bitwise_or(ver_img, hor_img, resized_img);
 
-    // Should discard noise here? mastks
-
+    // Dillate with cross so we get better connections
     Mat cross_struct_el = getStructuringElement(MORPH_CROSS, Size(3,3));
     dilate(resized_img, resized_img, cross_struct_el, Point(-1, -1), 1);
 
+    // Create new horisontal structuring element & dillate
+    // This takes care of dotted lines
+    Mat hor_line_st2(Size(3,1), CV_8U, Scalar(1));
+    morphologyEx(resized_img, resized_img, MORPH_OPEN,
+            hor_line_st2, Point(-1, -1), 1);
+
     // Bastardise input image so we know whats going on
-    //resize(resized_img, image, Size(img_rgb.cols, img_rgb.rows));
-    //cvtColor(image, img_rgb, CV_GRAY2RGB);
+    add(resized_img, copy_img, copy_img);
+    resize(copy_img, image, Size(img_rgb.cols, img_rgb.rows));
+    
+    cvtColor(image, img_rgb, CV_GRAY2RGB);
 
     // Find contours...
 
