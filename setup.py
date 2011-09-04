@@ -24,6 +24,7 @@ formative_cv = Extension(
         'formative_cv',
         include_dirs = [
             '/usr/include/opencv',
+            '/usr/local/include/opencv/',
             #'/usr/local/include/tesseract/',
             'formative_cv/'
         ],
