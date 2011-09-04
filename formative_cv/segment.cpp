@@ -202,7 +202,7 @@ vector<feature> * segment(Mat & img_rgb){
             THRESH_BINARY, 7, 10);
     
     // Display purposes
-    Mat copy_img = resized_img.clone();
+    
 
     // Invert image so it represents edges?
     bitwise_not(resized_img, resized_img);
@@ -249,9 +249,14 @@ vector<feature> * segment(Mat & img_rgb){
             hor_line_st2, Point(-1, -1), 1);
 
     // Bastardise input image so we know whats going on
-    add(resized_img, copy_img, copy_img);
-    resize(copy_img, image, Size(img_rgb.cols, img_rgb.rows));
-    
+    resize(resized_img, image, Size(img_rgb.cols, img_rgb.rows));
+
+    // Subtract lies from original
+    // Flood fill out lines here perhaps
+    Mat orig_gray = Mat(Size(img_rgb.cols,img_rgb.rows), CV_8UC1);
+    cvtColor(img_rgb, orig_gray, CV_RGB2GRAY);
+    add(image, orig_gray, image);
+
     cvtColor(image, img_rgb, CV_GRAY2RGB);
 
     // Find contours...
