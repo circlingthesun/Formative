@@ -30,7 +30,7 @@ formative_cv = Extension(
         ],
         libraries = [
             #'tesseract_api',
-            'ml',
+            #'ml',
             'cvaux',
             'highgui',
             'cv',
