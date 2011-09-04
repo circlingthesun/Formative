@@ -29,7 +29,6 @@ class feature_compare{
 
 
 vector <retbox> * parse(Mat & img_rgb){
-    printf("parse\n");
     unskew(img_rgb);
 
     // Segment img_rgb

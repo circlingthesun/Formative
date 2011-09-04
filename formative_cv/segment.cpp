@@ -181,36 +181,67 @@ vector<feature> * segment(Mat & img_rgb){
     resize(image, resized_img, Size(cols,rows));
 
     // Calculate the degree of smoothing required HACK!
-    int avg_pix = sum(resized_img).val[0]/(double)(cols*rows);
-    int kernel_size = 1;
+    
+    int kernel_size = 3;
+    /*int avg_pix = sum(resized_img).val[0]/(double)(cols*rows);
     if(avg_pix < 190){
         kernel_size = 7;
-    }
+    }*/
     
     // Smooth / despeckle image
     // Writeup: explain different choices
-    GaussianBlur(resized_img, resized_img, Size(kernel_size, kernel_size), 0,0);
+    // Guasian loses to much detail
+    //GaussianBlur(resized_img, resized_img, Size(kernel_size, kernel_size), 0,0);
+
+    //medianBlur(resized_img, resized_img,, 3);
 
     // Clean up via addaptive threshold
     // Why  ADAPTIVE_THRESH_MEAN_C or ADAPTIVE_THRESH_GAUSSIAN_C
     // How did I get to 7, 20?
-    adaptiveThreshold(resized_img, resized_img, 255, ADAPTIVE_THRESH_GAUSSIAN_C,
-            THRESH_BINARY, 7, 20);
+    adaptiveThreshold(resized_img, resized_img, 255, ADAPTIVE_THRESH_MEAN_C,
+            THRESH_BINARY, 7, 10);
     
     // Invert image so it represents edges?
     bitwise_not(resized_img, resized_img);
 
     // So lets connect the lines
     // We use a cross since its assumed that the image has be unskewed
+    
+    //dilate(resized_img, resized_img, cross_struct_el);
+
+    int depth = 1;
+    int size = 17;
+
+    // Horisontal
+    Mat hor_line_st(Size(size,1), CV_8U, Scalar(1));
+    Mat hor_img = Mat(Size(cols,rows), CV_8UC1);
+    morphologyEx(resized_img, hor_img, MORPH_OPEN,
+            hor_line_st, Point(-1, -1), depth);
+
+    // Vertical
+    Mat ver_line_st(Size(size,size), CV_8U, Scalar(1));
+    for(int y = 0; y < size; y++){
+        for(int x = 0; x < size; x++){
+            if(x != (int)(size/2))
+                ver_line_st.at<uchar>(y,x)=0;
+        }   
+    }
+    
+    Mat ver_img = Mat(Size(cols,rows), CV_8UC1);
+
+    morphologyEx(resized_img, ver_img, MORPH_OPEN,
+            ver_line_st, Point(-1, -1), depth);
+    
+    bitwise_or(ver_img, hor_img, resized_img);
+
+    // Should discard noise here? mastks
+
     Mat cross_struct_el = getStructuringElement(MORPH_CROSS, Size(3,3));
-    //morphologyEx(resized_img, resized_img, MORPH_BLACKHAT,
-    //        cross_struct_el, Point(-1, -1), 10);
     dilate(resized_img, resized_img, cross_struct_el, Point(-1, -1), 1);
 
-
     // Bastardise input image so we know whats going on
-    resize(resized_img, image, Size(img_rgb.cols, img_rgb.rows));
-    cvtColor(image, img_rgb, CV_GRAY2RGB);
+    //resize(resized_img, image, Size(img_rgb.cols, img_rgb.rows));
+    //cvtColor(image, img_rgb, CV_GRAY2RGB);
 
     // Find contours...
 
@@ -241,6 +272,8 @@ vector<feature> * segment(Mat & img_rgb){
     //Scalar color( 0, 255, 0 );
     //drawContours( img_rgb, contours, -1, color, 2, 8, hierarchy );
 
+    float approx_accuracy=0.02; // 0.2
+
     // Approximate contours
     vector<vector<Point> >::iterator itc=contours.begin();
     while (itc!=contours.end()) {
@@ -255,7 +288,7 @@ vector<feature> * segment(Mat & img_rgb){
         approxPolyDP(
             curve,
             approx,
-            arc_len*0.02,// was 5. accuracy of the approximation
+            arc_len*approx_accuracy,// was 5. accuracy of the approximation
             true // yes it is a closed shape
         );
 
