@@ -8,8 +8,9 @@ void classify(vector<vector<Point> >& contours, vector<Vec4i>& hierarchy,
         int width, int height, vector<feature> & result){
 
     // Some heuristics
-    int minimum_line_len = width/30;
-    int min_box_size = pow((height+width)/120, 2);
+    int minimum_line_len = width/18;
+    int minimum_box_width = width/20;
+    int min_box_size = (height*width)/(40*50);
     double horisontal_line_gradient = 0.1;
     
     // Topological info
@@ -86,7 +87,8 @@ void classify(vector<vector<Point> >& contours, vector<Vec4i>& hierarchy,
             
             if((ratio - 1) < delta)
                 element.ftype = SQUARE;
-            else
+            // Assume line 1 is horisontal
+            else if(line1 > minimum_box_width)
                 element.ftype = RECT;
         }
         
@@ -215,13 +217,13 @@ vector<feature> * segment(Mat & img_rgb){
     int depth = 1;
     int size = 21;
 
-    // Horisontal
+    // Horisontal open
     Mat hor_line_st(Size(size,1), CV_8U, Scalar(1));
     Mat hor_img = Mat(Size(cols,rows), CV_8UC1);
     morphologyEx(resized_img, hor_img, MORPH_OPEN,
             hor_line_st, Point(-1, -1), depth);
 
-    // Vertical
+    // Vertical open
     Mat ver_line_st(Size(size,size), CV_8U, Scalar(1));
     for(int y = 0; y < size; y++){
         for(int x = 0; x < size; x++){
@@ -235,7 +237,7 @@ vector<feature> * segment(Mat & img_rgb){
     morphologyEx(resized_img, ver_img, MORPH_OPEN,
             ver_line_st, Point(-1, -1), depth);
     
-
+    // Combine the vertical and horisontal components
     bitwise_or(ver_img, hor_img, resized_img);
 
     // Dillate with cross so we get better connections
@@ -248,19 +250,12 @@ vector<feature> * segment(Mat & img_rgb){
     morphologyEx(resized_img, resized_img, MORPH_OPEN,
             hor_line_st2, Point(-1, -1), 1);
 
-    // Bastardise input image so we know whats going on
+
+    // Create large copy of original morphologically alterterd image
+    // Will be used to subtract lines from image
     resize(resized_img, image, Size(img_rgb.cols, img_rgb.rows));
 
-    // Subtract lies from original
-    // Flood fill out lines here perhaps
-    Mat orig_gray = Mat(Size(img_rgb.cols,img_rgb.rows), CV_8UC1);
-    cvtColor(img_rgb, orig_gray, CV_RGB2GRAY);
-    add(image, orig_gray, image);
-
-    cvtColor(image, img_rgb, CV_GRAY2RGB);
-
-    // Find contours...
-
+    // Find contours
     vector<vector <Point> > contours;
     vector<Vec4i> hierarchy;
     findContours(
@@ -271,17 +266,6 @@ vector<feature> * segment(Mat & img_rgb){
         CV_CHAIN_APPROX_NONE
     );
 
-
-    // Scale my babies back to normal
-    for( unsigned int i=0; i< contours.size(); i++ ) {
-        vector<Point> & points = contours[i];
-
-        for( unsigned  int j=0; j< points.size(); j++ ) {
-            Point & p = points[j];
-            p.x = p.x*scale_factor+0.5;
-            p.y = p.y*scale_factor+0.5;
-        }
-    }
 
 
     // Draw contours them
@@ -319,9 +303,40 @@ vector<feature> * segment(Mat & img_rgb){
         }
     }
 
-    // Classify my babies!
+    // Scale my babies back to normal
+    for( unsigned int i=0; i< contours.size(); i++ ) {
+        vector<Point> & points = contours[i];
+
+        for( unsigned  int j=0; j< points.size(); j++ ) {
+            Point & p = points[j];
+            p.x = p.x*scale_factor+0.5;
+            p.y = p.y*scale_factor+0.5;
+        }
+    }
+
+    // Classify
     vector<feature> * result = new vector<feature>();
     classify(contours, hierarchy, rows, cols, *result);
+
+    // Flood fill out noise
+    for(vector<feature>::iterator it = result->begin(); it != result->end(); it++){
+        if(it->ftype == TEXT_BOX ){
+            Point p = it->points[0];
+            // Move the edge point onto the line
+            // Assume at least 2 pixels in size
+            // Assume point is left top
+            p.x +=1;
+            p.y +=1;
+            floodFill(image, p, Scalar(0), 0, Scalar(90), Scalar(10));
+        }
+    }
+
+    // Subtract liness from original
+    Mat orig_gray = Mat(Size(img_rgb.cols,img_rgb.rows), CV_8UC1);
+    cvtColor(img_rgb, orig_gray, CV_RGB2GRAY);
+    add(image, orig_gray, image);
+    cvtColor(image, img_rgb, CV_GRAY2RGB);
+
 
     image.release();
     resized_img.release();
