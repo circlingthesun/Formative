@@ -1,6 +1,20 @@
 import os
 
 from setuptools import setup, find_packages, Extension
+import commands
+
+
+def pkgconfig(*packages, **kw):
+    '''Parses libraries from pkg config'''
+    flag_map = {'-I': 'include_dirs', '-L': 'library_dirs', '-l': 'libraries'}
+    for token in commands.getoutput("pkg-config --libs --cflags %s" % ' '.join(packages)).split():
+        if flag_map.has_key(token[:2]):
+            kw.setdefault(flag_map.get(token[:2]), []).append(token[2:])
+        else: # throw others to extra_link_args
+            kw.setdefault('extra_link_args', []).append(token)
+    for k, v in kw.iteritems(): # remove duplicated
+        kw[k] = list(set(v))
+    return kw
 
 here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.txt')).read()
@@ -22,27 +36,15 @@ requires = [
 
 formative_cv = Extension(
         'formative_cv',
-        include_dirs = [
-            '/usr/include/opencv',
-            '/usr/local/include/opencv/',
-            #'/usr/local/include/tesseract/',
-            'formative_cv/'
-        ],
-        libraries = [
-            #'tesseract_api',
-            #'ml',
-            'cvaux',
-            'highgui',
-            'cv',
-            'cxcore'
-        ],
-        library_dirs = ['/usr/local/lib'],
-        sources = [
+        [
             'formative_cv/formative_cv.cpp',
             'formative_cv/parse.cpp',
             'formative_cv/segment.cpp',
             'formative_cv/unskew.cpp'
-        ]
+        ],
+        **pkgconfig('opencv')
+        #library_dirs = ['/usr/local/lib'],
+
     )
 
 setup(name='Formative',
@@ -72,4 +74,3 @@ setup(name='Formative',
       """,
       paster_plugins=['pyramid'],
       )
-
