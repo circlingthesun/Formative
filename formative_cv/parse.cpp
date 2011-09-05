@@ -51,9 +51,8 @@ vector <retbox> * parse(Mat & img_rgb){
     // Parse segmentation results aka turn into boxes
     for(vector<feature>::iterator it = result->begin(); it != result->end(); it++){
         feature m = *it;  
-        Rect box;      
-
-        box = boundingRect(Mat(m.points));
+     
+        Rect box = boundingRect(Mat(m.points));
 
         // Lines
         if( m.ftype == LINE){

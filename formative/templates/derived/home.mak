@@ -33,6 +33,9 @@
 <iframe src="http://www.facebook.com/plugins/likebox.php?id=141110852575588&amp;width=292&amp;connections=10&amp;stream=false&amp;header=true&amp;height=287" style="border:none; overflow:hidden; width:292px; height:287px;"></iframe>
                 
 </%def>
+<img style="float:right;padding:20px;" src="/static/images/fluffy.jpg"/>
+Welcome to Zombocom I mean Formative.<br />
+Download <a href="/static/testform.zip">this test image</a> and test out the sytem by navigating to "Create a form" in the above menu.
 
 <!-- home.mak -->
 

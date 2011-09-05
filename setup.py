@@ -21,8 +21,8 @@ README = open(os.path.join(here, 'README.txt')).read()
 CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 
 pkgstuff = pkgconfig('opencv')
-pkgstuff['include_dirs'].append('/usr/local/include/tesseract/')
-pkgstuff['libraries'].append('tesseract_api')
+#pkgstuff['include_dirs'].append('/usr/local/include/tesseract/')
+#pkgstuff['libraries'].append('tesseract_api')
 
 requires = [
     'pyramid',

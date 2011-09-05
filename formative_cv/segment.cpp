@@ -1,15 +1,15 @@
 #include "segment.h"
-#include <baseapi.h>
+//#include <baseapi.h>
 
 using namespace std;
 using namespace cv;
-using namespace tesseract;
+//using namespace tesseract;
 
 void make_structuring_el(int size, vector<Mat> & structs){
     // Structuring elements...
     for(int i = 0; i < 11; i++){
         structs[i] =
-            getStructuringElement(MORPH_CROSS, Size(size,size));;
+            getStructuringElement(MORPH_CROSS, Size(size,size));
     }
 
     int mid = size/2;
@@ -49,16 +49,51 @@ void make_structuring_el(int size, vector<Mat> & structs){
                 structs[9].at<uchar>(x,y)=0;      
         }
     }
-    /*for(int i = 0; i < structs.size(); i++){
-        printf("Struct %d\n", i);
-        for(int y = 0; y < size; y++){
-            for(int x = 0; x < size; x++){            
-                    printf("%d", structs[i].at<uchar>(x,y));
-            }
-            printf("\n");
-        }
-    }*/
 }
+
+void text_segment(Mat & image, vector<feature> & results){
+    // smear the text with an elipse
+
+    // Scale for ocr
+    // 2480 X 3508 = 300 dpi
+    /*int ref_x = 2480;
+    int ref_y = 3508;
+    double x_ra = (double)image.rows/ref_x;
+    double y_ra = (double)image.cols/ref_y;
+    double scale_factor = y_ra;
+    if(x_ra > y_ra)
+        scale_factor = x_ra;
+    int cols = image.cols/scale_factor+0.5;
+    int rows = image.rows/scale_factor+0.5;
+    Mat ocr_img = Mat(Size(cols,rows), CV_8UC1);
+    resize(image, ocr_img, Size(cols,rows));
+
+    Mat ocr_img2 = ocr_img.clone();
+    getStructuringElement(MORPH_CROSS, Size(5,5));
+
+
+    // OCR
+    TessBaseAPI api;
+    api.Init("/usr/local/share", "eng", 0, 0, false);
+    //api.SetPageSegMode(tesseract::PSM_SINGLE_WORD); // PSM_SINGLE_WORD PSM_AUTO
+    api.SetPageSegMode(tesseract::PSM_AUTO);
+    
+    api.SetImage( (const unsigned char*) ocr_img.data,
+        rows,
+        cols,
+        1, //image->depth,
+        rows
+    );
+
+    api.SetRectangle(
+    //x,y,w,h
+        0,0,rows,cols
+    );
+                   
+    char * text = api.GetUTF8Text();
+    printf("%s\n", text);*/
+}
+
 
 // Traverse contour tree and mark relevant boxess
 void classify(vector<vector<Point> >& contours, vector<Vec4i>& hierarchy,
@@ -424,41 +459,7 @@ vector<feature> * segment(Mat & img_rgb){
 
     add(image, orig_gray, image);
 
-
-
-    // Scale for ocr
-    // 2480 X 3508 = 300 dpi
-    ref_x = 2480;
-    ref_y = 3508;
-    x_ra = (double)image.rows/ref_x;
-    y_ra = (double)image.cols/ref_y;
-    scale_factor = y_ra;
-    if(x_ra > y_ra)
-        scale_factor = x_ra;
-    cols = image.cols/scale_factor+0.5;
-    Mat ocr_img = Mat(Size(cols,rows), CV_8UC1);
-    resize(image, ocr_img, Size(cols,rows));
-
-    // OCR
-    tesseract::TessBaseAPI api;
-    api.Init("/usr/local/share", "eng", 0, 0, false);
-    //api.SetPageSegMode(tesseract::PSM_SINGLE_WORD); // PSM_SINGLE_WORD PSM_AUTO
-    api.SetPageSegMode(tesseract::PSM_AUTO);
-    
-    api.SetImage( (const unsigned char*) ocr_img.data,
-        rows,
-        cols,
-        1, //image->depth,
-        rows
-    );
-
-    api.SetRectangle(
-    //x,y,w,h
-        0,0,rows,cols
-    );
-                   
-    char * text = api.GetUTF8Text();
-    printf("%s\n", text);
+    //text_segment(image, *result);
 
 
     cvtColor(image, img_rgb, CV_GRAY2RGB);

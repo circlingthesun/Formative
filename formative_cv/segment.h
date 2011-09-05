@@ -7,11 +7,12 @@
 #include <cvaux.h>
 #include <math.h>
 
-enum FType {TEXT_BOX, LINE, RECT, SQUARE, FILLED_RECT, FILLED_SQUARE, INVALID };
+enum FType {TEXT_BOX, LINE, RECT, SQUARE, FILLED_RECT, FILLED_SQUARE, TEXT, INVALID };
 
 typedef struct{
     FType ftype;
     std::vector<cv::Point> points;
+    std::string text;
 } feature;
 
 std::vector<feature> * segment(cv::Mat & image);
