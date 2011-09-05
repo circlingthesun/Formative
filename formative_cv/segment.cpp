@@ -1,9 +1,8 @@
 #include "segment.h"
-#include <baseapi.h>
+#include <tesseract/baseapi.h>
 
 using namespace std;
 using namespace cv;
-using namespace tesseract;
 
 void make_structuring_el(int size, vector<Mat> & structs){
     // Structuring elements...
@@ -89,16 +88,7 @@ void text_segment(Mat & image, vector<feature> & results){
 
     // OCR
     TessBaseAPI api;
-    api.Init("/usr/local/share", "eng", 0, 0, false);
-    //api.SetPageSegMode(tesseract::PSM_SINGLE_WORD); // PSM_SINGLE_WORD PSM_AUTO
-    api.SetPageSegMode(tesseract::PSM_AUTO);
-    
-    api.SetImage( (const unsigned char*) image.data,
-        image.rows,
-        image.cols,
-        1, //image->depth,
-        image.rows
-    );
+    api.SimpleInit("/usr/share/tesseract-ocr/tessdata", NULL, NULL);
 
     int min_area = (image.rows*image.cols)/pow(100, 2);
     int max_area = (image.rows*image.cols)/2;
@@ -109,16 +99,14 @@ void text_segment(Mat & image, vector<feature> & results){
             continue;
         Rect box = boundingRect(Mat(contours[i]));
 
-        api.SetRectangle(
-            box.x,
-            box.y,
-            box.width,
-            box.height
-        );
+        char* text = api.TesseractRect((const unsigned char*) image.data,
+                             8, // bits per pixel
+                             image.cols, //bytes_per_line,
+                             box.x, box.y, box.width, box.height);
                        
-        char * text = api.GetUTF8Text();
-        printf("%s\n", text);
-        delete text;
+
+        //printf("%s\n", text);
+        delete [] text;
 
         rectangle(image, Point(box.x, box.y),
                 Point(box.x+box.width, box.y+box.height), Scalar(0));
