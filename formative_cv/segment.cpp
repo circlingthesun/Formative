@@ -1,9 +1,9 @@
 #include "segment.h"
-//#include <baseapi.h>
+#include <baseapi.h>
 
 using namespace std;
 using namespace cv;
-//using namespace tesseract;
+using namespace tesseract;
 
 void make_structuring_el(int size, vector<Mat> & structs){
     // Structuring elements...
@@ -54,6 +54,23 @@ void make_structuring_el(int size, vector<Mat> & structs){
 void text_segment(Mat & image, vector<feature> & results){
     // smear the text with an elipse
 
+    Mat smear = image.clone();
+    // Should set to space between lines
+    Mat elipse = getStructuringElement(MORPH_RECT, Size(20,1));
+    erode(smear, smear, elipse, Point(-1, -1), 1);
+    elipse = getStructuringElement(MORPH_ELLIPSE, Size(3,3));
+    threshold(smear, smear, 200, 255, THRESH_BINARY);
+
+
+    vector<vector <Point> > contours;
+    findContours(
+        smear,
+        contours,
+        CV_RETR_TREE, // CV_RETR_CCOMP CV_RETR_EXTERNAL
+        CV_CHAIN_APPROX_NONE
+    );
+
+
     // Scale for ocr
     // 2480 X 3508 = 300 dpi
     /*int ref_x = 2480;
@@ -67,10 +84,8 @@ void text_segment(Mat & image, vector<feature> & results){
     int rows = image.rows/scale_factor+0.5;
     Mat ocr_img = Mat(Size(cols,rows), CV_8UC1);
     resize(image, ocr_img, Size(cols,rows));
-
     Mat ocr_img2 = ocr_img.clone();
-    getStructuringElement(MORPH_CROSS, Size(5,5));
-
+    */
 
     // OCR
     TessBaseAPI api;
@@ -78,20 +93,36 @@ void text_segment(Mat & image, vector<feature> & results){
     //api.SetPageSegMode(tesseract::PSM_SINGLE_WORD); // PSM_SINGLE_WORD PSM_AUTO
     api.SetPageSegMode(tesseract::PSM_AUTO);
     
-    api.SetImage( (const unsigned char*) ocr_img.data,
-        rows,
-        cols,
+    api.SetImage( (const unsigned char*) image.data,
+        image.rows,
+        image.cols,
         1, //image->depth,
-        rows
+        image.rows
     );
 
-    api.SetRectangle(
-    //x,y,w,h
-        0,0,rows,cols
-    );
-                   
-    char * text = api.GetUTF8Text();
-    printf("%s\n", text);*/
+    int min_area = (image.rows*image.cols)/pow(100, 2);
+    int max_area = (image.rows*image.cols)/2;
+
+    for(int i = 0; i < contours.size(); i++){
+        double contour_area = fabs(contourArea(Mat(contours[i])));
+        if(contour_area < min_area || contour_area > max_area)
+            continue;
+        Rect box = boundingRect(Mat(contours[i]));
+
+        api.SetRectangle(
+            box.x,
+            box.y,
+            box.width,
+            box.height
+        );
+                       
+        char * text = api.GetUTF8Text();
+        printf("%s\n", text);
+        delete text;
+
+        rectangle(image, Point(box.x, box.y),
+                Point(box.x+box.width, box.y+box.height), Scalar(0));
+    }
 }
 
 
@@ -459,7 +490,7 @@ vector<feature> * segment(Mat & img_rgb){
 
     add(image, orig_gray, image);
 
-    //text_segment(image, *result);
+    text_segment(image, *result);
 
 
     cvtColor(image, img_rgb, CV_GRAY2RGB);
