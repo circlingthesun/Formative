@@ -1,7 +1,64 @@
 #include "segment.h"
+#include <baseapi.h>
 
 using namespace std;
 using namespace cv;
+using namespace tesseract;
+
+void make_structuring_el(int size, vector<Mat> & structs){
+    // Structuring elements...
+    for(int i = 0; i < 11; i++){
+        structs[i] =
+            getStructuringElement(MORPH_CROSS, Size(size,size));;
+    }
+
+    int mid = size/2;
+
+    // Whipe out correct areas
+    for(int y = 0; y < size; y++){
+        for(int x = 0; x < size; x++){
+            // Vertical line
+            if(x != mid)
+                structs[0].at<uchar>(x,y)=0;
+            // Horisontal line
+            if(y != mid)
+                structs[1].at<uchar>(x,y)=0;
+            // Top t
+            if(y > mid)
+                structs[2].at<uchar>(x,y)=0;
+            // Bottom t
+            if(y < mid)
+                structs[3].at<uchar>(x,y)=0;
+            // Left t
+            if(x < mid)
+                structs[4].at<uchar>(x,y)=0;
+            // Right t
+            if(x > mid)
+                structs[5].at<uchar>(x,y)=0;
+            // Top left
+            if(x <= mid && y <= mid && (x != y))
+                structs[6].at<uchar>(x,y)=0;
+            // Top right
+            if(x >= mid && y <= mid && (x != y))
+                structs[7].at<uchar>(x,y)=0;
+            // Bottom left
+            if(x <= mid && y >= mid && (x != y))
+                structs[8].at<uchar>(x,y)=0;
+            // Bottom right
+            if(x >= mid && y >= mid && (x != y))
+                structs[9].at<uchar>(x,y)=0;      
+        }
+    }
+    /*for(int i = 0; i < structs.size(); i++){
+        printf("Struct %d\n", i);
+        for(int y = 0; y < size; y++){
+            for(int x = 0; x < size; x++){            
+                    printf("%d", structs[i].at<uchar>(x,y));
+            }
+            printf("\n");
+        }
+    }*/
+}
 
 // Traverse contour tree and mark relevant boxess
 void classify(vector<vector<Point> >& contours, vector<Vec4i>& hierarchy,
@@ -9,7 +66,7 @@ void classify(vector<vector<Point> >& contours, vector<Vec4i>& hierarchy,
 
     // Some heuristics
     int minimum_line_len = width/18;
-    int minimum_box_width = width/20;
+    int minimum_box_width = width/25;
     int min_box_size = (height*width)/(40*50);
     double horisontal_line_gradient = 0.1;
     
@@ -210,46 +267,64 @@ vector<feature> * segment(Mat & img_rgb){
     bitwise_not(resized_img, resized_img);
 
     // So lets connect the lines
-    // We use a cross since its assumed that the image has be unskewed
+    // Assumption that the image has been deskewed
     
-    //dilate(resized_img, resized_img, cross_struct_el);
+    //dilate(resized_img, resized_img, cross_struct_el)
 
+    // HEURISTICS
     int depth = 1;
-    int size = 21;
+    int size = 21; // was 21
 
-    // Horisontal open
-    Mat hor_line_st(Size(size,1), CV_8U, Scalar(1));
-    Mat hor_img = Mat(Size(cols,rows), CV_8UC1);
-    morphologyEx(resized_img, hor_img, MORPH_OPEN,
-            hor_line_st, Point(-1, -1), depth);
+    // Structuring elements...
+    vector<Mat> structs(11);
+    make_structuring_el(size, structs);
+    int mid = size/2;
 
-    // Vertical open
-    Mat ver_line_st(Size(size,size), CV_8U, Scalar(1));
-    for(int y = 0; y < size; y++){
-        for(int x = 0; x < size; x++){
-            if(x != (int)(size/2))
-                ver_line_st.at<uchar>(y,x)=0;
-        }   
+    // temp image used for all morph operations
+    Mat temp_img = Mat(Size(cols,rows), CV_8UC1);
+    Mat morph_img = Mat(Size(cols,rows), CV_8UC1, Scalar(0));
+
+    // Find horisontal and vertical
+    for(int i = 0; i < 2; i++){
+        morphologyEx(resized_img, temp_img, MORPH_OPEN,
+            structs[i], Point(-1, -1), depth);
+        bitwise_or(temp_img, morph_img, morph_img);
     }
-    
-    Mat ver_img = Mat(Size(cols,rows), CV_8UC1);
 
-    morphologyEx(resized_img, ver_img, MORPH_OPEN,
-            ver_line_st, Point(-1, -1), depth);
-    
+    resized_img = morph_img;
+
+    /*size = 3;
+    make_structuring_el(size, structs);
+    mid = size/2;
+
+    morph_img = Mat(Size(cols,rows), CV_8UC1, Scalar(0));
+    // Find horisontal and vertical
+    for(int i = 0; i < 11; i++){
+        morphologyEx(resized_img, temp_img, MORPH_OPEN,
+            structs[i], Point(mid, mid), depth);
+        bitwise_or(temp_img, morph_img, morph_img);
+    }
+
+    resized_img = morph_img;
+    */
     // Combine the vertical and horisontal components
-    bitwise_or(ver_img, hor_img, resized_img);
+    
 
     // Dillate with cross so we get better connections
+    // DOES NOT WORK SINCE BORDERING NOISE GETS CONNECTED
+    // INSTEAD TRY ALL CORNER TYPES
     Mat cross_struct_el = getStructuringElement(MORPH_CROSS, Size(3,3));
     dilate(resized_img, resized_img, cross_struct_el, Point(-1, -1), 1);
 
     // Create new horisontal structuring element & dillate
     // This takes care of dotted lines
-    Mat hor_line_st2(Size(3,1), CV_8U, Scalar(1));
-    morphologyEx(resized_img, resized_img, MORPH_OPEN,
-            hor_line_st2, Point(-1, -1), 1);
-
+    // TODO need better approach
+    
+    //Mat hor_line_st2(Size(1,3), CV_8U, Scalar(1));
+    //dilate(resized_img, resized_img, structs[1], Point(-1, -1), 1);
+    //morphologyEx(resized_img, resized_img, MORPH_OPEN,
+    //        hor_line_st2, Point(-1, -1), 1);
+     
 
     // Create large copy of original morphologically alterterd image
     // Will be used to subtract lines from image
@@ -325,19 +400,68 @@ vector<feature> * segment(Mat & img_rgb){
             // Move the edge point onto the line
             // Assume at least 2 pixels in size
             // Assume point is left top
+            // TODO set mask based on contour?
+            floodFill(image, p, Scalar(0), 0, Scalar(0), Scalar(0));
             p.x +=1;
             p.y +=1;
-            floodFill(image, p, Scalar(0), 0, Scalar(90), Scalar(10));
+            // TODO set mask based on contour?
+            floodFill(image, p, Scalar(0), 0, Scalar(0), Scalar(0));
         }
     }
 
     // Subtract liness from original
     Mat orig_gray = Mat(Size(img_rgb.cols,img_rgb.rows), CV_8UC1);
     cvtColor(img_rgb, orig_gray, CV_RGB2GRAY);
+
+    // TODO the treshold should be determined
+
+    // Threshold for ocr step
+    //adaptiveThreshold(orig_gray, orig_gray, 255, ADAPTIVE_THRESH_MEAN_C,
+    //        THRESH_BINARY, 7, 10);
+
+    // Despeckle for ocr
+    //medianBlur(orig_gray, orig_gray, 5);
+
     add(image, orig_gray, image);
+
+
+
+    // Scale for ocr
+    // 2480 X 3508 = 300 dpi
+    ref_x = 2480;
+    ref_y = 3508;
+    x_ra = (double)image.rows/ref_x;
+    y_ra = (double)image.cols/ref_y;
+    scale_factor = y_ra;
+    if(x_ra > y_ra)
+        scale_factor = x_ra;
+    cols = image.cols/scale_factor+0.5;
+    Mat ocr_img = Mat(Size(cols,rows), CV_8UC1);
+    resize(image, ocr_img, Size(cols,rows));
+
+    // OCR
+    tesseract::TessBaseAPI api;
+    api.Init("/usr/local/share", "eng", 0, 0, false);
+    //api.SetPageSegMode(tesseract::PSM_SINGLE_WORD); // PSM_SINGLE_WORD PSM_AUTO
+    api.SetPageSegMode(tesseract::PSM_AUTO);
+    
+    api.SetImage( (const unsigned char*) ocr_img.data,
+        rows,
+        cols,
+        1, //image->depth,
+        rows
+    );
+
+    api.SetRectangle(
+    //x,y,w,h
+        0,0,rows,cols
+    );
+                   
+    char * text = api.GetUTF8Text();
+    printf("%s\n", text);
+
+
     cvtColor(image, img_rgb, CV_GRAY2RGB);
-
-
     image.release();
     resized_img.release();
     return result;

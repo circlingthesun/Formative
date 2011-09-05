@@ -20,6 +20,10 @@ here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.txt')).read()
 CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 
+pkgstuff = pkgconfig('opencv')
+pkgstuff['include_dirs'].append('/usr/local/include/tesseract/')
+pkgstuff['libraries'].append('tesseract_api')
+
 requires = [
     'pyramid',
     'WebError',
@@ -42,9 +46,7 @@ formative_cv = Extension(
             'formative_cv/segment.cpp',
             'formative_cv/unskew.cpp'
         ],
-        **pkgconfig('opencv')
-        #library_dirs = ['/usr/local/lib'],
-
+        **pkgstuff
     )
 
 setup(name='Formative',

@@ -9,10 +9,6 @@
 #include "parse.h"
 
 //#include <baseapi.h>
-
-//#include <highgui.h>
-
-
 //#include "leptonica/allheaders.h"
 using namespace std;
 using namespace cv;
