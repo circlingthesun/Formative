@@ -48,6 +48,9 @@ vector <retbox> * parse(Mat & img_rgb){
         
     vector <retbox> * ret = new vector<retbox>();
 
+    retbox logo;
+    double l_area = 0;
+
     // Parse segmentation results aka turn into boxes
     for(vector<feature>::iterator it = result->begin(); it != result->end(); it++){
         feature m = *it;  
@@ -72,10 +75,20 @@ vector <retbox> * parse(Mat & img_rgb){
             ret->push_back(retbox{box.x, box.y, box.width, box.height, m.ftype, m.text});
         }
         // LOGO
-        else if(m.ftype == LOGO ){
-            ret->push_back(retbox{box.x, box.y, box.width, box.height, m.ftype, m.text});
+        else if(m.ftype == LOGO){
+            double area = fabs(contourArea(Mat(m.points)));
+            if(l_area < area){
+                logo = retbox{box.x, box.y, box.width, box.height, m.ftype, string("__LOGO__")};
+                l_area = area;
+            }
         }
+
+
+
     }
+
+    if(l_area != 0)
+        ret->push_back(logo);
     
     return ret;
 }

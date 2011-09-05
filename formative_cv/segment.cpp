@@ -99,7 +99,7 @@ void text_segment(Mat & image, vector<feature> & results){
     TessBaseAPI api;
     api.Init("/usr/local/share", "eng", 0, 0, false);
     api.SetPageSegMode(PSM_SINGLE_LINE);
-    //api.SetAccuracyVSpeed(AVS_MOST_ACCURATE);
+    api.SetAccuracyVSpeed(AVS_MOST_ACCURATE);
 
     api.SetVariable("tessedit_char_whitelist",
             "abcdefghijklmnopqrstuvwxyz\
@@ -114,7 +114,7 @@ void text_segment(Mat & image, vector<feature> & results){
         ocr_img.step1()
     );
 
-    int min_area = (ocr_img.rows*ocr_img.cols)/pow(100, 2);
+    int min_area = (ocr_img.rows*ocr_img.cols)/pow(140, 2);
     int max_area = (ocr_img.rows*ocr_img.cols)/2;
 
     for(int i = 0; i < contours.size(); i++){
