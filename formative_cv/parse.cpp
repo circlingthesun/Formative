@@ -56,22 +56,25 @@ vector <retbox> * parse(Mat & img_rgb){
 
         // Lines
         if( m.ftype == LINE){
-            ret->push_back(retbox{box.x, box.y-30, box.width, 30, m.ftype});
+            ret->push_back(retbox{box.x, box.y-30, box.width, 30, m.ftype, m.text});
             //line(img_rgb, *(poly.begin()),*(poly.end()-1),cv::Scalar(20),2);
-
         }
         // Rects
         else if(m.ftype == RECT ){
-            ret->push_back(retbox{box.x, box.y, box.width, box.height, m.ftype});
+            ret->push_back(retbox{box.x, box.y, box.width, box.height, m.ftype, m.text});
         }
         // Squares
         else if(m.ftype == SQUARE ){
-            ret->push_back(retbox{box.x, box.y, box.width, box.height, m.ftype});
+            ret->push_back(retbox{box.x, box.y, box.width, box.height, m.ftype, m.text});
         }
         // TEXT_BOX
-        /*else if(m.ftype == TEXT_BOX ){
-            ret->push_back(retbox{box.x, box.y, box.width, box.height, m.ftype});
-        }*/
+        else if(m.ftype == TEXT ){
+            ret->push_back(retbox{box.x, box.y, box.width, box.height, m.ftype, m.text});
+        }
+        // LOGO
+        else if(m.ftype == LOGO ){
+            ret->push_back(retbox{box.x, box.y, box.width, box.height, m.ftype, m.text});
+        }
     }
     
     return ret;

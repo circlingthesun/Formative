@@ -2,6 +2,7 @@
 #define INFORM_PARSE
 
 #include <vector>
+#include <string>
 #include <cv.h>
 
 typedef struct{
@@ -10,6 +11,7 @@ typedef struct{
     int w;
     int h;
     int type;
+    std::string text;
 } retbox;
 
 

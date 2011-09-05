@@ -86,6 +86,7 @@
       this.w = 1; // default width and height?
       this.h = 1;
       this.fill = '#444444';
+      this.text = '';
     }
 
     // New methods on the Box class
@@ -158,18 +159,24 @@
           }
         }
         
+        // Draw text
+        context.textBaseline = 'bottom';
+        context.font = "bold 11px sans-serif";
+        context.fillStyle = 'rgba(255,255,255,1.0)';
+        context.fillText(this.text, this.x, this.y+this.h);
       } // end draw
 
     }
 
     //Initialize a new Box, add it, and invalidate the canvas
-    function addRect(x, y, w, h, fill) {
+    function addRect(x, y, w, h, fill, text) {
       var rect = new Box2;
       rect.x = x;
       rect.y = y;
       rect.w = w
       rect.h = h;
       rect.fill = fill;
+      rect.text = text;
       boxes2.push(rect);
       invalidate();
     }
@@ -227,36 +234,36 @@
       
       // add custom initialization here:
 
-      var box_list = ${str(box_list)};
+      var box_list = ${str(box_list) | n};
       
       for(var i = 0; i < box_list.length; i++){
             box = box_list[i];
             colour = '';
             switch(box[4]){
-                case 0: // text
+                case 0: // LINE
                     colour = 'rgba(0,205,0,0.7)'; // Green
                     break;
-                case 1: // line
+                case 1: // RECT
                     colour = 'rgba(2,165,165,0.7)'; // Green/blue
                     break;
-                case 2: // rect
+                case 2: // SQUARE
                     colour = 'rgba(150,150,250,0.7)'; // Purle
                     break;
-                case 3: // square
-                    colour = 'rgba(255,0,0,0.7)'; // Red
+                case 3: // TEXT
+                    colour = 'rgba(0,0,0,0.8)'; // Red
                     break;
-                case 4: // filled rect
-                    colour = 'rgba(0,205,0,0.7)'; // Green
+                case 4: // LOGO
+                    colour = 'rgba(0,0,205,0.7)'; // BLUE
                     break;
                 case 5: // text
-                    colour = 'rgba(50,50,50,0.7)'; // Gay
+                    colour = 'rgba(50,50,50,0.7)'; // Gray
                     break;
                 case 6: // filled square
                     colour = 'rgba(0,205,0,0.7)'; // Green
                     break;
                 
             }
-            addRect(box[0]*scale_factor, box[1]*scale_factor, box[2]*scale_factor, box[3]*scale_factor, colour);
+            addRect(box[0]*scale_factor, box[1]*scale_factor, box[2]*scale_factor, box[3]*scale_factor, colour, box[5]);
       }
 
     }
@@ -460,7 +467,7 @@
       // so I left them as vars in case someone wanted to make them args for something and copy this code
       var width = 20;
       var height = 20;
-      addRect(mx - (width / 2), my - (height / 2), width, height, 'rgba(0,205,0,0.7)');
+      addRect(mx - (width / 2), my - (height / 2), width, height, 'rgba(0,205,0,0.7)', '');
     }
 
 

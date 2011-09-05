@@ -129,7 +129,8 @@ formative_cv_parse(PyObject *self, PyObject *args)
     // Create boxes
     for(int i=0; i < rb->size(); i++){
         retbox box = rb->at(i);
-        PyObject* l = Py_BuildValue("[i,i,i,i,i]", box.x,box.y,box.w,box.h,box.type);
+        PyObject* l = Py_BuildValue("[i,i,i,i,i,s]",
+                box.x,box.y,box.w,box.h,box.type,box.text.c_str());
         //printf("%d %d %d %d %d\n", box.x,box.y,box.w,box.h,box.type);
         PyList_SetItem(return_list, i, l);
     }

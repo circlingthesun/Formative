@@ -1,8 +1,14 @@
-#include "segment.h"
+//#include <cstring>
+#include <boost/algorithm/string.hpp>
 #include <tesseract/baseapi.h>
+#include <tesseract/tesseractmain.h>
+#include "segment.h"
 
+
+using namespace boost;
 using namespace std;
 using namespace cv;
+using namespace tesseract;
 
 void make_structuring_el(int size, vector<Mat> & structs){
     // Structuring elements...
@@ -53,9 +59,27 @@ void make_structuring_el(int size, vector<Mat> & structs){
 void text_segment(Mat & image, vector<feature> & results){
     // smear the text with an elipse
 
-    Mat smear = image.clone();
+    // Scale for ocr
+    // 2480 X 3508 = 300 dpi
+    int ref_x = 2480*1.5;
+    int ref_y = 3508*1.5;
+    double x_ra = (double)image.rows/ref_x;
+    double y_ra = (double)image.cols/ref_y;
+    double scale_factor = y_ra;
+    if(x_ra > y_ra)
+        scale_factor = x_ra;
+    int cols = image.cols/scale_factor+0.5;
+    int rows = image.rows/scale_factor+0.5;
+    Mat ocr_img = Mat(Size(cols,rows), CV_8UC1);
+    resize(image, ocr_img, Size(cols,rows));
+
+    // Note should perhaps only scale cut out bits of image
+    // Need to set accuracy threshold
+
+    Mat smear = ocr_img.clone();
+
     // Should set to space between lines
-    Mat elipse = getStructuringElement(MORPH_RECT, Size(20,1));
+    Mat elipse = getStructuringElement(MORPH_RECT, Size(40,1));
     erode(smear, smear, elipse, Point(-1, -1), 1);
     elipse = getStructuringElement(MORPH_ELLIPSE, Size(3,3));
     threshold(smear, smear, 200, 255, THRESH_BINARY);
@@ -67,31 +91,31 @@ void text_segment(Mat & image, vector<feature> & results){
         contours,
         CV_RETR_TREE, // CV_RETR_CCOMP CV_RETR_EXTERNAL
         CV_CHAIN_APPROX_NONE
-    );
+    );    
 
-
-    // Scale for ocr
-    // 2480 X 3508 = 300 dpi
-    /*int ref_x = 2480;
-    int ref_y = 3508;
-    double x_ra = (double)image.rows/ref_x;
-    double y_ra = (double)image.cols/ref_y;
-    double scale_factor = y_ra;
-    if(x_ra > y_ra)
-        scale_factor = x_ra;
-    int cols = image.cols/scale_factor+0.5;
-    int rows = image.rows/scale_factor+0.5;
-    Mat ocr_img = Mat(Size(cols,rows), CV_8UC1);
-    resize(image, ocr_img, Size(cols,rows));
-    Mat ocr_img2 = ocr_img.clone();
-    */
+    smear.release();
 
     // OCR
     TessBaseAPI api;
-    api.SimpleInit("/usr/share/tesseract-ocr/tessdata", NULL, NULL);
+    api.Init("/usr/local/share", "eng", 0, 0, false);
+    api.SetPageSegMode(PSM_SINGLE_LINE);
+    api.SetAccuracyVSpeed(AVS_MOST_ACCURATE);
 
-    int min_area = (image.rows*image.cols)/pow(100, 2);
-    int max_area = (image.rows*image.cols)/2;
+    api.SetVariable("tessedit_char_whitelist",
+            "abcdefghijklmnopqrstuvwxyz\
+            ABCDEFGHIJKLMNOPQRSTUVWXYZ\
+            0123456789()\
+            .:\"/?!&*+-=$#");
+    
+    api.SetImage( (const unsigned char*) ocr_img.data,
+        ocr_img.cols,
+        ocr_img.rows,
+        1, //image->depth,
+        ocr_img.step1()
+    );
+
+    int min_area = (ocr_img.rows*ocr_img.cols)/pow(100, 2);
+    int max_area = (ocr_img.rows*ocr_img.cols)/2;
 
     for(int i = 0; i < contours.size(); i++){
         double contour_area = fabs(contourArea(Mat(contours[i])));
@@ -99,18 +123,46 @@ void text_segment(Mat & image, vector<feature> & results){
             continue;
         Rect box = boundingRect(Mat(contours[i]));
 
-        char* text = api.TesseractRect((const unsigned char*) image.data,
-                             8, // bits per pixel
-                             image.cols, //bytes_per_line,
-                             box.x, box.y, box.width, box.height);
-                       
+        api.SetRectangle(
+            box.x-2,
+            box.y-2,
+            box.width+2,
+            box.height+2
+        );
+                 
+        char * output = api.GetUTF8Text();
+        string text = output;
+        delete [] output;
+        trim(text);
+        printf("Confidence: %d ...", api.MeanTextConf());
+        printf("%s\n", text.c_str());
+        
 
-        //printf("%s\n", text);
-        delete [] text;
+        // Scale back to normal
 
-        rectangle(image, Point(box.x, box.y),
-                Point(box.x+box.width, box.y+box.height), Scalar(0));
+        vector<Point> & points = contours[i];
+
+        for( unsigned  int j=0; j< points.size(); j++ ) {
+            Point & p = points[j];
+            p.x = p.x*scale_factor+0.5;
+            p.y = p.y*scale_factor+0.5;
+        }
+        
+
+        box = boundingRect(Mat(contours[i]));
+
+
+        FType t = TEXT;
+        if(text.size() == 0)        
+            t  = LOGO;
+
+        results.push_back(feature{t,contours[i],text});
+
+        //rectangle(image, Point(box.x, box.y),
+        //        Point(box.x+box.width, box.y+box.height), Scalar(0));
     }
+
+    ocr_img.release();
 }
 
 
@@ -226,7 +278,7 @@ void classify(vector<vector<Point> >& contours, vector<Vec4i>& hierarchy,
 
         // Assume things that have more points are text
         else{
-            element.ftype = TEXT_BOX;
+            element.ftype = UNCLASSIFIED;
             element.points = cont;
         }
 
@@ -240,7 +292,7 @@ void classify(vector<vector<Point> >& contours, vector<Vec4i>& hierarchy,
         // next itteration
 
         // Dont recurse into text contour
-        if(parent_type != TEXT_BOX){
+        if(parent_type != UNCLASSIFIED){
             if(child > 0){
                 current = child;
                 level++;
@@ -449,7 +501,7 @@ vector<feature> * segment(Mat & img_rgb){
 
     // Flood fill out noise
     for(vector<feature>::iterator it = result->begin(); it != result->end(); it++){
-        if(it->ftype == TEXT_BOX ){
+        if(it->ftype == UNCLASSIFIED ){
             Point p = it->points[0];
             // Move the edge point onto the line
             // Assume at least 2 pixels in size
@@ -469,12 +521,12 @@ vector<feature> * segment(Mat & img_rgb){
 
     // TODO the treshold should be determined
 
-    // Threshold for ocr step
-    //adaptiveThreshold(orig_gray, orig_gray, 255, ADAPTIVE_THRESH_MEAN_C,
-    //        THRESH_BINARY, 7, 10);
-
     // Despeckle for ocr
     //medianBlur(orig_gray, orig_gray, 5);
+
+    // Threshold for ocr step
+    //adaptiveThreshold(orig_gray, orig_gray, 255, ADAPTIVE_THRESH_MEAN_C,
+    //        THRESH_BINARY, 7, 30);
 
     add(image, orig_gray, image);
 

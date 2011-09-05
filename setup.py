@@ -21,23 +21,8 @@ README = open(os.path.join(here, 'README.txt')).read()
 CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 
 pkgstuff = pkgconfig('opencv')
-#pkgstuff['include_dirs'].append('/usr/local/include/tesseract/')
-#pkgstuff['libraries'].append('tesseract_api')
-pkgstuff['extra_objects'] = [
-    '/usr/lib/libtesseract_ccstruct.a',
-    '/usr/lib/libtesseract_classify.a',
-    '/usr/lib/libtesseract_dict.a',
-    '/usr/lib/libtesseract_image.a',
-    '/usr/lib/libtesseract_pageseg.a',
-    '/usr/lib/libtesseract_training.a',
-    '/usr/lib/libtesseract_wordrec.a',
-    '/usr/lib/libtesseract_ccutil.a',
-    '/usr/lib/libtesseract_cutil.a',
-    '/usr/lib/libtesseract_full.a',
-    '/usr/lib/libtesseract_main.a',
-    '/usr/lib/libtesseract_textord.a',
-    '/usr/lib/libtesseract_viewer.a'
-]
+pkgstuff['include_dirs'].append('/usr/local/include/tesseract/')
+pkgstuff['libraries'].append('tesseract_api')
 
 requires = [
     'pyramid',
