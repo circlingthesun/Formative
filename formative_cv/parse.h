@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <cv.h>
+#include "segment.h"
 
 typedef struct{
     int x;
@@ -15,7 +16,7 @@ typedef struct{
 } retbox;
 
 
-std::vector <retbox> * parse(cv::Mat & image);
+void parse(std::vector<Feature> & features);
 
 inline double edist(int x1, int y1, int x2, int y2){
     return sqrt(pow(x2-x1,2) + pow(y2-y1,2));

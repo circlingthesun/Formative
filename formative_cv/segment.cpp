@@ -3,6 +3,7 @@
 #include <tesseract/baseapi.h>
 #include <tesseract/tesseractmain.h>
 #include "segment.h"
+#include "unskew.h"
 
 
 using namespace boost;
@@ -56,7 +57,7 @@ void make_structuring_el(int size, vector<Mat> & structs){
     }
 }
 
-void text_segment(Mat & image, vector<feature> & results){
+void text_segment(Mat & image, vector<Feature> & results){
     // smear the text with an elipse
 
     // Scale for ocr
@@ -155,8 +156,9 @@ void text_segment(Mat & image, vector<feature> & results){
         FType t = TEXT;
         if(text.size() == 0)        
             t  = LOGO;
-
-        results.push_back(feature{t,contours[i],text});
+        
+        if(api.MeanTextConf() > 20)
+            results.push_back(Feature(t,box,contours[i],text));
 
         //rectangle(image, Point(box.x, box.y),
         //        Point(box.x+box.width, box.y+box.height), Scalar(0));
@@ -166,37 +168,61 @@ void text_segment(Mat & image, vector<feature> & results){
 }
 
 
-// Traverse contour tree and mark relevant boxess
+// Depth first traverse of contour tree
+// Classify contours
 void classify(vector<vector<Point> >& contours, vector<Vec4i>& hierarchy,
-        int width, int height, vector<feature> & result){
+        int width, int height, vector<Feature> & result){
 
-    // Some heuristics
+    // HEURISTICS
+    // Determines the smallest and biggest elements accepted
+    // Function of the document size
     int minimum_line_len = width/18;
     int minimum_box_width = width/25;
     int min_box_size = (height*width)/(40*50);
     double horisontal_line_gradient = 0.1;
+
+    // HEURISTIC
+    // Determines how much sides of a "Square" may differ
+    // Ratio - 1 = delta
+    // Assumes paralellogram += rectangle/square
+    float delta = 0.5;
     
     // Topological info
     int parent = -1;
-    FType parent_type = RECT;
-
+    int child = -1;
+    int next = -1;
     int current = 0;
     int level = 0;
 
-    int child;
-    int next;
+    FType parent_type = RECT;
+
+    // Topological info in terms of features
+    Feature * fparent = NULL;
+    Feature * fprev = NULL;
+
+    Feature * fchild = NULL;
+    Feature * fnext = NULL;
+    
+
     bool backtracking = false;
 
     // Traverse countours at same level
     while(current >= 0){
-        //printf("Level %d\n", level);
 
         // Set child & sibling & parent
         child = hierarchy[current][2];
         next = hierarchy[current][0];
         parent = hierarchy[current][3];
 
-        // When back tracking up the tree
+        // Feature tree backtrack
+        if(backtracking){
+            if(fparent != NULL){
+                fprev = fparent;
+                fparent = fparent->parent;
+            }
+        }
+
+        // When backtracking up the tree
         if(backtracking){
             if(next > 0){
                 current = next;
@@ -209,20 +235,24 @@ void classify(vector<vector<Point> >& contours, vector<Vec4i>& hierarchy,
             continue;
         }
 
+
         // Set current contour
         vector<Point> & cont = contours[current];
 
-        // New feature to be added to results
-        feature element;
+        // New Feature to be added to results
+        Feature element;
         element.points = cont;
-        element.ftype = INVALID;
+
+        // Set pointers for feature tree
+        element.prev = fprev;
+        element.parent = fparent;
 
         // Current contour area
         double contour_area = fabs(contourArea(Mat(cont)));
 
         // Squares and rectangles have 4 points
         if(cont.size()==4 && contour_area > min_box_size){
-            //printf("BOX\n");
+
             // Check for square
             Point pt[4];
             for(int i=0;i<4;i++)
@@ -234,7 +264,7 @@ void classify(vector<vector<Point> >& contours, vector<Vec4i>& hierarchy,
             float line2 = sqrt( (float)pow((pt[1]).y-(pt[2]).y, 2) +
                     (float)pow((pt[1]).x-(pt[2]).x, 2) ); 
             
-            // Biggest line is line1
+            // Set longest line as line1
             if(line2>line1){
                 float tmpline = line1;
                 line1 = line2;
@@ -244,10 +274,6 @@ void classify(vector<vector<Point> >& contours, vector<Vec4i>& hierarchy,
             // Ratio of the two lines
             float ratio = line1/line2;
 
-            // Heuristic for detecting approximate square
-            // Assumes paralellogram += rectangle/square
-            float delta = 0.5;
-            
             if((ratio - 1) < delta)
                 element.ftype = SQUARE;
             // Assume line 1 is horisontal
@@ -276,7 +302,7 @@ void classify(vector<vector<Point> >& contours, vector<Vec4i>& hierarchy,
             }
         }
 
-        // Assume things that have more points are text
+        // Assume things that have more points are probably text
         else{
             element.ftype = UNCLASSIFIED;
             element.points = cont;
@@ -284,14 +310,40 @@ void classify(vector<vector<Point> >& contours, vector<Vec4i>& hierarchy,
 
         // Dont add text inside text
         if(element.ftype != INVALID){
+            element.box = boundingRect(Mat(cont));
             result.push_back(element);
+        
+            // Set variables in feature tree
+
+            // If child was just pushed
+            if(fprev == NULL && fparent != NULL){
+                fparent->child = &result.back();
+                printf("child pushed\n");
+            }
+            // If sibling was just pushed
+            if(fprev != NULL && fprev->next == NULL){
+                fprev->next = &result.back();
+                printf("sibling pushed\n");
+            }
+
+            // If is child is going to be pushed
+            if(child > 0){
+                fparent = &result.back();
+                fprev = NULL;
+                printf("about to child push\n");
+            }
+            // If a sibling is going to be pushed
+            else if(next > 0){
+                fprev = &result.back();
+                printf("about to sibling push\n");
+            }
         }
-         
+        
         // All the work is done for the contour
         // Here we decide how to procede on the
         // next itteration
 
-        // Dont recurse into text contour
+        // Set variables for next itteration
         if(parent_type != UNCLASSIFIED){
             if(child > 0){
                 current = child;
@@ -309,15 +361,14 @@ void classify(vector<vector<Point> >& contours, vector<Vec4i>& hierarchy,
         else{
             current = parent;
             backtracking = true;
-            printf("parent from box\n");
         }
 
     }    
 
 }
 
-vector<feature> * segment(Mat & img_rgb){
-
+void segment(Mat & img_rgb, vector<Feature> & features){
+    unskew(img_rgb);
     // Create new gray scale image
     Mat image = Mat(Size(img_rgb.cols, img_rgb.rows), CV_8UC1);
     cvtColor(img_rgb,image,CV_RGB2GRAY);
@@ -365,11 +416,9 @@ vector<feature> * segment(Mat & img_rgb){
     // How did I get to 7, 20?
     adaptiveThreshold(resized_img, resized_img, 255, ADAPTIVE_THRESH_MEAN_C,
             THRESH_BINARY, 7, 10);
-    
-    // Display purposes
-    
 
-    // Invert image so it represents edges?
+    
+    // Invert image so white represents an edge
     bitwise_not(resized_img, resized_img);
 
     // So lets connect the lines
@@ -479,8 +528,8 @@ vector<feature> * segment(Mat & img_rgb){
             ++itc;
         }
         else{
-            // Eliminate too shortcontours
-            itc= contours.erase(itc);
+            // Eliminate short contours
+            itc = contours.erase(itc);
         }
     }
 
@@ -496,11 +545,10 @@ vector<feature> * segment(Mat & img_rgb){
     }
 
     // Classify
-    vector<feature> * result = new vector<feature>();
-    classify(contours, hierarchy, rows, cols, *result);
+    classify(contours, hierarchy, rows, cols, features);
 
     // Flood fill out noise
-    for(vector<feature>::iterator it = result->begin(); it != result->end(); it++){
+    for(vector<Feature>::iterator it = features.begin(); it != features.end(); it++){
         if(it->ftype == UNCLASSIFIED ){
             Point p = it->points[0];
             // Move the edge point onto the line
@@ -530,12 +578,11 @@ vector<feature> * segment(Mat & img_rgb){
 
     add(image, orig_gray, image);
 
-    text_segment(image, *result);
+    text_segment(image, features);
 
 
     cvtColor(image, img_rgb, CV_GRAY2RGB);
     image.release();
     resized_img.release();
-    return result;
 }
 
