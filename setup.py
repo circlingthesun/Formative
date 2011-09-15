@@ -23,6 +23,7 @@ CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 pkgstuff = pkgconfig('opencv')
 pkgstuff['include_dirs'].append('/usr/local/include/tesseract/')
 pkgstuff['libraries'].append('tesseract_api')
+pkgstuff['extra_compile_args'] = ['-g',]
 
 requires = [
     'pyramid',

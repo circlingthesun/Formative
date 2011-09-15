@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <vector>
+#include <list>
 #include <iostream>
 #include <cv.h>
 #include <Python.h>
@@ -28,7 +29,8 @@ formative_cv_parse(PyObject *self, PyObject *args)
     Mat image = Mat( Size(w,h), CV_8UC3, imagedata);
 
     // Magic happens here
-    vector<Feature> features;
+    list<Feature> features;
+    
     segment(image, features);
     parse(features);
     
@@ -40,12 +42,14 @@ formative_cv_parse(PyObject *self, PyObject *args)
 
 
     // Create boxes
-    for(unsigned int i=0; i < features.size(); i++){
-        Feature f = features[i];
+    int i = 0;
+    list<Feature>::iterator it;
+    for(it = features.begin(); it != features.end(); it++){
+        Feature & f = *it;
         PyObject* l = Py_BuildValue("[i,i,i,i,i,s]",
-                f.box.x,f.box.y,f.box.width,f.box.height,f.ftype,f.text.c_str());
+                f.box.x,f.box.y,f.box.width,f.box.height,f.type,f.text.c_str());
         //printf("%d %d %d %d %d\n", box.x,box.y,box.w,box.h,box.type);
-        PyList_SetItem(return_list, i, l);
+        PyList_SetItem(return_list, i++, l);
     }
     
 

@@ -1,63 +1,55 @@
 #include <queue>
 #include <algorithm>
+#include <stdio.h>
 #include <float.h>
+#include <list>
 #include <cvaux.h>
 #include "segment.h"
 #include "parse.h"
+#include "reductions.h"
+
 
 
 using namespace std;
 using namespace cv;
 
-// Compares features
-
-class feature_compare{
-    public:
-    feature_compare(){}
-    
-    bool operator ()(const Feature & first, const Feature & second) const{
-
-        Rect box1 = boundingRect(Mat(first.points));
-        Rect box2 = boundingRect(Mat(second.points));
-
-        if(box1.y+box1.height == box2.y+box2.height)
-            return box1.x < box2.x;
-
-        return box1.y+box1.height < box2.y+box2.height;
-    }
-};
-
-void reduce_boxes(vector<Feature> & features){
-    Feature * current = &features[0];
-    bool backtracking = false;
-    while(current != NULL){
-        printf("%d\n", current->ftype);
-        if(current->child != NULL && !backtracking){
-            printf("child\n");
-            current = current->child;
-        }
-        else if(current->next != NULL){
-            printf("next\n");
-            backtracking = false;
-        }
-        else if(current->parent != NULL){
-            printf("backtrack\n");
-            current = current->parent;
-            backtracking = true;
-        }
-        else{
-            break;
-        }
-    }
-}
-
-void parse(vector<Feature> & features){
+void parse(list<Feature> & features){
     
     // Sort results from top left to bottom right
-    reduce_boxes(features);
-
-    sort(features.begin(), features.end(), feature_compare());
     
+    tree_visitor(features, reduce_double_features);
+    tree_visitor(features, reduce_boxes);
+    tree_visitor(features, tag);
+    //tree_visitor(features, containment);
+
+    
+    /*for(list<Feature>::iterator it = features.begin(); it != features.end(); it++){
+      
+        // Stamp id
+        char tmp[100];
+        for(int x=0;x<100;x++){tmp[x]='\0';}
+
+        sprintf ( tmp, "%d", it->id);
+        it->text += string() + " id= " + tmp;
+
+        for(int x=0;x<100;x++){tmp[x]='\0';}
+        if(it->parent != NULL)
+            sprintf ( tmp, "%d", it->parent->id);
+        it->text += string() + ", p=" + tmp;
+
+        for(int x=0;x<100;x++){tmp[x]='\0';}
+        if(it->child != NULL)
+            sprintf ( tmp, "%d", it->child->id);
+        it->text += string() + ", c=" + tmp;
+
+        for(int x=0;x<100;x++){tmp[x]='\0';}
+        if(it->next != NULL)
+            sprintf ( tmp, "%d", it->next->id);
+        it->text += string() + ", n=" + tmp;
+
+    }*/
+
+
     // Set up heuristic variables
     /*double dist_weight = 0.2;
     double logo_rank = 0;
@@ -65,17 +57,17 @@ void parse(vector<Feature> & features){
     int m_y = img_rgb.rows/2;
     int m_x = img_rgb.cols/2;
     double max_dist = edist(m_x, m_y);*/
-        
+
     vector <retbox> * ret = new vector<retbox>();
 
     Feature * logo;
     double l_area = 0;
 
     // Find logo
-    for(vector<Feature>::iterator it = features.begin(); it != features.end(); it++){
+    for(list<Feature>::iterator it = features.begin(); it != features.end(); it++){
       
-        if(it->ftype == LOGO){
-            it->ftype = UNCLASSIFIED;
+        if(it->type == LOGO){
+            it->type = UNCLASSIFIED;
             double area = fabs(contourArea(Mat(it->points)));
             if(l_area < area){
                 logo = &*it;
@@ -86,21 +78,22 @@ void parse(vector<Feature> & features){
     }
 
     if(l_area != 0){
-        logo->ftype = LOGO;
+        logo->type = LOGO;
         logo->text = "__LOGO__";
     }
-    
+   
 
     //HEURISTICS
     int max_y_delta = 15;
     int box_count = 0;
     int box_y = 0;
     bool reducing = false;
+
     // Convert boxes to rectangles
-    for(vector<Feature>::iterator it = features.begin(); it != features.end(); it++){
+    /*for(list<Feature>::iterator it = features.begin(); it != features.end(); it++){
         Feature & f = *it;
 
-        if(f.ftype == SQUARE){
+        if(f.type == SQUARE){
             box_count++;
             if(box_count == 1){
                 box_y = f.box.height + f.box.y;
@@ -108,14 +101,14 @@ void parse(vector<Feature> & features){
             }
         }
 
-        if((reducing && ( f.ftype != SQUARE) ||
+        if((reducing && ( f.type != SQUARE) ||
                 abs(box_y - (f.box.height + f.box.y)) > max_y_delta) ){
 
             if(box_count > 1){
                 (it-1)->box.width = (it-1)->box.x + (it-1)->box.width -
                         (it-box_count)->box.x;
                 (it-1)->box.x = (it-box_count)->box.x;
-                (it-1)->ftype = RECT;
+                (it-1)->type = RECT;
                 (it-1)->input_limit = box_count;
                 features.erase(it-box_count, it-2);
             }
@@ -124,19 +117,20 @@ void parse(vector<Feature> & features){
             
         }
             
-    }
+    }*/
 
 
     // Calculate mode for font height...
     // Should look at stdev
 
-    float avg_text_size = 0;
+    /*float avg_text_size = 0;
     vector<int> text_height = vector<int>(200);
-    for(int i = 0; i < features.size(); i++){
-        if(features[i].ftype == TEXT && features[i].box.height < 200){
-            text_height[features[i].box.height]++;
+    list<Feature>::iterator it;
+    for(it = features.begin(); it != features.end(); it++){
+        if(it->type == TEXT && it->box.height < 200){
+            text_height[it->box.height]++;
         }
-        avg_text_size += features[i].box.height;
+        avg_text_size += it->box.height;
     }
 
     avg_text_size/=features.size();
@@ -154,57 +148,60 @@ void parse(vector<Feature> & features){
 
     // HEURISTIC
     // Neighbourhood that needs to be searched for text
+    
     int range = 20;
-
+*/
     // Bind text to box
-    for(int i = 0; i < features.size(); i++){
+    /*for(it = features.begin(); it != features.end(); it++){
      
-        if(features[i].ftype == TEXT && approx_label_size+20 > features[i].box.height
-            && approx_label_size-20 < features[i].box.height){
+        if(it->type == TEXT && approx_label_size+20 > it->box.height
+            && approx_label_size-20 < it->box.height){
 
             int begin = i-range < 0 ? 0 : i-range;
             int end = i+range > features.size()  ? features.size() : i+range;
 
             double max_dist = -99999999;//DBL_MIN;
-            int idx = -1;
+            
+            list<Feature>::iterator best_match;
 
-            Point2f p = Point2f(features[i].box.x+features[i].box.width,
-                features[i].box.y+features[i].box.height);
+            Point2f p = Point2f(it->box.x+it->box.width,
+                it->box.y+it->box.height);
 
-            for(int j = begin; j < end; j++){
-                if(features[j].ftype == TEXT || features[j].ftype == INVALID ||
-                        features[j].ftype == UNCLASSIFIED || features[j].text != "")
+            list<Feature>::iterator it2;
+            for(it2 = features.begin(); it2 != features.end(); it2++){
+                if(it2->type == TEXT || it2->type == INVALID ||
+                        it2->type == UNCLASSIFIED || it2->text != "")
                     continue;
                 
                 
-                double dist = pointPolygonTest(Mat(features[j].points), p, true);
+                double dist = pointPolygonTest(Mat(it2->points), p, true);
                 //printf("dist %f\n", dist);
                 
-                double x_dist = fabs(p.x - (features[j].box.x+features[j].box.width));
-                double y_dist = fabs(p.y - (features[j].box.y+features[i].box.height));
+                double x_dist = fabs(p.x - (it2->box.x+it2->box.width));
+                double y_dist = fabs(p.y - (it2->box.y+it->box.height));
 
-                if (dist > 0 && (x_dist > features[j].box.width ||
-                        y_dist > features[j].box.height))
+                if (dist > 0 && (x_dist > it2->box.width ||
+                        y_dist > it2->box.height))
                     continue;
 
                 if(dist > max_dist){
                     max_dist = dist;
-                    idx = j;
+                    best_match = it2;
                 }
 
             }
 
             if(idx != -1){
-                features[idx].text = features[i].text;
-                features[i].ftype = INVALID;
+                best_match->text = it->text;
+                it->type = INVALID;
             }
         }
-    }
+    }*/
 
     // Delete invalid elements
-    vector<Feature>::iterator itc=features.begin();
+    list<Feature>::iterator itc=features.begin();
     while (itc!=features.end()) {
-        if(itc->ftype == INVALID || itc->ftype == UNCLASSIFIED)
+        if(itc->type == INVALID || itc->type == UNCLASSIFIED)
             itc=features.erase(itc);
         else
             itc++;
