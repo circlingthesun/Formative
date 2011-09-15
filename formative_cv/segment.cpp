@@ -84,7 +84,8 @@ void text_segment(Mat & image, Mat & original, list<Feature> & results){
     resize(image, smear, Size(cols,rows));
 
     // Should set to space between lines
-    Mat elipse = getStructuringElement(MORPH_RECT, Size(40,1));
+    int smear_x = 40;
+    Mat elipse = getStructuringElement(MORPH_RECT, Size(smear_x,1));
     erode(smear, smear, elipse, Point(-1, -1), 1);
 
     elipse = getStructuringElement(MORPH_ELLIPSE, Size(3,3));
@@ -131,6 +132,10 @@ void text_segment(Mat & image, Mat & original, list<Feature> & results){
         if(contour_area < min_area || contour_area > max_area)
             continue;
         Rect box = boundingRect(Mat(contours[i]));
+        box.x += smear_x/2;
+        box.width -= smear_x/2;
+        box.y -= 2;
+        box.height +=2;
 
         api.SetRectangle(
             box.x-2,
@@ -148,7 +153,6 @@ void text_segment(Mat & image, Mat & original, list<Feature> & results){
         
 
         // Scale back to normal
-
         vector<Point> & points = contours[i];
 
         for( unsigned  int j=0; j< points.size(); j++ ) {
@@ -157,9 +161,9 @@ void text_segment(Mat & image, Mat & original, list<Feature> & results){
             p.y = p.y*scale_factor+0.5;
         }
         
-
         box = boundingRect(Mat(contours[i]));
-
+        box.x += smear_x/2*scale_factor;
+        box.width -= smear_x/2*scale_factor;
 
         FType t = TEXT;
         if(text.size() == 0)        

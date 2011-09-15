@@ -20,8 +20,8 @@ void parse(list<Feature> & features){
     tree_visitor(features, reduce_double_features);
     tree_visitor(features, reduce_boxes);
     tree_visitor(features, tag);
-    //tree_visitor(features, containment);
-
+    tree_visitor(features, containment);
+    tree_visitor(features, bound_left);
     
     /*for(list<Feature>::iterator it = features.begin(); it != features.end(); it++){
       

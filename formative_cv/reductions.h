@@ -45,8 +45,8 @@ void tree_visitor(list<Feature> & features,
 
 
 bool tag(Feature * current, bool backtracking, list<Feature> & features){
-    if(//current->type != INVALID &&
-            //current->type != UNCLASSIFIED &&
+    if(current->type != INVALID &&
+            current->type != UNCLASSIFIED &&
             current->type != TEXT &&
             !backtracking){
         
@@ -121,6 +121,7 @@ bool reduce_boxes(Feature * current, bool backtracking, list<Feature> & features
         if(square_count > 1){
             string text;
             current->parent->child->type = INVALID;
+            current->parent->child = NULL;
             sibling = current;
             while(sibling != NULL){
                 sibling->type = INVALID;
@@ -146,18 +147,20 @@ bool reduce_double_features(Feature * current, bool backtracking,
 
     // Remove double feature's parent
     if(
-            current->parent != NULL &&
-            current->parent->type == current->type &&
-            current->next == NULL
+            current->child != NULL &&
+            current->child->type == current->type &&
+            current->child->next == NULL &&
+            current->child->prev == NULL
     ){
-        current->parent->type = INVALID;
-        if(current->parent->parent != NULL)
-            current->parent->parent->child = current;
-        if(current->parent->prev != NULL)
-            current->prev = current->parent->prev;
-        if(current->parent->next != NULL)
-            current->next = current->parent->next;
-        current->parent = current->parent->parent;
+        current->child->type = INVALID;
+        
+        Feature * sibling = current->child->child;
+        while(sibling != NULL){
+            sibling->parent = current;
+            sibling=sibling->next;
+        }
+        current->child = current->child->child;
+        
     }
 
     return true;
@@ -176,34 +179,115 @@ void move_to_text_start(list<Feature> & features, list<Feature>::iterator & text
     }
 }
 
+bool contains(Rect & outer, Rect &inner){
+    if(
+        outer.x <= inner.x &&
+        outer.y <= inner.y &&
+        outer.x+outer.width >= inner.x+inner.width &&
+        outer.y+outer.height >= inner.y+inner.height
+    )
+        return true;
+    
+    return false;
+}
 
 bool containment(Feature * current, bool backtracking,
         list<Feature> & features){
+
+    if(backtracking)
+        return true;
     // If leaf
-    if(current->child == NULL){
-        list<Feature>::iterator it;
+    if(current->child != NULL)
+        return true;
 
-        if(current->type == TEXT || current->type == INVALID ||
-                current->type == UNCLASSIFIED)
-                return true;
+    list<Feature>::iterator it;
 
-        for(move_to_text_start(features, it); it != features.end(); it++){
-            
-            Point2f text_mid = Point2f(it->box.x+it->box.width/2,
-            it->box.y+it->box.height/2);
-            double contains = pointPolygonTest(Mat(current->points), text_mid, false);
-            //printf("%f\n", contains);
-            //printf("Consider: %s\n", it->text.c_str());
-            if(contains >= 0){
-                printf("Hoorray: %s\n", it->text.c_str());
-                if(current->text == "")
-                    current->text = it->text;
-                else
-                    current->text += string("\n") + it->text;
-                it = features.erase(it);
-            }
+    if(current->type == TEXT || current->type == INVALID ||
+            current->type == UNCLASSIFIED)
+            return true;
+
+    for(move_to_text_start(features, it); it != features.end(); it++){
+        
+        //printf("%f\n", contains);
+        //printf("Consider: %s\n", it->text.c_str());
+        if(contains(current->box, it->box)){
+            printf("Hoorray: %s\n", it->text.c_str());
+            if(current->text == "")
+                current->text = it->text;
+            else
+                current->text += string("\n") + it->text;
+            it = features.erase(it);
         }
     }
+
+    return true;
+}
+
+// Return negative if not on left
+int left_dist(const Feature & text, const Feature & f){
+    const int text_height = text.box.height;
+    int y_start, y_end;
+
+    if(f.type==LINE){
+        y_start = f.box.y - text_height*1.5;
+        y_end = f.box.y + text_height*0.5;
+    }
+    else if(f.type==RECT || f.type==SQUARE){
+        y_start = f.box.y - text_height/2;
+        y_end = f.box.y + f.box.height + text_height/2;
+    }
+    else
+        return 9999999999;
+
+    if(
+        // Check Y bounds
+        y_start <= text.box.y &&
+        y_end >= text.box.y+text.box.height &&
+        // Check if input is left of text
+        f.box.x >= text.box.x// + text.box.width
+    ){
+        printf("type %d, dist %d\n", f.type, text.box.x - f.box.x);
+        return f.box.x - (text.box.x + text.box.width);
+    }
+    return 9999999999;
+}
+
+bool bound_left(Feature * current, bool backtracking,
+        list<Feature> & features){
+    
+    if(backtracking)
+        return true;
+
+    // If leaf
+    if(current->child != NULL)
+        return true;
+
+    list<Feature>::iterator it;
+
+    if(current->type == TEXT || current->type == INVALID ||
+            current->type == UNCLASSIFIED)
+            return true;
+    
+    int min_dist = 9999999999;
+    Feature * match = NULL;
+
+    for(move_to_text_start(features, it); it != features.end(); it++){
+        int dist = left_dist(*it, *current);
+        if(dist<min_dist){
+            min_dist = dist;
+            match = &*it;
+        }
+    }
+
+    if(match != NULL){
+        printf("LEFT: %s\n", match->text.c_str());
+        if(current->text == "")
+            current->text = match->text;
+        else
+            current->text += string("\n") + match->text;      
+    }
+
+
     return true;
 }
 
