@@ -3,6 +3,7 @@
 
 #include <list>
 #include <cv.h>
+#include <limits.h>
 #include "segment.h"
 
 using namespace std;
@@ -94,13 +95,7 @@ bool reduce_boxes(Feature * current, bool backtracking, list<Feature> & features
                 // Could check size
                 sibling = sibling->next;
             }
-            else{
-                printf("not square!! p=%d, id=%d, type=%d\n",
-                        current->parent->id, sibling->id, sibling->type);
-                printf("x=%d, y=%d, w=%d, h=%d\n",
-                        current->box.x, current->box.y,
-                        current->box.width, current->box.height);
-                
+            else{                
                 int size = sibling->box.width * sibling->box.height;
 
                 // Check if the element is large enough
@@ -131,9 +126,11 @@ bool reduce_boxes(Feature * current, bool backtracking, list<Feature> & features
                 }
                 sibling = sibling->next;
             }
-            char count[100];
+
+            current->parent->length=square_count;
+            /*char count[100];
             sprintf ( count, "%d", square_count);
-            current->parent->text = text + " c = " + count;
+            current->parent->text = text + " c = " + count;*/
             
         }
 
@@ -237,7 +234,7 @@ int left_dist(const Feature & text, const Feature & f){
         y_end = f.box.y + f.box.height + text_height/2;
     }
     else
-        return 9999999999;
+        return INT_MAX;
 
     if(
         // Check Y bounds
@@ -249,13 +246,13 @@ int left_dist(const Feature & text, const Feature & f){
         printf("type %d, dist %d\n", f.type, text.box.x - f.box.x);
         return f.box.x - (text.box.x + text.box.width);
     }
-    return 9999999999;
+    return INT_MAX;
 }
 
 bool bound_left(Feature * current, bool backtracking,
         list<Feature> & features){
     
-    if(backtracking)
+    if(backtracking || current->label != NULL)
         return true;
 
     // If leaf
@@ -268,10 +265,12 @@ bool bound_left(Feature * current, bool backtracking,
             current->type == UNCLASSIFIED)
             return true;
     
-    int min_dist = 9999999999;
+    int min_dist = INT_MAX;
     Feature * match = NULL;
 
     for(move_to_text_start(features, it); it != features.end(); it++){
+        if(it->label != NULL)
+            continue;
         int dist = left_dist(*it, *current);
         if(dist<min_dist){
             min_dist = dist;
@@ -280,11 +279,9 @@ bool bound_left(Feature * current, bool backtracking,
     }
 
     if(match != NULL){
-        printf("LEFT: %s\n", match->text.c_str());
-        if(current->text == "")
-            current->text = match->text;
-        else
-            current->text += string("\n") + match->text;      
+            current->label = match;
+            match->label = current;
+            current->text += string() + match->text;      
     }
 
 

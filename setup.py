@@ -35,7 +35,7 @@ requires = [
     'pymongo',
     'webhelpers',
     'pyparsing',
-    'PIL',
+    #'PIL',
     'pyDNS',
     ]
 

@@ -293,7 +293,7 @@ void build_feature_tree(vector<vector<Point> >& contours, vector<Vec4i>& hierarc
     while(current >= 0){
 
         if(backtracking){
-            printf("<-----------BACKTRACKING\n");
+            //printf("<-----------BACKTRACKING\n");
             current = parent;
             level--;
 
@@ -339,15 +339,15 @@ void build_feature_tree(vector<vector<Point> >& contours, vector<Vec4i>& hierarc
         element.parent = fparent;
         element.points = contours[current];
 
-        printf("-----------NEXT ITTERATION---------\n");
-        if(fparent != NULL)
-            printf("parent = %d\n", fparent->id);
-        else
-            printf("parent = NULL\n");
-        if(fprev != NULL)   
-            printf("prev   = %d\n", fprev->id);
-        else
-            printf("prev   = NULL\n");
+        //printf("-----------NEXT ITTERATION---------\n");
+        //if(fparent != NULL)
+        //    printf("parent = %d\n", fparent->id);
+        //else
+        //    printf("parent = NULL\n");
+        //if(fprev != NULL)   
+        //    printf("prev   = %d\n", fprev->id);
+        //else
+        //    printf("prev   = NULL\n");
 
         // Classify the contour
         classify_contour(element, width, height);
@@ -364,8 +364,8 @@ void build_feature_tree(vector<vector<Point> >& contours, vector<Vec4i>& hierarc
         if(fprev == NULL){
             if(fparent != NULL){
                 fparent->child = &result.back();
-                printf("retropectively set child of %d to %d\n",
-                    fparent->id, result.back().id);
+                //printf("retropectively set child of %d to %d\n",
+                //    fparent->id, result.back().id);
             }
             fprev = &result.back();
             
@@ -373,8 +373,8 @@ void build_feature_tree(vector<vector<Point> >& contours, vector<Vec4i>& hierarc
         // If sibling was just pushed
         else if(fprev != NULL){
             fprev->next = &result.back();
-            printf("retropectively set next of %d to %d\n",
-                    fprev->id, result.back().id);
+            //printf("retropectively set next of %d to %d\n",
+            //        fprev->id, result.back().id);
         }
 
 
@@ -383,21 +383,21 @@ void build_feature_tree(vector<vector<Point> >& contours, vector<Vec4i>& hierarc
         // next itteration
 
         // Set variables for next itteration
-        printf("Next itteration set----\n");
+        //printf("Next itteration set----\n");
 
         if(child > 0){
-            printf("Next itteration CHILD\n");
+            //printf("Next itteration CHILD\n");
             current = child;
             fparent = &result.back();
             fprev = NULL;
             level++;
-            printf("Parent id = %d\n", result.back().id); 
+            //printf("Parent id = %d\n", result.back().id); 
         }
         else if(next > 0){
-            printf("Next itteration NEXT\n");
+            //printf("Next itteration NEXT\n");
             current = next;
             fprev = &result.back();
-            printf("Prev id = %d\n", result.back().id);
+            //printf("Prev id = %d\n", result.back().id);
         }
         else{
             backtracking = true;

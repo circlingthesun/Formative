@@ -1,10 +1,12 @@
 import os
+import json
+import base64
 
 from pyramid.view import view_config
 from pyramid.exceptions import NotFound
 from pyramid.exceptions import Forbidden
 from pyramid.response import Response
-from pyramid.httpexceptions import HTTPFound
+from pyramid.httpexceptions import HTTPFound, HTTPBadRequest
 
 from pyramid_mailer.message import Message
 from pyramid_mailer.message import Attachment
@@ -27,51 +29,40 @@ from datetime import datetime
 
 class FormSchema(Schema):
     """
-    Schema for contact form
+    Schema for ajax submission
     """
     filter_extra_fields = True
     allow_extra_fields = True
-    file = validators.FieldStorageUploadConverter
-    # boxes = validators.String()
-
+    file = validators.String
 
 @view_config(context='formative:resources.Root',
                     renderer='/derived/create.mak',
                     name="create")
-def form_new(request):
+def create(request):
     form = Form(request, schema=FormSchema)
-    return {"renderer":FormRenderer(form)}
+    return {"csrf":request.session.get_csrf_token()}
 
 
 @view_config(context='formative:resources.Root',
-                    renderer='/derived/verify.mak',
-                    name="verify")
-def form_verify(request):
+                    name="process",
+                    renderer='json',
+                    xhr=True
+                    )
+def process(request):
+    print "hai"
     form = Form(request, schema=FormSchema)
-    box_list = []
     if form.validate():
-        
-        d = form.data
-        img_file = form.data['file'].file
-        img = Image.open(img_file)
+        form.data['file'] = form.data['file'].replace('data:image/png;base64,', '')
+        form.data['file'] = base64.decodestring(form.data['file'])
+        img = Image.open(StringIO.StringIO(form.data['file']))
+        img.save("see.jpg", "JPEG")
         raw_img = img.convert('RGB').tostring()
-        #boxes = eval(d['boxes']) # Very bad security hole
         
-        # Process
-        box_list, raw_img, w, h = formative_cv.parse(raw_img, img.size[0], img.size[1])
-        img = Image.fromstring("RGB", (w, h), raw_img, "raw", "BGR", 0, 1)
-        
-        # Save
-        output = StringIO.StringIO()
-        img.save(output, format="JPEG")
-        filename = datetime.now().strftime("%Y%m%d%H%S") + ".jpg"
-        file_id = request.fs.put(output.getvalue(), filename=filename, content_type="image/jpeg")
-        output.close()
+        features = formative_cv.process(raw_img, img.size[0], img.size[1])
+        img = Image.fromstring("RGB", (img.size[0], img.size[1]), raw_img, "raw", "BGR", 0, 1)
         
     if form.errors:
         request.session.flash('There are errors in your form. %s' % str(form.errors), queue='error')
-        return HTTPFound(location="/create")
-    
-    url = '/file/%s' % filename;
-    
-    return {"renderer":FormRenderer(form), 'img_url':url, 'box_list':box_list}
+        return HTTPBadRequest()
+    print "kthxbye"
+    return features#json.dumps(features)

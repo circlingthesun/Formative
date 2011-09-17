@@ -18,13 +18,13 @@ public:
     cv::Rect box;
     std::vector<cv::Point> points;
     std::string text;
-    int input_limit;
+    int length;
     Feature * parent;
     Feature * child;
     Feature * prev;
     Feature * next;
 
-    Feature * lables;
+    Feature * label;
 
     Feature(FType type,
 		    cv::Rect box,
@@ -32,23 +32,23 @@ public:
 		    std::string text
 			): type(type), box(box), points(points), text(text){
 				this->id = next_id++;
-		    	this->input_limit = 0;
+		    	this->length = 0;
 			    this->parent = NULL;
 			    this->child = NULL;
 			    this->prev = NULL;
 			    this->next = NULL;
-			    this->lables = NULL;
+			    this->label = NULL;
 	}
 
 	Feature(){
 		this->id = next_id++;
 		this->type = INVALID;
-		this->input_limit = 0;
+		this->length = 0;
 		this->parent = NULL;
 		this->child = NULL;
 		this->prev = NULL;
 		this->next = NULL;
-		this->lables = NULL;
+		this->label = NULL;
 	}
 
 
