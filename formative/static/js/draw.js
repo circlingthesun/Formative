@@ -2,10 +2,24 @@ function drawCursor(){
     context = ctx;
     if(mySel != null && (mySel.type == 'TEXT' || mySel.type == 'LABEL') ){
         if(cursorOn){
-            var alpha = cursorAlpha;
+
+            // Calculate the display text height
+            var text_height = mySel.h;
+            context.font = "bold " + text_height + "px sans-serif";
+            var text_width = context.measureText(mySel.val).width;
+
+            // Make text fit box
+            while(text_width > mySel.w){
+                text_height -= 1;
+                context.font = "bold " + text_height + "px sans-serif";
+                text_width = context.measureText(mySel.val).width;
+            }
+
+            // Get the text at the cursor position
+            // WARNING does not meature white space
             var text = mySel.val.substring(0,cursorPos);
-            context.font = "bold " + mySel.h + "px sans-serif";
-            var x = context.measureText(text).width + mySel.x;
+            var x = mySel.x + context.measureText(text).width;
+
             context.strokeStyle = 'black';
             context.lineWidth   = 1;
             context.beginPath();
@@ -181,8 +195,8 @@ var drawText = function(context, boxColor, ghostArrowColour) {
     // Make text fit box
     while(text_width > this.w){
         text_height -= 1;
-        text_width = context.measureText(this.val).width;
         context.font = "bold " + text_height + "px sans-serif";
+        text_width = context.measureText(this.val).width;
     }
     
     
