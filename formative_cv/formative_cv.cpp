@@ -49,60 +49,69 @@ formative_cv_process(PyObject *self, PyObject *args)
     for(it = features.begin(); it != features.end(); it++){
         PyObject* key = Py_BuildValue("i", it->id);
 
-        PyObject* bounding_box = Py_BuildValue(
-                "[i,i,i,i]",
-                it->box.x,it->box.y,it->box.width, it->box.height
-        );
-
         PyObject* val;
 
         switch(it->type){
             case TEXT:
                 if(it->label == NULL){
                     val = Py_BuildValue(
-                        "{s:s,s:O,s:s}",
+                        "{s:s,s:i,s:i,s:i,s:i,s:s}",
                         "type", "TEXT",
-                        "bounding_box", bounding_box,
+                        "x", it->box.x,
+                        "y", it->box.y,
+                        "w", it->box.width,
+                        "h", it->box.height,
                         "val", it->text.c_str()
                     );
                     break;
                 }
 
                 val = Py_BuildValue(
-                    "{s:s,s:O,s:s,s:i}",
+                    "{s:s,s:i,s:i,s:i,s:i,s:s,s:i}",
                     "type", "LABEL",
-                    "bounding_box", bounding_box,
+                    "x", it->box.x,
+                    "y", it->box.y,
+                    "w", it->box.width,
+                    "h", it->box.height,
                     "val", it->text.c_str(),
                     "target", it->label->id
                 );
                 break;
             case SQUARE:
                 val = Py_BuildValue(
-                    "{s:s,s:O}",
+                    "{s:s,s:i,s:i,s:i,s:i}",
                     "type", "CHECKBOX",
-                    "bounding_box", bounding_box
+                    "x", it->box.x,
+                    "y", it->box.y,
+                    "w", it->box.width,
+                    "h", it->box.height
                 );
                 break;
             case RECT:
                 val = Py_BuildValue(
-                    "{s:s,s:O,s:s,s:i}",
+                    "{s:s,s:i,s:i,s:i,s:i,s:s,s:i}",
                     "type", "TEXTBOX",
-                    "bounding_box", bounding_box,
+                    "x", it->box.x,
+                    "y", it->box.y,
+                    "w", it->box.width,
+                    "h", it->box.height,
                     "val", it->text.c_str(),
                     "len", it->length
                 );
                 break;
             case LINE:
                 val = Py_BuildValue(
-                    "{s:s,s:O,s:s}",
+                    "{s:s,s:i,s:i,s:i,s:i,s:s}",
                     "type", "TEXTBOX",
-                    "bounding_box", bounding_box,
+                    "x", it->box.x,
+                    "y", it->box.y,
+                    "w", it->box.width,
+                    "h", it->box.height,
                     "val", it->text.c_str()
                 );
                 break;
             default:
                 Py_DECREF(key);
-                Py_DECREF(bounding_box);
                 continue;
         }
 
