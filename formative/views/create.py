@@ -65,5 +65,5 @@ def process(request):
         request.session.flash('There are errors in your form. %s' % str(form.errors), queue='error')
         return HTTPBadRequest()
     print "kthxbye"
-    print json.dumps(features)
+    print json.dumps(features, indent=4)
     return features

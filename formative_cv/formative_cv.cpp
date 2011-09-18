@@ -50,10 +50,11 @@ formative_cv_process(PyObject *self, PyObject *args)
         PyObject* key = Py_BuildValue("i", it->id);
 
         PyObject* val;
+        int linked = it->label != NULL ? it->label->id : -1;
 
         switch(it->type){
             case TEXT:
-                if(it->label == NULL){
+                if(linked == -1){
                     val = Py_BuildValue(
                         "{s:s,s:i,s:i,s:i,s:i,s:s}",
                         "type", "TEXT",
@@ -74,20 +75,34 @@ formative_cv_process(PyObject *self, PyObject *args)
                     "w", it->box.width,
                     "h", it->box.height,
                     "val", it->text.c_str(),
-                    "target", it->label->id
+                    "target", linked
                 );
                 break;
             case SQUARE:
                 val = Py_BuildValue(
-                    "{s:s,s:i,s:i,s:i,s:i}",
+                    "{s:s,s:i,s:i,s:i,s:i,s:i}",
                     "type", "CHECKBOX",
                     "x", it->box.x,
                     "y", it->box.y,
                     "w", it->box.width,
-                    "h", it->box.height
+                    "h", it->box.height,
+                    "linked", linked
                 );
                 break;
             case RECT:
+                val = Py_BuildValue(
+                    "{s:s,s:i,s:i,s:i,s:i,s:s,s:i,s:i}",
+                    "type", "TEXTBOX",
+                    "x", it->box.x,
+                    "y", it->box.y,
+                    "w", it->box.width,
+                    "h", it->box.height,
+                    "val", it->text.c_str(),
+                    "len", it->length,
+                    "linked", linked
+                );
+                break;
+            case LINE:
                 val = Py_BuildValue(
                     "{s:s,s:i,s:i,s:i,s:i,s:s,s:i}",
                     "type", "TEXTBOX",
@@ -96,18 +111,7 @@ formative_cv_process(PyObject *self, PyObject *args)
                     "w", it->box.width,
                     "h", it->box.height,
                     "val", it->text.c_str(),
-                    "len", it->length
-                );
-                break;
-            case LINE:
-                val = Py_BuildValue(
-                    "{s:s,s:i,s:i,s:i,s:i,s:s}",
-                    "type", "TEXTBOX",
-                    "x", it->box.x,
-                    "y", it->box.y,
-                    "w", it->box.width,
-                    "h", it->box.height,
-                    "val", it->text.c_str()
+                    "linked", linked
                 );
                 break;
             default:
