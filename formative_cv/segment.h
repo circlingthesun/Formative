@@ -12,6 +12,8 @@ enum Action{UP, DOWN, RIGHT};
 
 class Feature{
 public:
+	static float text_mean;
+	static float text_std_dev;
 	static int next_id;
 	int id;
     FType type;
@@ -23,7 +25,6 @@ public:
     Feature * child;
     Feature * prev;
     Feature * next;
-
     Feature * label;
 
     Feature(FType type,

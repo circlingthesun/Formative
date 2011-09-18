@@ -55,7 +55,7 @@ def process(request):
         form.data['file'] = form.data['file'].replace('data:image/png;base64,', '')
         form.data['file'] = base64.decodestring(form.data['file'])
         img = Image.open(StringIO.StringIO(form.data['file']))
-        img.save("see.jpg", "JPEG")
+        #img.save("see.jpg", "JPEG")
         raw_img = img.convert('RGB').tostring()
         
         features = formative_cv.process(raw_img, img.size[0], img.size[1])
@@ -65,5 +65,8 @@ def process(request):
         request.session.flash('There are errors in your form. %s' % str(form.errors), queue='error')
         return HTTPBadRequest()
     print "kthxbye"
-    print json.dumps(features, indent=4)
+
+    with open('json.txt', 'w') as out:
+        out.write(json.dumps(features, indent=4))
+
     return features

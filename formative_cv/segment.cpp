@@ -14,6 +14,8 @@ using namespace tesseract;
 
 // Static init
 int Feature::next_id = 0;
+float Feature::text_mean = 0.0f;
+float Feature::text_std_dev = 0.0f;
 
 void make_structuring_el(int size, vector<Mat> & structs){
     // Structuring elements...
@@ -115,7 +117,7 @@ void text_segment(Mat & image, Mat & original, list<Feature> & results){
             "abcdefghijklmnopqrstuvwxyz\
             ABCDEFGHIJKLMNOPQRSTUVWXYZ\
             0123456789()\
-            .:\"/?!&*+-=$#");
+            .:\"/?!&*+-=$#@");
     
     api.SetImage( (const unsigned char*) ocr_img.data,
         ocr_img.cols,
@@ -127,11 +129,21 @@ void text_segment(Mat & image, Mat & original, list<Feature> & results){
     int min_area = (ocr_img.rows*ocr_img.cols)/pow(140, 2);
     int max_area = (ocr_img.rows*ocr_img.cols)/2;
 
+    int sum_x = 0;
+    int sum_x_2 = 0;
+    int n = 0; 
+
     for(int i = 0; i < contours.size(); i++){
-        double contour_area = fabs(contourArea(Mat(contours[i])));
-        if(contour_area < min_area || contour_area > max_area)
+
+        /*double contour_area = fabs(contourArea(Mat(contours[i])));
+        if(contour_area < min_area ||contour_area > max_area)
             continue;
+        */
+
         Rect box = boundingRect(Mat(contours[i]));
+        if(box.height < 20 || box.width < 20)
+            continue;
+
         box.x += smear_x/2;
         box.width -= smear_x/2;
         box.y -= 2;
@@ -147,10 +159,7 @@ void text_segment(Mat & image, Mat & original, list<Feature> & results){
         char * output = api.GetUTF8Text();
         string text = output;
         delete [] output;
-        trim(text);
-        //printf("Confidence: %d ...", api.MeanTextConf());
-        //printf("%s\n", text.c_str());
-        
+        trim(text);        
 
         // Scale back to normal
         vector<Point> & points = contours[i];
@@ -169,11 +178,15 @@ void text_segment(Mat & image, Mat & original, list<Feature> & results){
         if(text.size() == 0)        
             t  = LOGO;
         
-        if(api.MeanTextConf() > 20)
+        if(api.MeanTextConf() > 20){
             results.push_back(Feature(t,box,contours[i],text));
-
-        //rectangle(image, Point(box.x, box.y),
-        //        Point(box.x+box.width, box.y+box.height), Scalar(0));
+            // Stats
+            n++;
+            sum_x += box.height;
+            sum_x_2 += box.height*box.height;
+        }
+        Feature::text_mean = sum_x/(float)n;
+        Feature::text_std_dev = (sum_x_2 - sum_x*sum_x/(float)n)/(n-1);
     }
 
     ocr_img.release();
@@ -615,7 +628,6 @@ void segment(Mat & img_rgb, list<Feature> & features){
         Scalar color( rand()&255, rand()&255, rand()&255 );
         drawContours( tmp, contours, idx, color, CV_FILLED, 8, hierarchy );
     }
-
     namedWindow("LemmeSee",1);
     imshow("LemmeSee", tmp);
     waitKey(0);*/
@@ -636,11 +648,11 @@ void segment(Mat & img_rgb, list<Feature> & features){
                 continue;
             }
 
+            // Fill only bounded area
             Rect b = boundingRect(Mat(it->points));
             Mat roi = image(b);
             p.x -=b.x;
             p.y -=b.y;
-            // TODO set mask based on contour?
             floodFill(roi, p, Scalar(0), 0, Scalar(0), Scalar(0));
         }
     }

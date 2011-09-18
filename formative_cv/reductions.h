@@ -105,13 +105,10 @@ bool reduce_boxes(Feature * current, bool backtracking, list<Feature> & features
                 }
                 else{
                     sibling = sibling->next;
-                }
-
-                
+                }   
             }
         }
         
-
         // Invalidate boxes and get text
         if(square_count > 1){
             string text;
@@ -128,9 +125,6 @@ bool reduce_boxes(Feature * current, bool backtracking, list<Feature> & features
             }
 
             current->parent->length=square_count;
-            /*char count[100];
-            sprintf ( count, "%d", square_count);
-            current->parent->text = text + " c = " + count;*/
             
         }
 
@@ -162,7 +156,6 @@ bool reduce_double_features(Feature * current, bool backtracking,
 
     return true;
 }
-
 
 
 // Find position where text starts
@@ -208,7 +201,7 @@ bool containment(Feature * current, bool backtracking,
         //printf("%f\n", contains);
         //printf("Consider: %s\n", it->text.c_str());
         if(contains(current->box, it->box)){
-            printf("Hoorray: %s\n", it->text.c_str());
+            //printf("Hoorray: %s\n", it->text.c_str());
             if(current->text == "")
                 current->text = it->text;
             else
@@ -243,7 +236,7 @@ int left_dist(const Feature & text, const Feature & f){
         // Check if input is left of text
         f.box.x >= text.box.x// + text.box.width
     ){
-        printf("type %d, dist %d\n", f.type, text.box.x - f.box.x);
+        //printf("type %d, dist %d\n", f.type, text.box.x - f.box.x);
         return f.box.x - (text.box.x + text.box.width);
     }
     return INT_MAX;
@@ -252,11 +245,10 @@ int left_dist(const Feature & text, const Feature & f){
 bool bound_left(Feature * current, bool backtracking,
         list<Feature> & features){
     
-    if(backtracking || current->label != NULL)
-        return true;
-
-    // If leaf
-    if(current->child != NULL)
+    // If the visitor is backtracking, if it already has a
+    // label or if the box is not a leaf
+    if(backtracking || current->label != NULL ||
+            current->child != NULL)
         return true;
 
     list<Feature>::iterator it;
@@ -268,8 +260,9 @@ bool bound_left(Feature * current, bool backtracking,
     int min_dist = INT_MAX;
     Feature * match = NULL;
 
+    // Find a match
     for(move_to_text_start(features, it); it != features.end(); it++){
-        if(it->label != NULL)
+        if(it->label != NULL || it->box.height > Feature::text_mean)
             continue;
         int dist = left_dist(*it, *current);
         if(dist<min_dist){

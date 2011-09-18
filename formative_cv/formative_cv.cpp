@@ -103,6 +103,9 @@ formative_cv_process(PyObject *self, PyObject *args)
                 );
                 break;
             case LINE:
+                // Raise line so it becomes a box
+                it->box.y -= Feature::text_mean;
+                it->box.height += Feature::text_mean;
                 val = Py_BuildValue(
                     "{s:s,s:i,s:i,s:i,s:i,s:s,s:i}",
                     "type", "TEXTBOX",
