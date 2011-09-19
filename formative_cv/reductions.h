@@ -249,7 +249,7 @@ bool containment(Feature * current, bool backtracking,
 }
 
 // HEURISTIC
-int MAX_DIST = 800;
+int MAX_DIST = 400;
 
 // Return negative if not on left
 bool calc_dist(Feature & text, const Feature & f,
@@ -259,26 +259,46 @@ bool calc_dist(Feature & text, const Feature & f,
     int y_start_box, y_end_box;
     int x_start_box, x_end_box;
 
-    int y_start_text = text.box.y;
-    int y_end_text = text.box.y + text.box.height;
-    int x_start_text = text.box.x;
-    int x_end_text = text.box.x + text.box.width;
-
-
     if(f.type==LINE){
         y_start_box = f.box.y - text_height*1.5;
         y_end_box = f.box.y + text_height*0.5;
 
     }
     else if(f.type==RECT || f.type==SQUARE){
-        y_start_box = f.box.y - text_height*0.8;
-        y_end_box = f.box.y + f.box.height + text_height*0.8;
+        y_start_box = f.box.y - text_height*0.5;
+        y_end_box = f.box.y + f.box.height + text_height*0.5;
     }
     else
         return MAX_DIST;
 
-    x_start_box = f.box.x - 10;
-    x_end_box = f.box.x + f.box.width + 10;
+    // HEURISTIC
+    int error_margin = 0.3;
+
+    x_start_box = f.box.x - f.box.width*error_margin;
+    x_end_box = f.box.x + f.box.width + f.box.width*error_margin;
+
+    // Size text boxes
+
+    int y_start_text = text.box.y;
+    int y_end_text = text.box.y + text.box.height;
+    int x_start_text;
+    int x_end_text;
+
+    // Deal with text larger than boxes by making it narrower
+    // same size as the box infact
+    // WHAT IT ALL TEXT WERE CONVERTED TO POINTS?
+    // WOULD THAT WORK?
+    if(text.box.width > f.box.width){
+        int x_center_text = text.box.x + text.box.width/2;
+        x_start_text = x_center_text;// - f.box.width/4;
+        x_end_text = x_center_text;// + f.box.width/4;
+        //y_start_text = text.box.y + text.box.height/2;
+        //y_end_text = text.box.y + text.box.height/2;
+    }
+    else{
+        x_start_text = text.box.x;
+        x_end_text = text.box.x + text.box.width;
+    }
 
     bool better = false;
     int dist;
@@ -407,7 +427,7 @@ bool bindtext(Feature * current, bool backtracking,
 
         printf("Considering %s\n", it->text.c_str());
 
-        if(it->match_priority > match_priority || it->box.height > Feature::text_mean)
+        if(it->match_priority > match_priority || it->box.height > Feature::text_mean*1.5)
             continue;
 
         printf("Accepted %s\n", it->text.c_str());

@@ -5,7 +5,7 @@
         "y": 1640, 
         "x": 765, 
         "type": "CHECKBOX", 
-        "linked": 309
+        "linked": 307
     }, 
     "5": {
         "h": 26, 
@@ -13,7 +13,7 @@
         "y": 1639, 
         "x": 847, 
         "type": "CHECKBOX", 
-        "linked": 312
+        "linked": 308
     }, 
     "7": {
         "h": 26, 
@@ -21,7 +21,7 @@
         "y": 1638, 
         "x": 240, 
         "type": "CHECKBOX", 
-        "linked": 309
+        "linked": 310
     }, 
     "9": {
         "h": 26, 
@@ -29,7 +29,7 @@
         "y": 1637, 
         "x": 590, 
         "type": "CHECKBOX", 
-        "linked": -1
+        "linked": 308
     }, 
     "11": {
         "h": 25, 
@@ -115,14 +115,14 @@
         "linked": 344
     }, 
     "106": {
-        "val": "", 
+        "val": "F (FEMALE)", 
         "h": 34, 
         "len": 0, 
         "w": 80, 
         "y": 650, 
         "x": 1042, 
         "type": "TEXTBOX", 
-        "linked": -1
+        "linked": 349
     }, 
     "108": {
         "val": "M (MALE)", 
@@ -135,14 +135,14 @@
         "linked": 350
     }, 
     "110": {
-        "val": "", 
+        "val": "AGE ON DAY OF RACE", 
         "h": 33, 
         "len": 2, 
         "w": 76, 
         "y": 650, 
         "x": 468, 
         "type": "TEXTBOX", 
-        "linked": -1
+        "linked": 348
     }, 
     "113": {
         "val": "Dov", 
@@ -254,24 +254,24 @@
         "linked": -1
     }, 
     "281": {
-        "val": "", 
+        "val": "FOR OFFICIAL USE ONLY", 
         "h": 30, 
         "len": 0, 
         "w": 46, 
         "y": 162, 
         "x": 1053, 
         "type": "TEXTBOX", 
-        "linked": -1
+        "linked": 364
     }, 
     "282": {
-        "val": "", 
+        "val": "PHoTocoPIEs ACCEPTABLE", 
         "h": 30, 
         "len": 0, 
         "w": 45, 
         "y": 162, 
         "x": 1007, 
         "type": "TEXTBOX", 
-        "linked": -1
+        "linked": 365
     }, 
     "283": {
         "val": "", 
@@ -302,14 +302,14 @@
         "linked": -1
     }, 
     "300": {
-        "val": "CLUB CODE\nRACE NUMBERFOR OFFICIAL USE ONLY", 
+        "val": "CLUB CODE\nRACE NUMBER", 
         "h": 157, 
         "len": 0, 
         "w": 311, 
         "y": 129, 
         "x": 886, 
         "type": "TEXTBOX", 
-        "linked": 364
+        "linked": -1
     }, 
     "305": {
         "val": "Account No: FNB (200109) 501 500 98439", 
@@ -328,20 +328,22 @@
         "type": "TEXT"
     }, 
     "307": {
+        "target": 3, 
         "val": "Faxed entry I", 
         "h": 20, 
         "w": 108, 
         "y": 1646, 
         "x": 659, 
-        "type": "TEXT"
+        "type": "LABEL"
     }, 
     "308": {
+        "target": 9, 
         "val": "Direct Deposit I", 
         "h": 20, 
         "w": 129, 
         "y": 1645, 
         "x": 462, 
-        "type": "TEXT"
+        "type": "LABEL"
     }, 
     "309": {
         "target": 11, 
@@ -353,12 +355,13 @@
         "type": "LABEL"
     }, 
     "310": {
+        "target": 7, 
         "val": "Payment by Cheque l", 
         "h": 20, 
         "w": 176, 
         "y": 1644, 
         "x": 68, 
-        "type": "TEXT"
+        "type": "LABEL"
     }, 
     "311": {
         "val": "Yes", 
@@ -369,13 +372,12 @@
         "type": "TEXT"
     }, 
     "312": {
-        "target": 5, 
         "val": "No", 
         "h": 15, 
         "w": 31, 
         "y": 1621, 
         "x": 850, 
-        "type": "LABEL"
+        "type": "TEXT"
     }, 
     "313": {
         "val": "SIGNATURE OF ENTRANT2 .......................................................................... SIGNATURE OF PARENT (If under 18) ...................................................", 
@@ -667,20 +669,22 @@
         "type": "TEXT"
     }, 
     "348": {
+        "target": 110, 
         "val": "AGE ON DAY OF RACE", 
         "h": 17, 
         "w": 199, 
         "y": 628, 
         "x": 413, 
-        "type": "TEXT"
+        "type": "LABEL"
     }, 
     "349": {
+        "target": 106, 
         "val": "F (FEMALE)", 
         "h": 19, 
         "w": 133, 
         "y": 626, 
         "x": 1033, 
-        "type": "TEXT"
+        "type": "LABEL"
     }, 
     "350": {
         "target": 108, 
@@ -786,7 +790,7 @@
         "type": "TEXT"
     }, 
     "364": {
-        "target": 300, 
+        "target": 281, 
         "val": "FOR OFFICIAL USE ONLY", 
         "h": 17, 
         "w": 233, 
@@ -795,12 +799,13 @@
         "type": "LABEL"
     }, 
     "365": {
+        "target": 282, 
         "val": "PHoTocoPIEs ACCEPTABLE", 
         "h": 19, 
         "w": 294, 
         "y": 58, 
         "x": 904, 
-        "type": "TEXT"
+        "type": "LABEL"
     }, 
     "366": {
         "val": "NO STAPLES ANYWHERE AT ALL PLEASE", 
