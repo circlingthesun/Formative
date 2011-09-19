@@ -9,6 +9,8 @@
 using namespace std;
 using namespace cv;
 
+enum Side{UP, DOWN, LEFT, RIGHT, UNDEFINED};
+
 void tree_visitor(list<Feature> & features,
         bool(*func)(Feature *, bool, list<Feature> &)){
             
@@ -18,6 +20,7 @@ void tree_visitor(list<Feature> & features,
         while(current != NULL){
             
             //printf("Current type %d\n", current->type);
+
 
             if (!func(current, backtracking, features))
                 return;
@@ -67,11 +70,8 @@ bool tag(Feature * current, bool backtracking, list<Feature> & features){
 }
 
 
-bool reduce_boxes(Feature * current, bool backtracking, list<Feature> & features){
-
-    if(current->id == 641){
-        printf("%d, %d, %d", current->type, current->parent, current->parent->type);
-    }
+bool reduce_boxes(Feature * current, bool backtracking,
+        list<Feature> & features){
 
     // Reduces boxes
     if(
@@ -90,7 +90,8 @@ bool reduce_boxes(Feature * current, bool backtracking, list<Feature> & features
                 square_count++;
                 sibling = sibling->next;
             }
-            else if(sibling->type == INVALID || sibling->type == UNCLASSIFIED){
+            else if(sibling->type == INVALID ||
+                    sibling->type == UNCLASSIFIED){
                 // Ignore stray elements
                 // Could check size
                 sibling = sibling->next;
@@ -108,7 +109,6 @@ bool reduce_boxes(Feature * current, bool backtracking, list<Feature> & features
                 }   
             }
         }
-        
         // Invalidate boxes and get text
         if(square_count > 1){
             string text;
@@ -121,9 +121,10 @@ bool reduce_boxes(Feature * current, bool backtracking, list<Feature> & features
                 if(sibling->child != NULL && sibling->child->type == TEXT){
                     text += sibling->child->text; 
                 }
+                // Canntot do coz tree traversal breaks on backtrack
+                //sibling->parent = NULL;
                 sibling = sibling->next;
             }
-
             current->parent->length=square_count;
             
         }
@@ -143,38 +144,66 @@ bool reduce_double_features(Feature * current, bool backtracking,
             current->child->next == NULL &&
             current->child->prev == NULL
     ){
-        current->child->type = INVALID;
-        
+
         Feature * sibling = current->child->child;
         while(sibling != NULL){
             sibling->parent = current;
             sibling=sibling->next;
         }
+        current->child->type = INVALID;
+        current->child->parent = NULL;
         current->child = current->child->child;
+        
         
     }
 
     return true;
 }
 
+bool flatten_tree(Feature * current, bool backtracking,
+        list<Feature> & features){
 
-// Find position where text starts
-void move_to_text_start(list<Feature> & features, list<Feature>::iterator & text_start){
-    list<Feature>::iterator it;
-    for(it = features.begin(); it != features.end(); it++){
-        if(it->type == TEXT){
-            text_start = it;
-            break;
+    // If element is not a child, kill it and reparent children
+    if(current->child != NULL){
+
+        current->child->parent = NULL;
+
+        // Link up the previous node
+        if(current->prev != NULL){
+            current->prev->next = current->child;
         }
+
+        // Remove children's parent 
+        Feature * child = current->child;
+            while(child != NULL){
+                child->parent = NULL;
+                // Last child should point to next
+                if(child->next == NULL){
+                    child->next = current->next;
+                    break;
+                }
+                child=child->next;
+        }
+
+        // Clean up the affairs of the parent
+        // Note we set the child as the seibling so traversal continues
+        current->next = current->child;
+        current->child = NULL;
+        current->type = INVALID;
+        current->parent = NULL;
+
     }
+
+    return true;
 }
+
 
 bool contains(Rect & outer, Rect &inner){
     if(
-        outer.x <= inner.x &&
-        outer.y <= inner.y &&
-        outer.x+outer.width >= inner.x+inner.width &&
-        outer.y+outer.height >= inner.y+inner.height
+        outer.x < inner.x &&
+        outer.y < inner.y &&
+        outer.x+outer.width > inner.x+inner.width &&
+        outer.y+outer.height > inner.y+inner.height
     )
         return true;
     
@@ -190,59 +219,186 @@ bool containment(Feature * current, bool backtracking,
     if(current->child != NULL)
         return true;
 
-    list<Feature>::iterator it;
-
     if(current->type == TEXT || current->type == INVALID ||
             current->type == UNCLASSIFIED)
             return true;
-
-    for(move_to_text_start(features, it); it != features.end(); it++){
         
-        //printf("%f\n", contains);
-        //printf("Consider: %s\n", it->text.c_str());
+    
+    for(list<Feature>::iterator it = features.begin();
+            it != features.end();it++){
+
         if(contains(current->box, it->box)){
-            //printf("Hoorray: %s\n", it->text.c_str());
-            if(current->text == "")
-                current->text = it->text;
-            else
-                current->text += string("\n") + it->text;
-            it = features.erase(it);
+            
+            if(it->type==TEXT){
+                if(current->text == "")
+                    current->text = it->text;
+                else
+                    current->text += string("\n") + it->text;
+                // Only erase text features
+                it = features.erase(it);
+            }
+            // Delete what looks like a parent but isnt
+            /*else if((it->type==RECT || it->type==SQUARE) &&
+                    it->parent == NULL){
+                current->type = INVALID;
+            }*/
+            
+
         }
     }
 
     return true;
 }
 
+// HEURISTIC
+int MAX_DIST = 100;
+
 // Return negative if not on left
-int left_dist(const Feature & text, const Feature & f){
+/*int dist(const Feature & text, const Feature & f){
+    const int text_height = text.box.height;
+    int y_start_box, y_end_box;
+    int x_start_box, x_end_box;
+
+    int y_start_text = text.box.y, y_end_text = text.box.y + text.box.height;
+    int x_start_text = text.box.x, x_end_text = text.box.x + text.box.width;
+
+
+    if(f.type==LINE){
+        y_start_box = f.box.y - text_height*1.5;
+        y_end_box = f.box.y + text_height*0.5;
+
+    }
+    else if(f.type==RECT || f.type==SQUARE){
+        y_start_box = f.box.y - text_height*0.8;
+        y_end_box = f.box.y + f.box.height + text_height*0.8;
+    }
+    else
+        return MAX_DIST;
+
+    x_start_box = f.box.x - 10;
+    x_end_box = f.box.x + f.box.width + 10;
+
+    int dist = MAX_DIST;
+    int tmp_dist = MAX_DIST;
+
+    //First check horisontal
+    if(
+        // Check Y bounds
+        y_end_text <= y_end_box &&
+        y_start_text >= y_start_box
+    ){
+        
+        // Left
+        if(x_start_text <= x_end_box){
+            dist = x_end_text  - x_start_box;
+        }
+
+        // Right
+        if(x_start_box <= x_start_text){
+            tmp_dist = x_start_text - x_end_box;
+            if(tmp_dist < dist)
+                dist = tmp_dist;
+        }
+        
+    }
+    // If no match then vertitical
+    if(dist >= MAX_DIST &&
+        // Check X bounds
+        x_end_text <= x_end_box &&
+        x_start_text >= x_start_box
+    ){
+      
+        // Top
+        if(y_start_text <= y_end_box){
+            dist = y_end_text  - y_start_box;
+        }
+
+        // Bottom
+        if(y_start_box >= y_start_text){
+            tmp_dist = y_start_text - y_end_box;
+            if(tmp_dist < dist)
+                dist = tmp_dist;
+        }
+
+        
+    }
+
+    return dist;
+}*/
+
+
+// Return negative if not on left
+int calc_dist(const Feature & text, const Feature & f){
     const int text_height = text.box.height;
     int y_start, y_end;
+    int x_start, x_end;
 
     if(f.type==LINE){
         y_start = f.box.y - text_height*1.5;
         y_end = f.box.y + text_height*0.5;
+
     }
     else if(f.type==RECT || f.type==SQUARE){
-        y_start = f.box.y - text_height/2;
-        y_end = f.box.y + f.box.height + text_height/2;
+        y_start = f.box.y - text_height*0.8;
+        y_end = f.box.y + f.box.height + text_height*0.8;
     }
     else
         return INT_MAX;
 
+    x_start = f.box.x - 10;
+    x_end = f.box.x + 10;
+
+    int dist = INT_MAX;
+    int tmp_dist = INT_MAX;
+
+    //First check horisontal
     if(
         // Check Y bounds
-        y_start <= text.box.y &&
-        y_end >= text.box.y+text.box.height &&
-        // Check if input is left of text
-        f.box.x >= text.box.x// + text.box.width
+        y_start <= text.box.y + text.box.height &&
+        y_end >= text.box.y+text.box.height
     ){
-        //printf("type %d, dist %d\n", f.type, text.box.x - f.box.x);
-        return f.box.x - (text.box.x + text.box.width);
+        
+        // Left preferential
+        if(text.box.x <= f.box.x){
+            dist = f.box.x - (text.box.x + text.box.width);
+        }
+
+        // Right
+        if(text.box.x >= f.box.x+f.box.width){
+            tmp_dist = text.box.x - (f.box.x+f.box.width);
+            if(tmp_dist < dist)
+                dist = tmp_dist;
+        }
+        
     }
-    return INT_MAX;
+    // If no match then vertitical
+    if(dist == INT_MAX &&
+        // Check X bounds
+        x_start <= text.box.x &&
+        x_end >= text.box.x+text.box.width
+    ){
+      
+        // Top preferential
+        if(text.box.y <= f.box.y){
+            dist = f.box.y - (text.box.y + text.box.height);
+        }
+
+        // Bottom
+        if(text.box.y >= f.box.y+f.box.height){
+            tmp_dist = text.box.y - (f.box.y+f.box.height);
+            if(tmp_dist < dist)
+                dist = tmp_dist;
+        }
+
+        
+    }
+
+    return dist;
 }
 
-bool bound_left(Feature * current, bool backtracking,
+
+
+bool bindtext_hor(Feature * current, bool backtracking,
         list<Feature> & features){
     
     // If the visitor is backtracking, if it already has a
@@ -251,27 +407,29 @@ bool bound_left(Feature * current, bool backtracking,
             current->child != NULL)
         return true;
 
-    list<Feature>::iterator it;
-
     if(current->type == TEXT || current->type == INVALID ||
             current->type == UNCLASSIFIED)
             return true;
-    
-    int min_dist = INT_MAX;
+    // HEURISTIC
+    int min_dist = MAX_DIST;
+    Side min_side = UNDEFINED;
     Feature * match = NULL;
 
     // Find a match
-    for(move_to_text_start(features, it); it != features.end(); it++){
-        if(it->label != NULL || it->box.height > Feature::text_mean)
+    for(list<Feature>::iterator it = features.begin();
+            it != features.end(); it++){
+        if(it->label != NULL || it->box.height > Feature::text_mean ||
+                it->type!=TEXT)
             continue;
-        int dist = left_dist(*it, *current);
+
+        int dist = calc_dist(*it, *current);
         if(dist<min_dist){
             min_dist = dist;
             match = &*it;
         }
     }
 
-    if(match != NULL){
+    if(match != NULL && min_dist < MAX_DIST){
             current->label = match;
             match->label = current;
             current->text += string() + match->text;      

@@ -8,7 +8,6 @@
 #include <math.h>
 
 enum FType {LINE, RECT, SQUARE, TEXT, LOGO, UNCLASSIFIED, INVALID};
-enum Action{UP, DOWN, RIGHT};
 
 class Feature{
 public:
@@ -20,7 +19,7 @@ public:
     cv::Rect box;
     std::vector<cv::Point> points;
     std::string text;
-    int length;
+    int length; // For text fields
     Feature * parent;
     Feature * child;
     Feature * prev;

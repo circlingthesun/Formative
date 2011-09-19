@@ -31,6 +31,10 @@ var HEIGHT;
 var INTERVAL = 20;    // how often, in milliseconds, we check to see if a
                       // redraw is needed
 
+// Checkbox refences
+//var showoriginal = $("#showoriginal");
+//var showresults = $("#showresults");
+
 var isDrag = false;
 var isResizeDrag = false;
 var expectResize = -1;  // New, will save the # of the selection handle if the
@@ -83,65 +87,6 @@ function Target(x, y){
     this.h = 1;
 }
 
-function initCanvas(){
-    $("#process").show();
-    $("#process").click(upload);
-    $("#original").show();
-    scale = calc_scale(960, 0, image);
-    HEIGHT = image.height*scale;
-    WIDTH = image.width*scale;
-
-    canvas = document.getElementById('canvas2');
-    canvas.height = HEIGHT;
-    canvas.width = WIDTH;
-    ctx = canvas.getContext('2d');
-    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-}
-
-// initialize our canvas, add a ghost canvas, set draw loop
-// then add everything we want to intially exist on the canvas
-function initVerify() {
-    $("#process").hide();
-    $("#original").show();
-    $("#original").click(invalidate);
-    ghostcanvas = document.createElement('canvas');
-    ghostcanvas.height = HEIGHT;
-    ghostcanvas.width = WIDTH;
-    gctx = ghostcanvas.getContext('2d');
-                
-    //fixes a problem where double clicking causes text to get selected on the canvas
-    canvas.onselectstart = function () { return false; }
-    
-    // fixes mouse co-ordinate problems when there's a border or padding
-    // see getMouse for more detail
-    if (document.defaultView && document.defaultView.getComputedStyle) {
-        stylePaddingLeft = parseInt(document.defaultView.getComputedStyle(canvas, null)['paddingLeft'], 10)         || 0;
-        stylePaddingTop    = parseInt(document.defaultView.getComputedStyle(canvas, null)['paddingTop'], 10)            || 0;
-        styleBorderLeft    = parseInt(document.defaultView.getComputedStyle(canvas, null)['borderLeftWidth'], 10) || 0;
-        styleBorderTop     = parseInt(document.defaultView.getComputedStyle(canvas, null)['borderTopWidth'], 10)    || 0;
-    }
-    
-    // make mainDraw() fire every INTERVAL milliseconds
-    setInterval(mainDraw, INTERVAL);
-    setInterval(drawCursor, CURSOR_INTERVAL);
-
-    // set events
-    canvas.onmousedown = myDown;
-    canvas.onmouseup = myUp;
-    canvas.ondblclick = myDblClick;
-    canvas.onmousemove = myMove;
-
-    $(document).bind("keypress", myKey);
-    $(document).bind("keydown", myNonTextKey);
-    //document.textinput = ;
-    
-    // set up the selection handle boxes
-    for (var i = 0; i < 8; i ++) {
-        var rect = new SelectorRect;
-        selectionHandles.push(rect);
-    }
-
-}
 
 //wipes the canvas context
 function clear(c) {
@@ -154,14 +99,18 @@ function clear(c) {
 function mainDraw() {
     if (canvasValid == false) {
         clear(ctx);
-        
+
         // Draw background image
-        if($("#showoriginal").is(':checked'))
+        if( $("#showoriginal").is(':checked') ){
             ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+        }
         
-        // Draw all features
-        for (idx in features) {
-            features[idx].draw(ctx);
+        if( $("#showresults").is(':checked') ){
+
+            // Draw all features
+            for (idx in features) {
+                features[idx].draw(ctx);
+            }
         }
 
         canvasValid = true;
@@ -175,7 +124,7 @@ function myNonTextKey(e){
     else if (e.which) code = e.which;
 
     
-    if(mySel.type !== null &&
+    if(mySel !== null &&
             (mySel.type === 'TEXT' || mySel.type === 'LABEL')){
         switch(code){
             case 8: // Backspace
@@ -196,12 +145,25 @@ function myNonTextKey(e){
                     mySel.val = mySel.val.substring(0,cursorPos) +
                         mySel.val.substring(cursorPos+1,mySel.val.length);
                 }
+                else {
+                    if( mySel.type === 'LABEL' && !(mySel.target instanceof Object) ){
+                        features[mySel.target].linked = -1;
+                    }
+                    delete features[mySelId];
+                    mySel = null;
+                    mySelId = -1;  
+                }
                 break;
         }
     }
     // Delete key
     else if (code == 46){
         if(mySel !== null){
+            if((mySel.type === 'TEXTBOX' || mySel.type === 'CHECKBOX') &&
+                    mySel.linked != -1){
+                var linked = features[mySel.linked];
+                linked.target = new Target(linked.x+linked.w+20, linked.y+linked.h);   
+            }
             delete features[mySelId];
             mySel = null;
             mySelId = -1;
@@ -221,9 +183,11 @@ function myKey(e){
     if(mySel.type !== null &&
             (mySel.type === 'TEXT' || mySel.type === 'LABEL')){
 
-        cursorPos++;
         // Expand box if too small
-        var newText = mySel.val+String.fromCharCode(code);
+        var newText = mySel.val.substring(0,cursorPos) + 
+                String.fromCharCode(code) +
+                mySel.val.substring(cursorPos,mySel.val.length);
+
         ctx.font = "bold " + mySel.h + "px sans-serif";
         var newWidth = ctx.measureText(newText).width;
         if(newWidth > mySel.w){
@@ -231,12 +195,15 @@ function myKey(e){
         }
         mySel.val = newText;
         
+        cursorPos++;
 
-        // Disable spacebar
+        // Disable default spacebar
         if(e.keyCode==32){
             e.preventDefault();
             return false;
         }
+        // Keep cursor visible
+        cursorOn = true;
     }
     
     invalidate();
@@ -388,7 +355,7 @@ function myDown(e){
             if((features[idx].type === 'TEXT' || features[idx].type === 'LABEL') &&
                 mySel !== features[idx]    
             )
-                cursorPos = features[idx].val.length;
+            cursorPos = features[idx].val.length;
 
             mySel = features[idx];
             mySelId = idx;
@@ -455,7 +422,7 @@ function myUp(e){
                 // Moves it off invalid box
                 else{
                     mySel.target = new Target(mySel.x + mySel.w+20,
-                            mySel.y + mySel.h/2);
+                            mySel.y + mySel.h);
                 }
 
                 invalidate();
@@ -539,7 +506,86 @@ function calc_scale(max_x, max_y, img){
     return scale_f;
 }
 
-var fakeit = true;
+function setEvents(on){
+    if(on){
+        canvas.onmousedown = myDown;
+        canvas.onmouseup = myUp;
+        canvas.ondblclick = myDblClick;
+        canvas.onmousemove = myMove;
+        document.onkeypress = myKey;
+        document.onkeydown = myNonTextKey;
+        window.oncontextmenu = function(){
+            return false;
+        }
+    }
+    else{
+        canvas.onmousedown = undefined;
+        canvas.onmouseup =  undefined;
+        canvas.ondblclick = undefined;
+        canvas.onmousemove = undefined;
+        document.onkeypress = myKey;
+        document.onkeydown = myNonTextKey;
+        window.oncontextmenu = undefined;
+    }
+}
+
+// initialize our canvas, add a ghost canvas, set draw loop
+// then add everything we want to intially exist on the canvas
+function initVerify() {
+    $("#process").hide();
+    $("#checkboxes").show();
+    $("#checkboxes").click(invalidate);
+    $("#showresults").click(function(){
+        setEvents($("#showresults").is(':checked'));
+    });
+    ghostcanvas = document.createElement('canvas');
+    ghostcanvas.height = HEIGHT;
+    ghostcanvas.width = WIDTH;
+    gctx = ghostcanvas.getContext('2d');
+                
+    //fixes a problem where double clicking causes text to get selected on the canvas
+    canvas.onselectstart = function () { return false; }
+    
+    // fixes mouse co-ordinate problems when there's a border or padding
+    // see getMouse for more detail
+    if (document.defaultView && document.defaultView.getComputedStyle) {
+        stylePaddingLeft = parseInt(document.defaultView.getComputedStyle(canvas, null)['paddingLeft'], 10)         || 0;
+        stylePaddingTop    = parseInt(document.defaultView.getComputedStyle(canvas, null)['paddingTop'], 10)            || 0;
+        styleBorderLeft    = parseInt(document.defaultView.getComputedStyle(canvas, null)['borderLeftWidth'], 10) || 0;
+        styleBorderTop     = parseInt(document.defaultView.getComputedStyle(canvas, null)['borderTopWidth'], 10)    || 0;
+    }
+    
+    // make mainDraw() fire every INTERVAL milliseconds
+    setInterval(mainDraw, INTERVAL);
+    setInterval(drawCursor, CURSOR_INTERVAL);
+
+    // set events
+    setEvents($("#showresults").is(':checked'));
+
+    // set up the selection handle boxes
+    for (var i = 0; i < 8; i ++) {
+        var rect = new SelectorRect;
+        selectionHandles.push(rect);
+    }
+
+}
+
+function initCanvas(){
+    $("#process").show();
+    $("#process").click(upload);
+    $("#checkboxes").hide();
+    scale = calc_scale(960, 0, image);
+    HEIGHT = image.height*scale;
+    WIDTH = image.width*scale;
+
+    canvas = document.getElementById('canvas2');
+    canvas.height = HEIGHT;
+    canvas.width = WIDTH;
+    ctx = canvas.getContext('2d');
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    invalidate();
+}
+
 
 function initFeatures(json){
         features = json;

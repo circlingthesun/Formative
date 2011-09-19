@@ -21,22 +21,26 @@
 <%def name="script_section()">
 	${parent.script_section()}
 	var csrf = "${csrf}";
+	var fakeit = false;
 	$(function(){
 	    var inputElement = document.getElementById("input");  
 		inputElement.addEventListener("change", handleFiles, false);
-		$("#process").hide();
-		$("#original").hide();
+		//$("#process").hide();
+		//$("#checkboxes").hide();
 	});
 </%def>
 
 <div id="toolbox">
 	<input type="file" id="input">
-	<input id="process" type="button" value="process">
-	<span id="original">
-	show original
-	<input id="showoriginal" type="checkbox" checked="yes">
+	<input id="process" type="button" value="process" style="display:none">
+	<span id="checkboxes" style="display:none">
+		show original
+		<input id="showoriginal" type="checkbox"/>
+		show results
+		<input id="showresults" type="checkbox" checked />
 	</span>
 </div>
+<hr />
 
 <canvas id="canvas2" width="900" height="60">
     This text is displayed if your browser does not support HTML5 Canvas.

@@ -63,7 +63,7 @@ void make_structuring_el(int size, vector<Mat> & structs){
     }
 }
 
-void text_segment(Mat & image, Mat & original, list<Feature> & results){
+void ocr_text(Mat & image, Mat & original, list<Feature> & results){
     // smear the text with an elipse
 
     // Scale for ocr
@@ -126,8 +126,10 @@ void text_segment(Mat & image, Mat & original, list<Feature> & results){
         ocr_img.step1()
     );
 
-    int min_area = (ocr_img.rows*ocr_img.cols)/pow(140, 2);
-    int max_area = (ocr_img.rows*ocr_img.cols)/2;
+    /*int min_area = (ocr_img.rows*ocr_img.cols)/pow(140, 2);
+    int max_area = (ocr_img.rows*ocr_img.cols)/2;*/
+
+    int max_height = 200;
 
     int sum_x = 0;
     int sum_x_2 = 0;
@@ -137,11 +139,11 @@ void text_segment(Mat & image, Mat & original, list<Feature> & results){
 
         /*double contour_area = fabs(contourArea(Mat(contours[i])));
         if(contour_area < min_area ||contour_area > max_area)
-            continue;
-        */
+            continue;*/
+        
 
         Rect box = boundingRect(Mat(contours[i]));
-        if(box.height < 20 || box.width < 20)
+        if(box.height < 20 || box.width < 20 || box.height > max_height)
             continue;
 
         box.x += smear_x/2;
@@ -202,13 +204,10 @@ void classify_contour(Feature & element,
     // Determines the smallest and biggest elements accepted
     // Function of the document size
 
-    // Guestimated grid dimentions
-    // Gets rid of pesky elements
-    int gx = 50, gy = 80;
-    int gw = width/gx, gh = gy/height;
 
-    int minimum_line_len = width/(gx);
-    int minimum_box_width = width/gx;
+    int min_line_len = 100;
+    int min_box_width = 20;
+    int min_box_height = 20;
     double horisontal_line_gradient = 0.1;
 
     // Determines how much sides of a "Square" may differ
@@ -219,7 +218,8 @@ void classify_contour(Feature & element,
     element.box = boundingRect(Mat(cont));
 
     // Squares and rectangles have 4 points
-    if(cont.size()==4 && element.box.width > gw && element.box.height > gh){
+    if(cont.size()==4 && element.box.width > min_box_width &&
+            element.box.height > min_box_height){
 
         // Check for square
         Point pt[4];
@@ -245,11 +245,11 @@ void classify_contour(Feature & element,
         if((ratio - 1) < delta)
             element.type = SQUARE;
         // Assume line 1 is horisontal
-        else if(line1 > minimum_box_width)
+        else if(line1 > min_box_width)
             element.type = RECT;
     }
     
-    // Lines have two points
+    // Lines have two points and are horisontal
     else if(cont.size()==2){
         //printf("LINE\n");
         Point pt[2];
@@ -265,7 +265,7 @@ void classify_contour(Feature & element,
 
         // Look only for horisontal lines
         if(gradient < horisontal_line_gradient &&
-                length > minimum_line_len){
+                length > min_line_len){
             element.type = LINE;
         }
     }
@@ -282,7 +282,7 @@ void classify_contour(Feature & element,
 // Classify contours
 void build_feature_tree(vector<vector<Point> >& contours, vector<Vec4i>& hierarchy,
         int width, int height, list<Feature> & result){
-    
+    printf("11111\n");
     // Topological info
     int parent = -1;
     int child = -1;
@@ -295,8 +295,6 @@ void build_feature_tree(vector<vector<Point> >& contours, vector<Vec4i>& hierarc
     Feature * fprev = NULL;
 
     Feature * last_push = NULL;
-
-    Feature * _42 = NULL;
 
     bool backtracking = false;
 
@@ -317,12 +315,10 @@ void build_feature_tree(vector<vector<Point> >& contours, vector<Vec4i>& hierarc
             
 
         }
-
         // Update child, sibling & parent
         child = hierarchy[current][2];
         next = hierarchy[current][0];
         parent = hierarchy[current][3];
-
         // Safety
         /*if(level < 0){
             printf("Safety!\n");
@@ -331,20 +327,17 @@ void build_feature_tree(vector<vector<Point> >& contours, vector<Vec4i>& hierarc
 
         if(backtracking){
             // Try to move forward or backtrack again
-            if(next > 0){
+            if(next > 0 && next < contours.size()){
                 current = next;
-
                 // Update child, sibling
                 child = hierarchy[current][2];
                 next = hierarchy[current][0];
-
                 backtracking = false;
             }
             else{
                 continue; // Backtrack some more
             }
         }
-
 
         // New Feature to be added to results
         Feature element;
@@ -364,7 +357,6 @@ void build_feature_tree(vector<vector<Point> >& contours, vector<Vec4i>& hierarc
 
         // Classify the contour
         classify_contour(element, width, height);
-
         // Dont traverse into invalid elements?
         int size = element.box.width*element.box.height;
 
@@ -447,12 +439,14 @@ void build_feature_tree(vector<vector<Point> >& contours, vector<Vec4i>& hierarc
 void segment(Mat & img_rgb, list<Feature> & features){
     //unskew(img_rgb);
     // Create new gray scale image
+
     Mat image = Mat(Size(img_rgb.cols, img_rgb.rows), CV_8UC1);
     cvtColor(img_rgb,image,CV_RGB2GRAY);
 
+    ////////////////// DONE IN BROWSER /////////
     // Reference image scale, this is the size at which
     // the algorithm has been found to work
-    int ref_x = 1262;
+    /*int ref_x = 1262;
     int ref_y = 1772;
     
     // Scale up/down to reference scale size
@@ -470,13 +464,15 @@ void segment(Mat & img_rgb, list<Feature> & features){
     int rows = image.rows/scale_factor+0.5;
     
     // Create new resized image
-    Mat resized_img = Mat(Size(cols,rows), CV_8UC1);
-    resize(image, resized_img, Size(cols,rows));
+    Mat image = Mat(Size(cols,rows), CV_8UC1);
+    resize(image, image, Size(cols,rows));
+    */
+    /////////////////////////////////////////////////
 
     // Calculate the degree of smoothing required HACK!
     
     int kernel_size = 3;
-    /*int avg_pix = sum(resized_img).val[0]/(double)(cols*rows);
+    /*int avg_pix = sum(image).val[0]/(double)(cols*rows);
     if(avg_pix < 190){
         kernel_size = 7;
     }*/
@@ -484,24 +480,24 @@ void segment(Mat & img_rgb, list<Feature> & features){
     // Smooth / despeckle image
     // Writeup: explain different choices
     // Guasian loses to much detail
-    GaussianBlur(resized_img, resized_img, Size(kernel_size, kernel_size), 0,0);
+    GaussianBlur(image, image, Size(kernel_size, kernel_size), 0,0);
 
-    //medianBlur(resized_img, resized_img,, 3);
+    //medianBlur(image, image,, 3);
 
     // Clean up via addaptive threshold
     // Why  ADAPTIVE_THRESH_MEAN_C or ADAPTIVE_THRESH_GAUSSIAN_C
     // How did I get to 7, 20?
-    adaptiveThreshold(resized_img, resized_img, 255, ADAPTIVE_THRESH_MEAN_C,
+    adaptiveThreshold(image, image, 255, ADAPTIVE_THRESH_MEAN_C,
             THRESH_BINARY, 7, 10);
 
-    
+
     // Invert image so white represents an edge
-    bitwise_not(resized_img, resized_img);
+    bitwise_not(image, image);
 
     // So lets connect the lines
     // Assumption that the image has been deskewed
     
-    //dilate(resized_img, resized_img, cross_struct_el)
+    //dilate(image, image, cross_struct_el)
 
     // HEURISTICS
     int depth = 1;
@@ -513,60 +509,41 @@ void segment(Mat & img_rgb, list<Feature> & features){
     int mid = size/2;
 
     // temp image used for all morph operations
-    Mat temp_img = Mat(Size(cols,rows), CV_8UC1);
-    Mat morph_img = Mat(Size(cols,rows), CV_8UC1, Scalar(0));
+    Mat temp_img = Mat(Size(image.cols,image.rows), CV_8UC1);
+    Mat morph_img = Mat(Size(image.cols,image.rows), CV_8UC1, Scalar(0));
 
     // Find horisontal and vertical
     for(int i = 0; i < 2; i++){
-        morphologyEx(resized_img, temp_img, MORPH_OPEN,
+        morphologyEx(image, temp_img, MORPH_OPEN,
             structs[i], Point(-1, -1), depth);
         bitwise_or(temp_img, morph_img, morph_img);
     }
 
-    resized_img = morph_img;
-
-    /*size = 3;
-    make_structuring_el(size, structs);
-    mid = size/2;
-
-    morph_img = Mat(Size(cols,rows), CV_8UC1, Scalar(0));
-    // Find horisontal and vertical
-    for(int i = 0; i < 11; i++){
-        morphologyEx(resized_img, temp_img, MORPH_OPEN,
-            structs[i], Point(mid, mid), depth);
-        bitwise_or(temp_img, morph_img, morph_img);
-    }
-
-    resized_img = morph_img;
-    */
-    // Combine the vertical and horisontal components
-    
+    morph_img;
+    morph_img.copyTo(temp_img);
 
     // Dillate with cross so we get better connections
     // DOES NOT WORK SINCE BORDERING NOISE GETS CONNECTED
-    // INSTEAD TRY ALL CORNER TYPES
+    // INSTEAD TRY ALL CORNER TYPES??
     Mat cross_struct_el = getStructuringElement(MORPH_CROSS, Size(3,3));
-    dilate(resized_img, resized_img, cross_struct_el, Point(-1, -1), 1);
+    dilate(morph_img, morph_img, cross_struct_el, Point(-1, -1), 1);
 
     // Create new horisontal structuring element & dillate
     // This takes care of dotted lines
     // TODO need better approach
     
     //Mat hor_line_st2(Size(1,3), CV_8U, Scalar(1));
-    //dilate(resized_img, resized_img, structs[1], Point(-1, -1), 1);
-    //morphologyEx(resized_img, resized_img, MORPH_OPEN,
+    //dilate(image, image, structs[1], Point(-1, -1), 1);
+    //morphologyEx(image, image, MORPH_OPEN,
     //        hor_line_st2, Point(-1, -1), 1);
      
 
-    // Create large copy of original morphologically altered image
-    // Will be used to subtract lines from image
-    resize(resized_img, image, Size(img_rgb.cols, img_rgb.rows));
-
     // Find contours
+    // BEWARE EDGE DETECTS IMAGE
     vector<vector <Point> > contours;
     vector<Vec4i> hierarchy;
     findContours(
-        resized_img,
+        temp_img,
         contours,
         hierarchy,
         CV_RETR_TREE, // CV_RETR_CCOMP CV_RETR_EXTERNAL
@@ -574,11 +551,7 @@ void segment(Mat & img_rgb, list<Feature> & features){
     );
 
 
-    // Draw contours them
-    //Scalar color( 0, 255, 0 );
-    //drawContours( img_rgb, contours, -1, color, 2, 8, hierarchy );
-
-    float approx_accuracy=0.015; // 0.2
+    float approx_accuracy=0.015; // was 0.2
 
     // Approximate contours
     vector<vector<Point> >::iterator itc=contours.begin();
@@ -587,9 +560,6 @@ void segment(Mat & img_rgb, list<Feature> & features){
         Mat poly(*itc, true);
         double arc_len = arcLength(poly,true);
         double accuracy = arc_len*approx_accuracy;
-        //Rect box = boundingRect(poly);
-        //double diagonal = sqrt 
-        //double accuracy = 
 
         vector<Point> approx;
 
@@ -611,8 +581,9 @@ void segment(Mat & img_rgb, list<Feature> & features){
         }
     }
 
+
     // Scale my babies back to normal
-    for( unsigned int i=0; i< contours.size(); i++ ) {
+    /*for( unsigned int i=0; i< contours.size(); i++ ) {
         vector<Point> & points = contours[i];
 
         for( unsigned  int j=0; j< points.size(); j++ ) {
@@ -620,10 +591,11 @@ void segment(Mat & img_rgb, list<Feature> & features){
             p.x = p.x*scale_factor+0.5;
             p.y = p.y*scale_factor+0.5;
         }
-    }
+    }*/
 
-
-    /*Mat tmp(Size(image.rows, image.cols), CV_8UC3, Scalar(255,255,255));
+    
+    //////////// DRAWING CODE BRINGS UP WINDOW /////////////
+    /*Mat tmp(Size(image.cols, image.rows), CV_8UC3, Scalar(255,255,255));
     for(int idx = 0; idx >= 0; idx = hierarchy[idx][0] ){
         Scalar color( rand()&255, rand()&255, rand()&255 );
         drawContours( tmp, contours, idx, color, CV_FILLED, 8, hierarchy );
@@ -631,11 +603,16 @@ void segment(Mat & img_rgb, list<Feature> & features){
     namedWindow("LemmeSee",1);
     imshow("LemmeSee", tmp);
     waitKey(0);*/
+    /////////////////////////////////////////////////////////
+
+
 
     // Classify features and build tree
-    build_feature_tree(contours, hierarchy, rows, cols, features);
+    // bad alloc here
+    build_feature_tree(contours, hierarchy, image.cols, image.rows, features);
 
-    // Flood fill out noise
+
+    // Flood fill out noise && text
     for(list<Feature>::iterator it = features.begin(); it != features.end(); it++){
         if(it->type == UNCLASSIFIED ){
             Point p = it->points[0];
@@ -650,16 +627,22 @@ void segment(Mat & img_rgb, list<Feature> & features){
 
             // Fill only bounded area
             Rect b = boundingRect(Mat(it->points));
-            Mat roi = image(b);
+            Mat roi = morph_img(b);
+            // Map seed point to boinding box coordinates
             p.x -=b.x;
             p.y -=b.y;
-            floodFill(roi, p, Scalar(0), 0, Scalar(0), Scalar(0));
+            floodFill(roi, p, Scalar(0), NULL, Scalar(0), Scalar(0));
         }
     }
 
-    // Subtract lines from original
-    Mat orig_gray = Mat(Size(img_rgb.cols,img_rgb.rows), CV_8UC1);
-    cvtColor(img_rgb, orig_gray, CV_RGB2GRAY);
+
+    /*namedWindow("LemmeSee",1);
+    imshow("LemmeSee", morph_img);
+    waitKey(0);
+    destroyAllWindows();*/
+
+    // Restore original untarnished image
+    cvtColor(img_rgb, image, CV_RGB2GRAY);
 
     // TODO the treshold should be determined
 
@@ -670,13 +653,12 @@ void segment(Mat & img_rgb, list<Feature> & features){
     //adaptiveThreshold(orig_gray, orig_gray, 255, ADAPTIVE_THRESH_MEAN_C,
     //        THRESH_BINARY, 7, 30);
 
-    add(image, orig_gray, image);
 
-    text_segment(image, orig_gray, features);
+    // Add features found in image to original. White features cancel them
+    add(image, morph_img, temp_img);
 
+    ocr_text(temp_img, image, features);
 
-    cvtColor(orig_gray, img_rgb, CV_GRAY2RGB);
-    image.release();
-    resized_img.release();
+    //cvtColor(orig_gray, img_rgb, CV_GRAY2RGB);
 }
 

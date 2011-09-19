@@ -38,47 +38,100 @@ function drawCursor(){
     }
 }
 
+
+/**
+ * SOURCE:
+ * http://stackoverflow.com/questions/1255512/how-to-draw-a-rounded-
+ * rectangle-on-html-canvas
+ * Draws a rounded rectangle using the current state of the canvas. 
+ */
+function roundRect(context, x, y, width, height, radius, fill, stroke) {
+    if (typeof stroke == "undefined" ) {
+        stroke = true;
+    }
+        if (typeof radius === "undefined") {
+        radius = 5;
+    }
+        context.beginPath();
+        context.moveTo(x + radius, y);
+        context.lineTo(x + width - radius, y);
+        context.quadraticCurveTo(x + width, y, x + width, y + radius);
+        context.lineTo(x + width, y + height - radius);
+        context.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        context.lineTo(x + radius, y + height);
+        context.quadraticCurveTo(x, y + height, x, y + height - radius);
+        context.lineTo(x, y + radius);
+        context.quadraticCurveTo(x, y, x + radius, y);
+        context.closePath();
+    if (stroke) {
+        context.stroke();
+    }
+    if (fill) {
+        context.fill();
+    }
+}
+
+function cross(context, x, y, w, h, pad){
+    context.beginPath();
+    context.moveTo(x+pad, y+pad);
+    context.lineTo(x + w - pad, y + h - pad);
+
+    context.moveTo(x + w -pad, y  +pad);
+    context.lineTo(x + pad, y + h - pad);
+    context.closePath();
+    context.stroke();
+}
+
 var drawTextbox = function(context, boxColor, ghostArrowColour) {
     if (context === gctx) {
         context.fillStyle = boxColor;
+        context.fillRect(this.x,this.y,this.w,this.h);
+        return;
     } else {
         context.fillStyle = 'rgba(2,165,165,0.7)'; // Green/blue
     }
 
-    context.fillRect(this.x,this.y,this.w,this.h);
-    
+    //context.fillRect(this.x,this.y,this.w,this.h);
+    context.lineWidth = 2;
+    context.strokeStyle = 'rgba(0,0,0,1.0)';
+    context.fillStyle = 'rgba(157,212,178,0.7)';
+    roundRect(context, this.x, this.y, this.w, this.h, 5, true, true);
+
 }
 
 
 var drawCheckbox = function(context, boxColor, ghostArrowColour) {
     if (context === gctx) {
         context.fillStyle = boxColor;
+        context.fillRect(this.x,this.y,this.w,this.h);
+        return;
     } else {
-        context.fillStyle = 'rgba(150,150,250,0.7)'; // Purle
+        context.fillStyle = 'rgba(2,165,165,0.7)'; // Green/blue
     }
 
-    context.fillRect(this.x,this.y,this.w,this.h);
-    
+    //context.fillRect(this.x,this.y,this.w,this.h);
+    context.lineWidth = 2;
+    context.strokeStyle = 'rgba(0,0,0,1.0)';
+    context.fillStyle = 'rgba(211,157,212,0.7)';
+    roundRect(context, this.x, this.y, this.w, this.h, 5, true, true);
+    cross(context, this.x, this.y, this.w, this.h, 4);
 }
 
 var drawLabel = function(context, boxColor, ghostArrowColour) {
     if (context === gctx) {
         context.fillStyle = boxColor;
+        context.fillRect(this.x,this.y,this.w,this.h);
     } else {
+        context.lineWidth = 1;
         context.fillStyle = 'rgba(255,255,255,0.9)'; // White
+        context.strokeStyle = 'rgba(0,0,0,1.0)';
+        roundRect(context, this.x, this.y, this.w, this.h, 5, true, true);
     }
 
-    context.fillRect(this.x,this.y,this.w,this.h);
 
     this.drawText(context, boxColor, ghostArrowColour);
 
-
     // Draw arrow pointing to target
-
-    // Draw border around label
-    context.strokeStyle = 'rgba(0,0,0,1.0)';
-    context.lineWidth = 1;
-    context.strokeRect(this.x,this.y,this.w,this.h);
 
     from = this;
     var fromX = this.x;

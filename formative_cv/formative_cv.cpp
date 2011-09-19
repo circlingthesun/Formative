@@ -30,7 +30,9 @@ formative_cv_process(PyObject *self, PyObject *args)
 
     // Magic happens here
     list<Feature> features;
+    printf("segment start\n");
     segment(image, features);
+    printf("segment done\n");
     parse(features);
     
     printf("parse done\n");

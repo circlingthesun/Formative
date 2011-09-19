@@ -15,15 +15,21 @@ using namespace cv;
 
 void parse(list<Feature> & features){
     
-    // Sort results from top left to bottom right
-    
+    printf("1\n");
     tree_visitor(features, reduce_double_features);
+    printf("2\n");
     tree_visitor(features, reduce_boxes);
     //tree_visitor(features, tag);
+    printf("3\n");
+    tree_visitor(features, flatten_tree);
+    printf("4\n");
     tree_visitor(features, containment);
-    tree_visitor(features, bound_left);
-    
-    /*for(list<Feature>::iterator it = features.begin(); it != features.end(); it++){
+    printf("5\n");
+    tree_visitor(features, bindtext_hor);
+    printf("6\n");
+
+    /*for(list<Feature>::iterator it = features.begin();
+            it != features.end(); it++){
       
         // Stamp id
         char tmp[100];
@@ -58,13 +64,13 @@ void parse(list<Feature> & features){
     int m_x = img_rgb.cols/2;
     double max_dist = edist(m_x, m_y);*/
 
-    vector <retbox> * ret = new vector<retbox>();
 
-    Feature * logo;
+    /*Feature * logo;
     double l_area = 0;
 
     // Find logo
-    for(list<Feature>::iterator it = features.begin(); it != features.end(); it++){
+    for(list<Feature>::iterator it = features.begin();
+            it != features.end(); it++){
       
         if(it->type == LOGO){
             it->type = UNCLASSIFIED;
@@ -88,9 +94,10 @@ void parse(list<Feature> & features){
     int box_count = 0;
     int box_y = 0;
     bool reducing = false;
-
+    */
     // Convert boxes to rectangles
-    /*for(list<Feature>::iterator it = features.begin(); it != features.end(); it++){
+    /*for(list<Feature>::iterator it = features.begin();
+            it != features.end(); it++){
         Feature & f = *it;
 
         if(f.type == SQUARE){

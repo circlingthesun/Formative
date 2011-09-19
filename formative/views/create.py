@@ -49,7 +49,7 @@ def create(request):
                     xhr=True
                     )
 def process(request):
-    print "hai"
+    #print "hai"
     form = Form(request, schema=FormSchema)
     if form.validate():
         form.data['file'] = form.data['file'].replace('data:image/png;base64,', '')
@@ -59,12 +59,14 @@ def process(request):
         raw_img = img.convert('RGB').tostring()
         
         features = formative_cv.process(raw_img, img.size[0], img.size[1])
-        img = Image.fromstring("RGB", (img.size[0], img.size[1]), raw_img, "raw", "BGR", 0, 1)
+        img = Image.fromstring("RGB", (img.size[0], img.size[1]), raw_img,
+                "raw", "BGR", 0, 1)
         
     if form.errors:
-        request.session.flash('There are errors in your form. %s' % str(form.errors), queue='error')
+        request.session.flash('There are errors in your form. %s' %
+                str(form.errors), queue='error')
         return HTTPBadRequest()
-    print "kthxbye"
+    #print "kthxbye"
 
     with open('json.txt', 'w') as out:
         out.write(json.dumps(features, indent=4))

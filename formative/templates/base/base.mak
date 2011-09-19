@@ -89,14 +89,6 @@
             <div id="topmenu">
             ${topmenu.topmenu("menu")}
             </div>
-            <div id="subheader"> 
-                <div id="block-slideheader-0" class="block block-slideheader"> 
-                    <div class="content"> 
-                    
-                    </div> 
-                </div> 
-            </div> 
-			
 
             <!-- begin wrapper -->
 	        <div id="wrapper">

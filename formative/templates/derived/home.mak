@@ -1,8 +1,8 @@
 <%inherit file="/base/base.mak" />
 
 <%def name="meta()">
-        <meta name="description" content="Durbanville College has been offering vocational education in partnership with UNISA since 1992. The College attributes their students’ continued success to a small learning culture, headed up by lecturers whose appointments and qualifications have been approved by UNISA and who have practical experience in their fields of expertise." />
-        <meta name="keywords" content="degree, diploma, tertiary, college, unisa, education, courses, afrikaans, english" />
+        <meta name="description" content="Translate paper forms into web forms." />
+        <meta name="keywords" content="forms" />
 </%def>
 
 <%def name="js()">
@@ -33,9 +33,9 @@
 <iframe src="http://www.facebook.com/plugins/likebox.php?id=141110852575588&amp;width=292&amp;connections=10&amp;stream=false&amp;header=true&amp;height=287" style="border:none; overflow:hidden; width:292px; height:287px;"></iframe>
                 
 </%def>
-<img style="float:right;padding:20px;" src="/static/images/fluffy.jpg"/>
-Welcome to Zombocom I mean Formative.<br />
-Download <a href="/static/testform.zip">this test image</a> and test out the sytem by navigating to "Create a form" in the above menu.
+<img style="float:right;padding:10px;" src="/static/images/fluffy.jpg"/>
+Fluffy welcomes you to to Formative.<br />
+You can <a href="/static/testform.zip">download this</a> form and try convert it by clicking the "Create Form" link above.
 
 <!-- home.mak -->
 

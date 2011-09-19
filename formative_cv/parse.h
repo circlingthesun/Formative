@@ -6,15 +6,6 @@
 #include <cv.h>
 #include "segment.h"
 
-typedef struct{
-    int x;
-    int y;
-    int w;
-    int h;
-    int type;
-    std::string text;
-} retbox;
-
 
 void parse(std::list<Feature> & features);
 
