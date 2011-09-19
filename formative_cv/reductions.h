@@ -9,8 +9,6 @@
 using namespace std;
 using namespace cv;
 
-enum Side{UP, DOWN, LEFT, RIGHT, UNDEFINED};
-
 void tree_visitor(list<Feature> & features,
         bool(*func)(Feature *, bool, list<Feature> &)){
             
@@ -251,16 +249,20 @@ bool containment(Feature * current, bool backtracking,
 }
 
 // HEURISTIC
-int MAX_DIST = 100;
+int MAX_DIST = 800;
 
 // Return negative if not on left
-/*int dist(const Feature & text, const Feature & f){
+bool calc_dist(Feature & text, const Feature & f,
+        int & max_priority, int & min_dist){
+    
     const int text_height = text.box.height;
     int y_start_box, y_end_box;
     int x_start_box, x_end_box;
 
-    int y_start_text = text.box.y, y_end_text = text.box.y + text.box.height;
-    int x_start_text = text.box.x, x_end_text = text.box.x + text.box.width;
+    int y_start_text = text.box.y;
+    int y_end_text = text.box.y + text.box.height;
+    int x_start_text = text.box.x;
+    int x_end_text = text.box.x + text.box.width;
 
 
     if(f.type==LINE){
@@ -278,127 +280,109 @@ int MAX_DIST = 100;
     x_start_box = f.box.x - 10;
     x_end_box = f.box.x + f.box.width + 10;
 
-    int dist = MAX_DIST;
-    int tmp_dist = MAX_DIST;
+    bool better = false;
+    int dist;
+    int p = 4;
 
-    //First check horisontal
-    if(
-        // Check Y bounds
-        y_end_text <= y_end_box &&
-        y_start_text >= y_start_box
-    ){
-        
-        // Left
-        if(x_start_text <= x_end_box){
-            dist = x_end_text  - x_start_box;
-        }
-
-        // Right
-        if(x_start_box <= x_start_text){
-            tmp_dist = x_start_text - x_end_box;
-            if(tmp_dist < dist)
-                dist = tmp_dist;
-        }
-        
-    }
-    // If no match then vertitical
-    if(dist >= MAX_DIST &&
-        // Check X bounds
-        x_end_text <= x_end_box &&
-        x_start_text >= x_start_box
-    ){
-      
-        // Top
-        if(y_start_text <= y_end_box){
-            dist = y_end_text  - y_start_box;
-        }
-
-        // Bottom
-        if(y_start_box >= y_start_text){
-            tmp_dist = y_start_text - y_end_box;
-            if(tmp_dist < dist)
-                dist = tmp_dist;
-        }
-
-        
-    }
-
-    return dist;
-}*/
+    printf("Trying to bind '%s' to box\n", text.text.c_str());
+    printf("CURRENT MATCH PRIORITY = %d\n\n", max_priority);
+    printf("box y: %d  - %d\n", y_start_box, y_end_box);
+    printf("text y:%d  - %d\n", y_start_text, y_end_text);
+    printf("box x: %d  - %d\n", x_start_box, x_end_box);
+    printf("text x:%d  - %d\n\n", x_start_text, x_end_text);
 
 
-// Return negative if not on left
-int calc_dist(const Feature & text, const Feature & f){
-    const int text_height = text.box.height;
-    int y_start, y_end;
-    int x_start, x_end;
+    // Only consider text in the following positions
+    // Numbers indictate priority level
+    //
+    //              |   2. top text   |
+    //-----------------------------------------
+    //  4.left text |      BOX        |  3. right text
+    //-----------------------------------------
+    //              |  1. bottom text |
+    //
 
-    if(f.type==LINE){
-        y_start = f.box.y - text_height*1.5;
-        y_end = f.box.y + text_height*0.5;
+    // 1 & 2
+    if( y_start_text > y_start_box && y_end_text < y_end_box){
+        printf("H\n");
+        p = 4;
+        // left
+        if(x_end_text < x_end_box && p >= max_priority){
+            printf("L\n");
+            dist = x_start_box - x_end_text;
+            printf("current dist - %d\n", min_dist);
+            if(dist < text.match_dist && (dist < min_dist || p > max_priority)){
+                min_dist = dist;
+                text.match_dist = dist;
+                max_priority = p;
+                better = true;
+                printf("PICKED WITH PRIORITY = %d\n", max_priority);
+            }
+            printf("left dist - %d\n", dist);
 
-    }
-    else if(f.type==RECT || f.type==SQUARE){
-        y_start = f.box.y - text_height*0.8;
-        y_end = f.box.y + f.box.height + text_height*0.8;
-    }
-    else
-        return INT_MAX;
-
-    x_start = f.box.x - 10;
-    x_end = f.box.x + 10;
-
-    int dist = INT_MAX;
-    int tmp_dist = INT_MAX;
-
-    //First check horisontal
-    if(
-        // Check Y bounds
-        y_start <= text.box.y + text.box.height &&
-        y_end >= text.box.y+text.box.height
-    ){
-        
-        // Left preferential
-        if(text.box.x <= f.box.x){
-            dist = f.box.x - (text.box.x + text.box.width);
-        }
-
-        // Right
-        if(text.box.x >= f.box.x+f.box.width){
-            tmp_dist = text.box.x - (f.box.x+f.box.width);
-            if(tmp_dist < dist)
-                dist = tmp_dist;
         }
         
-    }
-    // If no match then vertitical
-    if(dist == INT_MAX &&
-        // Check X bounds
-        x_start <= text.box.x &&
-        x_end >= text.box.x+text.box.width
-    ){
-      
-        // Top preferential
-        if(text.box.y <= f.box.y){
-            dist = f.box.y - (text.box.y + text.box.height);
-        }
-
-        // Bottom
-        if(text.box.y >= f.box.y+f.box.height){
-            tmp_dist = text.box.y - (f.box.y+f.box.height);
-            if(tmp_dist < dist)
-                dist = tmp_dist;
+        p = 3;
+        // right
+        if(x_start_text > x_start_box && p >= max_priority){
+            printf("R\n");
+            dist = x_start_text - x_end_box;
+            printf("current dist - %d\n", min_dist);
+            if(dist < text.match_dist && (dist < min_dist || p > max_priority)){
+                min_dist = dist;
+                text.match_dist = dist;
+                max_priority = p;
+                better = true;
+                printf("PICKED WITH PRIORITY = %d\n", max_priority);
+            }
+            printf("right dist - %d\n", dist);
         }
 
         
     }
+    // Try 3 & 4
+    if(x_start_text > x_start_box && x_end_text < x_end_box){
+        printf("V\n");
+        p = 2;
+        // top
+        if(y_end_text <= y_end_box && p >= max_priority){
+            printf("T\n");
+            dist = y_start_box - y_end_text;
+            printf("current dist - %d\n", min_dist);
+            if(dist < text.match_dist && (dist < min_dist || p > max_priority)){
+                min_dist = dist;
+                text.match_dist = dist;
+                max_priority = p;
+                better = true;
+                printf("PICKED WITH PRIORITY = %d\n", max_priority);
+            }
+            printf("top dist - %d\n", dist);
+        }
+        
+        // bottom
+        p = 1;
+        if(y_start_text >=y_start_box && p >= max_priority){
+            printf("B\n");
+            dist = y_start_text - y_end_box;
+            printf("current dist - %d\n", min_dist);
+            if(dist < text.match_dist && (dist < min_dist || p > max_priority)){
+                min_dist = dist;
+                text.match_dist = dist;
+                max_priority = p;
+                better = true;
+                printf("PICKED WITH PRIORITY = %d\n", max_priority);
+            }
+            printf("bottom dist - %d\n", dist);
+        }
 
-    return dist;
+        
+    }
+    printf("EXIT DIST - %d\n", min_dist);
+    printf("EXIT PRIORITY = %d\n", max_priority);
+    return better;
 }
 
-
-
-bool bindtext_hor(Feature * current, bool backtracking,
+bool bindtext(Feature * current, bool backtracking,
         list<Feature> & features){
     
     // If the visitor is backtracking, if it already has a
@@ -412,19 +396,25 @@ bool bindtext_hor(Feature * current, bool backtracking,
             return true;
     // HEURISTIC
     int min_dist = MAX_DIST;
-    Side min_side = UNDEFINED;
+    int match_priority = 0;
     Feature * match = NULL;
 
     // Find a match
     for(list<Feature>::iterator it = features.begin();
             it != features.end(); it++){
-        if(it->label != NULL || it->box.height > Feature::text_mean ||
-                it->type!=TEXT)
+        if(it->type!=TEXT)
             continue;
 
-        int dist = calc_dist(*it, *current);
-        if(dist<min_dist){
-            min_dist = dist;
+        printf("Considering %s\n", it->text.c_str());
+
+        if(it->match_priority > match_priority || it->box.height > Feature::text_mean)
+            continue;
+
+        printf("Accepted %s\n", it->text.c_str());
+        
+        bool isBetter = calc_dist(*it, *current, match_priority, min_dist);
+
+        if(isBetter){
             match = &*it;
         }
     }

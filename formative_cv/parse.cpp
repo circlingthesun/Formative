@@ -25,7 +25,7 @@ void parse(list<Feature> & features){
     printf("4\n");
     tree_visitor(features, containment);
     printf("5\n");
-    tree_visitor(features, bindtext_hor);
+    tree_visitor(features, bindtext);
     printf("6\n");
 
     /*for(list<Feature>::iterator it = features.begin();

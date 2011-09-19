@@ -6,6 +6,7 @@
 #include <list>
 #include <cvaux.h>
 #include <math.h>
+#include <limits.h>
 
 enum FType {LINE, RECT, SQUARE, TEXT, LOGO, UNCLASSIFIED, INVALID};
 
@@ -26,6 +27,10 @@ public:
     Feature * next;
     Feature * label;
 
+    // Data for text matching
+    int match_priority;
+    int match_dist;
+
     Feature(FType type,
 		    cv::Rect box,
 		    std::vector<cv::Point> points,
@@ -38,6 +43,8 @@ public:
 			    this->prev = NULL;
 			    this->next = NULL;
 			    this->label = NULL;
+			    this->match_priority = 0;
+			    this->match_dist = INT_MAX;
 	}
 
 	Feature(){
@@ -49,6 +56,8 @@ public:
 		this->prev = NULL;
 		this->next = NULL;
 		this->label = NULL;
+		this->match_priority = 0;
+		this->match_dist = INT_MAX;
 	}
 
 
