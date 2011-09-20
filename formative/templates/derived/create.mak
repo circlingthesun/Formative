@@ -48,18 +48,18 @@
 <div id="contextmenu"
  style="border: 1px solid gray; display: none; position: absolute">
     <div class="cmenu">
-        <span><a id="newlabel" href="#">New label</a></span>
-        <span><a id="newtextbox" href="#">New textbox</a></span>
-        <span><a id="newcheckbox" href="#">New checkbox</a></span>
-        <span><a id="newtext" href="#">New text</a></span>
+        <a id="newlabel" href="#"><span>New label</span></a>
+        <a id="newtextbox" href="#"><span>New textbox</span></a>
+        <a id="newcheckbox" href="#"><span>New checkbox</span></a>
+        <a id="newtext" href="#"><span>New text</span></a>
         
         <hr class="topSep"/>
-        <span><a id="convertlabel" href="#">Convert to label</a></span>
-        <span><a id="converttext" href="#">Convert to text</a></span>
-        <span><a id="convertcheckbox" href="#">Convert to checkbox</a></span>
-        <span><a id="converttextbox" href="#">Convert to textbox</a></span>
+        <a id="convertlabel" href="#"><span>Convert to label</span></a>
+        <a id="converttext" href="#"><span>Convert to text</span></a>
+        <a id="convertcheckbox" href="#"><span>Convert to checkbox</span></a>
+        <a id="converttextbox" href="#"><span>Convert to textbox</span></a>
 
         <hr class="bottomSep"/>
-        <span><a id="delete" href="#">Delete</a></span>
+        <a id="delete" href="#"><span>Delete</span></a>
     </div>
 </div>
