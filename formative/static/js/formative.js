@@ -36,10 +36,13 @@ var INTERVAL = 20;    // how often, in milliseconds, we check to see if a
 //var showresults = $("#showresults");
 
 var isDrag = false;
+var isSelectionDrag = false;
 var isResizeDrag = false;
 var expectResize = -1;  // New, will save the # of the selection handle if the
                         // mouse is over one.
 var mx, my; // mouse coordinates
+
+var selX, selY; // Selection start
 
 mainDrawOn = false;
 mainDrawInit = false;
@@ -50,9 +53,10 @@ var canvasValid = false;
 // The node (if any) being selected.
 // If in the future we want to select multiple objects, this will get turned
 // into an array
-var mySel = [];
 var lastSel;
-var mySelId = -1;
+var lastSelId = -1;
+var mySel = [];
+var mySelId = [];
 var selArrow = false;
 var cursorPos = 0;
 var cursorAlpha = 1.0;
@@ -113,10 +117,18 @@ function mainDraw() {
 
             // Draw all features
             for (idx in features) {
+                if(!features.hasOwnProperty(idx)){
+                    break;
+                }
                 features[idx].draw(ctx);
             }
         }
 
+        // Draw selection
+        if(isSelectionDrag){
+            context.fillStyle = 'rgba(212,30,75,0.3)';
+            context.fillRect(selX,selY,mx-selX,my-selY);
+        }
         canvasValid = true;
     }
 }
@@ -159,32 +171,51 @@ function myNonTextKey(e){
     else if (code === 46){
         deleteSelected();
     }
-
-    if(code === 17) // CTRL
+    else if(code === 17){ // CTRL
         ctrlDown = true;
+    }
+
+    // Select all
+    if(e.ctrlKey && code === 65){
+        clearSelection();
+        for(idx in features){
+            if(features.hasOwnProperty(idx) && features[idx] != undefined){
+                mySel.push(features[idx]);
+                mySelId.push(idx);
+            }
+        }
+        invalidate();
+        return false;
+    }
 
     invalidate();
 }
 
 function deleteSelected(){
-    if(mySel.length !== 0){
-        if((mySel[0].type === 'TEXTBOX' || mySel[0].type === 'CHECKBOX') &&
-                mySel[0].linked != -1){
-            var linked = features[mySel[0].linked];
-            linked.target = {'x':linked.x+linked.w+20,
-                    'y':linked.y+linked.h, 'w':1, 'h':1};
+
+    mySelId.forEach(function(fid, idx, array){
+        var feature = features[fid];
+        if((feature.type === 'TEXTBOX' || feature.type === 'CHECKBOX') &&
+                feature.linked != -1){
+            var lnk = features[feature.linked];
+            features[feature.linked].target = {'x':lnk.x+lnk.w+20,
+                    'y':lnk.y+lnk.h, 'w':1, 'h':1};
 
         }
-        else if(mySel[0].type === 'LABEL' && !(mySel[0].target instanceof Object)){
-            features[mySel[0].target].linked = -1;
+        else if(
+                feature.type === 'LABEL' &&
+                !(feature.target instanceof Object) &&
+                features[feature.target] !== undefined              
+            ){
+            features[feature.target].linked = -1;
         }
 
-        delete features[mySelId];
-        mySel = [];
-        mySelId = -1;
-        showContextMenu(false);
-        invalidate();
-    }
+        delete features[fid];
+        
+    });
+    clearSelection();
+    showContextMenu(false); 
+    invalidate();
 }
 
 function myKey(e){
@@ -193,7 +224,7 @@ function myKey(e){
     if (e.keyCode) code = e.keyCode;
     else if (e.which) code = e.which;  
 
-    
+
     if(mySel.length !== 0 &&
             (mySel[0].type === 'TEXT' || mySel[0].type === 'LABEL')){
 
@@ -296,10 +327,13 @@ function myMove(e){
         
         invalidate();
     }
+    else if(isSelectionDrag){
+        invalidate();
+    }
     
     getMouse(e);
     // if there's a selection see if we grabbed one of the selection handles
-    if (mySel.length !== 0 && !isResizeDrag) {
+    if (mySel.length !== 0 && !isResizeDrag && !isSelectionDrag) {
         for (var i = 0; i < 8; i++) {
             // 0    1    2
             // 3         4
@@ -363,9 +397,12 @@ function myDown(e){
         isResizeDrag = true;
         return;
     }
-    
+
     clear(gctx);
     for (idx in features) {
+        if(!features.hasOwnProperty(idx)){
+                break;
+        }
         // draw shape onto ghost context
         var box_color = 'rgba(50,50,50,1)';
         var arrow_color = 'rgba(200,200,200,1)';
@@ -381,6 +418,7 @@ function myDown(e){
 
             var selection = features[idx];
             lastSel = features[idx];
+            lastSelId = idx;
 
             // Check if the item is already selected selected
             var alreadySelected = false;
@@ -398,15 +436,18 @@ function myDown(e){
             }
 
 
-            // Dont clear selection if ctrl is down
+            // Dont clear previous selection if ctrl is down
             if(!ctrlDown && !alreadySelected){
                 mySel = [];
-            }
-            if(!alreadySelected){
-                mySel.push(features[idx]);
+                mySelId = [];
             }
 
-            mySelId = idx;
+            if(!alreadySelected){
+                mySel.push(features[idx]);
+                mySelId.push(idx);
+            }
+
+            
             offsetx = mx - selection.x;
             offsety = my - selection.y;
             selection.x = mx - offsetx;
@@ -416,6 +457,7 @@ function myDown(e){
             if(e.button != 2)
                 isDrag = true;
             
+            // If selected an arrow
             if(val===200){
                 selArrow = true;
                 // Unlink
@@ -438,11 +480,16 @@ function myDown(e){
             clear(gctx);
             return;
         }
-        
     }
     // havent returned means we have selected nothing
-    mySel = [];
-    mySelId = -1;
+    
+    isSelectionDrag = true;
+    selX = mx;
+    selY = my;
+
+    if(!ctrlDown){
+        clearSelection();
+    }
 
     if(e.button === 2){
         showContextMenu(true);
@@ -454,6 +501,13 @@ function myDown(e){
     invalidate();
 }
 
+function clearSelection(){
+    mySel = [];
+    mySelId = [];
+    myLastSel = null;
+    myLastSelId = -1;
+}
+
 function myUp(e){
     isDrag = false;
     isResizeDrag = false;
@@ -462,6 +516,9 @@ function myUp(e){
     if(selArrow){
         getMouse(e);
         for (idx in features) {
+            if(!features.hasOwnProperty(idx)){
+                break;
+            }
             // draw shape onto ghost context
             var box_color = 'rgba(50,50,50,1)';
             var arrow_color = 'rgba(200,200,200,1)';
@@ -479,7 +536,7 @@ function myUp(e){
                 if((found.type == 'CHECKBOX' || found.type == 'TEXTBOX') &&
                         found.linked === -1){
                     // Link
-                    found.linked = mySelId;
+                    found.linked = lastSelId;
                     lastSel.target = idx;
                 }
                 // Moves it off invalid box
@@ -497,6 +554,32 @@ function myUp(e){
     }
     selArrow = false;
     showContextMenu(contextMenuVisible);
+    if(isSelectionDrag){
+        clearSelection();
+        for(idx in features){
+            // Find center
+            var f = features[idx];
+            var x = f.x+f.w/2;
+            var y = f.y+f.h/2;
+
+            // determine bounds
+            var min_x = selX < mx ? selX : mx;
+            var max_x = selX > mx ? selX : mx;
+            var min_y = selY < my ? selY : my;
+            var max_y = selY > my ? selY : my;
+
+            //console.log(features[idx]);
+
+            // If selection over center
+            if(x > min_x && x < max_x && y > min_y && y < max_y){
+                mySel.push(features[idx]);
+                mySelId.push(idx);
+                //console.log(features[idx]);
+            }
+        }
+    }
+    isSelectionDrag = false;
+    invalidate();
 }
 
 // adds a new node
@@ -657,7 +740,7 @@ function initContextMenu(){
     $('#converttext').click(function(){
         mySel[0].type = "TEXT";
         if(!(mySel[0].target instanceof Object))
-            features[mySel[0].target].linked = -1;
+            features[lastSel.target].linked = -1;
         mySel[0].target = undefined;
         showContextMenu(false);
         invalidate();
@@ -699,7 +782,9 @@ function showContextMenu(show){
         cy = cy;
     }
 
-    var sel = mySel[0] || {'type':'NONE'};
+    var sel = lastSel || {'type':'NONE'};
+    if(mySel.length >1)
+        sel = "MULTI";
     
     $('#convertlabel').hide();
     $('#convertcheckbox').hide();
@@ -736,6 +821,9 @@ function showContextMenu(show){
             break;
         case 'TEXTBOX':
             $('#convertcheckbox').show();
+            break;
+        case 'MULTI':
+            
             break;
     }
 
@@ -832,8 +920,7 @@ function initCanvas(){
     ctx = canvas.getContext('2d');
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
-    mySel = [];
-    mySelId = -1;
+    clearSelection();
     mainDrawOn = false;
 }
 
@@ -841,6 +928,9 @@ function initCanvas(){
 function initFeatures(json){
         features = json;
         for(var id in features){
+            if(!features.hasOwnProperty(id)){
+                break;
+            }
             features[id].x /=submit_scale/scale;
             features[id].y /=submit_scale/scale;
             features[id].w /=submit_scale/scale;
