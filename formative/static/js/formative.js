@@ -63,6 +63,10 @@ var mySelBoxColor = 'darkred'; // New for selection boxes
 var mySelBoxSize = 6;
 
 
+// Context menu stuff
+var contextmenu;
+var contextMenuVisible = false;
+var next_id = 10000; // id's for new features
 
 // since we can drag from anywhere in a node
 // instead of just its x/y corner, we need to save
@@ -79,6 +83,7 @@ function SelectorRect(){
     this.h;
 }
 
+// Used so arrows have something to point to
 function Target(x, y){
     this.type = 'TARGET'
     this.x = x;
@@ -146,31 +151,32 @@ function myNonTextKey(e){
                         mySel.val.substring(cursorPos+1,mySel.val.length);
                 }
                 else {
-                    if( mySel.type === 'LABEL' && !(mySel.target instanceof Object) ){
-                        features[mySel.target].linked = -1;
-                    }
-                    delete features[mySelId];
-                    mySel = null;
-                    mySelId = -1;  
+                    deleteSelected();
                 }
                 break;
         }
     }
     // Delete key
     else if (code == 46){
-        if(mySel !== null){
-            if((mySel.type === 'TEXTBOX' || mySel.type === 'CHECKBOX') &&
-                    mySel.linked != -1){
-                var linked = features[mySel.linked];
-                linked.target = new Target(linked.x+linked.w+20, linked.y+linked.h);   
-            }
-            delete features[mySelId];
-            mySel = null;
-            mySelId = -1;
-        }
+        deleteSelected();
     }
 
     invalidate();
+}
+
+function deleteSelected(){
+    if(mySel !== null){
+        if((mySel.type === 'TEXTBOX' || mySel.type === 'CHECKBOX') &&
+                mySel.linked != -1){
+            var linked = features[mySel.linked];
+            linked.target = new Target(linked.x+linked.w+20, linked.y+linked.h);   
+        }
+        delete features[mySelId];
+        mySel = null;
+        mySelId = -1;
+        showContextMenu(false);
+        invalidate();
+    }
 }
 
 function myKey(e){
@@ -205,7 +211,7 @@ function myKey(e){
         // Keep cursor visible
         cursorOn = true;
     }
-    
+    showContextMenu(false);
     invalidate();
 }
 
@@ -332,6 +338,7 @@ function myMove(e){
 function myDown(e){
     getMouse(e);
     
+
     //we are over a selection box
     if (expectResize !== -1) {
         isResizeDrag = true;
@@ -363,7 +370,8 @@ function myDown(e){
             offsety = my - mySel.y;
             mySel.x = mx - offsetx;
             mySel.y = my - offsety;
-            isDrag = true;
+            if(e.button != 2)
+                isDrag = true;
             
             if(selection===200){
                 selArrow = true;
@@ -377,6 +385,12 @@ function myDown(e){
                 selArrow = false;
             }
 
+
+            if(e.button === 2){
+                showContextMenu(true);
+                $('#contextmenu').offset({top:e.pageY, left:e.pageX});
+            }
+
             invalidate();
             clear(gctx);
             return;
@@ -386,6 +400,11 @@ function myDown(e){
     // havent returned means we have selected nothing
     mySel = null;
     mySelId = -1;
+
+    if(e.button === 2){
+        showContextMenu(true);
+        $('#contextmenu').offset({top:e.pageY, left:e.pageX});
+    }
     // clear the ghost canvas for next time
     clear(gctx);
     // invalidate because we might need the selection border to disappear
@@ -433,7 +452,7 @@ function myUp(e){
         }
     }
     selArrow = false;
-
+    showContextMenu(contextMenuVisible);
 }
 
 // adds a new node
@@ -441,7 +460,6 @@ function myDblClick(e) {
     getMouse(e);
     
 }
-
 
 function invalidate() {
     canvasValid = false;
@@ -506,6 +524,153 @@ function calc_scale(max_x, max_y, img){
     return scale_f;
 }
 
+function newFeature(type, x, h, w, h){
+    var x = x || mx;
+    var y = y || my;
+    var w = w || 25;
+    var h = h || 25;
+
+    var idx = next_id++;
+    features[idx] = {
+            'x' : mx,
+            'y' : my,
+            'w' : w,
+            'h' : h,
+            'draw' : draw,
+            'drawTextbox' : drawTextbox,
+            'drawCheckbox' : drawCheckbox,
+            'drawText' : drawText,
+            'drawLabel' : drawLabel,
+            'type' : type,
+    }
+    if(type === 'LABEL'){
+        features[idx].w = 80;
+        features[idx].target = {'x':x+80+20, 'y':y+h, 'w':1, 'h':1};
+        features[idx].val = 'label';
+    }
+    else if(type === 'TEXT'){
+        features[idx].val = 'text';
+        features[idx].w = 80;
+    }
+    else if(type === 'TEXTBOX'){
+        features[idx].w = 80;
+        features[idx].linked = -1;
+    }
+    else if(type === 'CHECKBOX'){
+        features[idx].w = 80;
+        features[idx].linked = -1;
+    }
+    invalidate();
+    return features[idx];
+}
+
+function initContextMenu(){
+    window.oncontextmenu = function(){return false;};
+    contextmenu.onmouseover = function(){contextMenuVisible=true}
+    contextmenu.onmouseover = function(){contextMenuVisible=false}
+    $('#delete').click(deleteSelected);
+
+    $('#newlabel').click(function(e){
+        getMouse(e);
+        newFeature('LABEL');
+        showContextMenu(false);
+        return false;
+    });
+    $('#newtextbox').click(function(e){
+        getMouse(e);
+        newFeature('TEXTBOX');
+        showContextMenu(false);
+        return false;
+    });
+    $('#newcheckbox').click(function(e){
+        getMouse(e);
+        newFeature('CHECKBOX');
+        showContextMenu(false);
+        return false;
+    });
+    $('#newtext').click(function(e){
+        getMouse(e);
+        newFeature('TEXT');
+        showContextMenu(false);
+        return false;
+    });
+
+    $('#convertlabel').click(function(){
+        mySel.type = "LABEL";
+        mySel.target = {'x':mySel.x+mySel.w+20, 'y':mySel.y+mySel.h, 'w':1, 'h':1}
+        showContextMenu(false);
+        invalidate();
+        return false;
+    });
+    $('#converttext').click(function(){
+        mySel.type = "TEXT";
+        if(!(mySel.target instanceof Object))
+            features[mySel.target].linked = -1;
+        mySel.target = undefined;
+        showContextMenu(false);
+        invalidate();
+        return false;
+    });
+    $('#converttextbox').click(function(){
+        mySel.type = "TEXTBOX";
+        showContextMenu(false);
+        invalidate();
+        return false;
+    });
+    $('#convertcheckbox').click(function(){
+        mySel.type = "CHECKBOX";
+        showContextMenu(false);
+        invalidate();
+        return false;
+    });
+}
+
+function showContextMenu(show){
+    if(!show){
+        $('#contextmenu').hide();
+        return
+    }
+
+    var sel = mySel || {'type':'NONE'};
+    
+    $('#convertlabel').hide();
+    $('#convertcheckbox').hide();
+    $('#converttextbox').hide();
+    $('#converttext').hide();
+
+    $('#delete').show();
+    
+    $('#newlabel').hide();
+    $('#newtextbox').hide();
+    $('#newtext').hide();
+    $('#newcheckbox').hide();
+
+    switch(sel.type){
+        case 'NONE':
+            $('#newlabel').show();
+            $('#newtextbox').show();
+            $('#newtext').show();
+            $('#newcheckbox').show();
+            $('#delete').hide();
+            break;
+        case 'TEXT':
+            $('#convertlabel').show();
+            break;
+        case 'LABEL':
+            $('#converttext').show();
+            break;
+        case 'CHECKBOX':
+            $('#converttextbox').show();
+            break;
+        case 'TEXTBOX':
+            $('#convertcheckbox').show();
+            break;
+    }
+
+    $('#contextmenu').show();
+}
+
+
 function setEvents(on){
     if(on){
         canvas.onmousedown = myDown;
@@ -514,9 +679,8 @@ function setEvents(on){
         canvas.onmousemove = myMove;
         document.onkeypress = myKey;
         document.onkeydown = myNonTextKey;
-        window.oncontextmenu = function(){
-            return false;
-        }
+        initContextMenu();
+        
     }
     else{
         canvas.onmousedown = undefined;
@@ -526,6 +690,8 @@ function setEvents(on){
         document.onkeypress = myKey;
         document.onkeydown = myNonTextKey;
         window.oncontextmenu = undefined;
+        contextmenu.onmouseover = undefined;
+        contextmenu.onmouseover = undefined;
     }
 }
 
@@ -538,6 +704,8 @@ function initVerify() {
     $("#showresults").click(function(){
         setEvents($("#showresults").is(':checked'));
     });
+
+    contextmenu = document.createElement('contextmenu');
     ghostcanvas = document.createElement('canvas');
     ghostcanvas.height = HEIGHT;
     ghostcanvas.width = WIDTH;

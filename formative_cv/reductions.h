@@ -397,6 +397,11 @@ bool calc_dist(Feature & text, const Feature & f,
 
         
     }
+
+    // Unlink poached text
+    if(better && text.label != NULL){
+        text.label->label = NULL;
+    }
     printf("EXIT DIST - %d\n", min_dist);
     printf("EXIT PRIORITY = %d\n", max_priority);
     return better;

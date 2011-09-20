@@ -21,12 +21,10 @@
 <%def name="script_section()">
 	${parent.script_section()}
 	var csrf = "${csrf}";
-	var fakeit = false;
+	var fakeit = true;
 	$(function(){
 	    var inputElement = document.getElementById("input");  
 		inputElement.addEventListener("change", handleFiles, false);
-		//$("#process").hide();
-		//$("#checkboxes").hide();
 	});
 </%def>
 
@@ -45,3 +43,23 @@
 <canvas id="canvas2" width="900" height="60">
     This text is displayed if your browser does not support HTML5 Canvas.
 </canvas>
+
+
+<div id="contextmenu"
+ style="border: 1px solid blue; display: none; position: absolute">
+    <ul class="cmenu">
+        <li><a id="newlabel" href="#">New label</a></li>
+        <li><a id="newtextbox" href="#">New textbox</a></li>
+        <li><a id="newcheckbox" href="#">New checkbox</a></li>
+        <li><a id="newtext" href="#">New text</a></li>
+        <li class="topSep">
+        	<a id="convertlabel" href="#">Convert to label</a>
+        </li>
+        <li><a id="converttext" href="#">Convert to text</a></li>
+        <li><a id="convertcheckbox" href="#">Convert to checkbox</a></li>
+        <li><a id="converttextbox" href="#">Convert to textbox</a></li>
+        <li class="topSep">
+            <a id="delete" href="#">Delete</a>
+        </li>
+    </ul>
+</div>

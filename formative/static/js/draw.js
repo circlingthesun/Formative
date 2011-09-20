@@ -96,7 +96,7 @@ var drawTextbox = function(context, boxColor, ghostArrowColour) {
     context.strokeStyle = 'rgba(0,0,0,1.0)';
     context.fillStyle = 'rgba(157,212,178,0.7)';
     roundRect(context, this.x, this.y, this.w, this.h, 5, true, true);
-
+    
 }
 
 
@@ -115,6 +115,8 @@ var drawCheckbox = function(context, boxColor, ghostArrowColour) {
     context.fillStyle = 'rgba(211,157,212,0.7)';
     roundRect(context, this.x, this.y, this.w, this.h, 5, true, true);
     cross(context, this.x, this.y, this.w, this.h, 4);
+
+    
 }
 
 var drawLabel = function(context, boxColor, ghostArrowColour) {
@@ -220,11 +222,11 @@ var drawLabel = function(context, boxColor, ghostArrowColour) {
     context.lineTo(toX, toY);
     context.closePath();
     context.fill();
-    
+
 }
 
 var drawText = function(context, boxColor, ghostArrowColour) {
-
+    
     if (context === gctx) {
         context.fillStyle = boxColor; // not white
     }
@@ -257,10 +259,51 @@ var drawText = function(context, boxColor, ghostArrowColour) {
     
 }
 
+
+var drawHandles = function (context, boxColor, box){
+
+    // draw selection
+    if (mySel === box) {
+        context.strokeStyle = mySelColor;
+        context.lineWidth = mySelWidth;
+        context.strokeRect(box.x,box.y,box.w,box.h);
+                
+        var half = mySelBoxSize / 2;
+                
+        // top left, middle, right
+        selectionHandles[0].x = box.x-half;
+        selectionHandles[0].y = box.y-half;
+        selectionHandles[1].x = box.x+box.w/2-half;
+        selectionHandles[1].y = box.y-half;
+        selectionHandles[2].x = box.x+box.w-half;
+        selectionHandles[2].y = box.y-half;
+        //middle left
+        selectionHandles[3].x = box.x-half;
+        selectionHandles[3].y = box.y+box.h/2-half;
+        //middle right
+        selectionHandles[4].x = box.x+box.w-half;
+        selectionHandles[4].y = box.y+box.h/2-half;
+        //bottom left, middle, right
+        selectionHandles[6].x = box.x+box.w/2-half;
+        selectionHandles[6].y = box.y+box.h-half;
+        selectionHandles[5].x = box.x-half;
+        selectionHandles[5].y = box.y+box.h-half;
+        selectionHandles[7].x = box.x+box.w-half;
+        selectionHandles[7].y = box.y+box.h-half;
+
+        
+        context.fillStyle = mySelBoxColor;
+        for (var i = 0; i < 8; i ++) {
+            var cur = selectionHandles[i];
+            context.fillRect(cur.x, cur.y, mySelBoxSize, mySelBoxSize);
+        }
+    }
+}
+
 // mainDraw() will call this with the normal canvas
 // myDown will call this with the ghost canvas with 'black'
 var draw = function(context, boxColor, ghostArrowColour) {
-
+    drawHandles(context, boxColor, this);
     // We can skip the drawing of elements that have moved off the screen:
     if (this.x > WIDTH || this.y > HEIGHT) return; 
     if (this.x + this.w < 0 || this.y + this.h < 0) return;
@@ -282,45 +325,6 @@ var draw = function(context, boxColor, ghostArrowColour) {
         case 'TEXT':
             this.drawText(context, boxColor, ghostArrowColour);
             break;        
-    }
-    
-    
-       
-    // draw selection
-    if (mySel === this) {
-        context.strokeStyle = mySelColor;
-        context.lineWidth = mySelWidth;
-        context.strokeRect(this.x,this.y,this.w,this.h);
-                
-        var half = mySelBoxSize / 2;
-                
-        // top left, middle, right
-        selectionHandles[0].x = this.x-half;
-        selectionHandles[0].y = this.y-half;
-        selectionHandles[1].x = this.x+this.w/2-half;
-        selectionHandles[1].y = this.y-half;
-        selectionHandles[2].x = this.x+this.w-half;
-        selectionHandles[2].y = this.y-half;
-        //middle left
-        selectionHandles[3].x = this.x-half;
-        selectionHandles[3].y = this.y+this.h/2-half;
-        //middle right
-        selectionHandles[4].x = this.x+this.w-half;
-        selectionHandles[4].y = this.y+this.h/2-half;
-        //bottom left, middle, right
-        selectionHandles[6].x = this.x+this.w/2-half;
-        selectionHandles[6].y = this.y+this.h-half;
-        selectionHandles[5].x = this.x-half;
-        selectionHandles[5].y = this.y+this.h-half;
-        selectionHandles[7].x = this.x+this.w-half;
-        selectionHandles[7].y = this.y+this.h-half;
-
-        
-        context.fillStyle = mySelBoxColor;
-        for (var i = 0; i < 8; i ++) {
-            var cur = selectionHandles[i];
-            context.fillRect(cur.x, cur.y, mySelBoxSize, mySelBoxSize);
-        }
-    }
+    }    
     
 } // end draw

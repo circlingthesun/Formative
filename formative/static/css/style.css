@@ -277,3 +277,19 @@ iframe {
     position:relative;
     top:-30px;
 }
+
+#contextmenu {
+    position: absolute;
+    z-index:99999;
+    color:#;
+}
+
+.cmenu {margin: 0; padding: 0.3em; list-style-type: none;
+    background-color: white;}
+.cmenu li:hover {}
+.cmenu hr {border: 0; border-bottom: 1px solid gray;
+    margin: 3px 0px 3px 0px; width: 10em;}
+.cmenu a {border: 0 !important;}
+.cmenu a:hover {text-decoration: underline !important;}
+.cmenu .topSep {font-size: 90%; border-top: 1px solid gray;
+    margin-top: 0.3em; padding-top: 0.3em;}
