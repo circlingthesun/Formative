@@ -483,10 +483,6 @@ function myDown(e){
     }
     // havent returned means we have selected nothing
     
-    isSelectionDrag = true;
-    selX = mx;
-    selY = my;
-
     if(!ctrlDown){
         clearSelection();
     }
@@ -494,6 +490,11 @@ function myDown(e){
     if(e.button === 2){
         showContextMenu(true);
         $('#contextmenu').offset({top:e.pageY, left:e.pageX});
+    }
+    else{
+        isSelectionDrag = true;
+        selX = mx;
+        selY = my;
     }
     // clear the ghost canvas for next time
     clear(gctx);
@@ -568,13 +569,10 @@ function myUp(e){
             var min_y = selY < my ? selY : my;
             var max_y = selY > my ? selY : my;
 
-            //console.log(features[idx]);
-
-            // If selection over center
+            // If selection over center add it
             if(x > min_x && x < max_x && y > min_y && y < max_y){
                 mySel.push(features[idx]);
                 mySelId.push(idx);
-                //console.log(features[idx]);
             }
         }
     }
