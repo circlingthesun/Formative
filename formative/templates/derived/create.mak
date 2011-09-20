@@ -46,20 +46,20 @@
 
 
 <div id="contextmenu"
- style="border: 1px solid blue; display: none; position: absolute">
-    <ul class="cmenu">
-        <li><a id="newlabel" href="#">New label</a></li>
-        <li><a id="newtextbox" href="#">New textbox</a></li>
-        <li><a id="newcheckbox" href="#">New checkbox</a></li>
-        <li><a id="newtext" href="#">New text</a></li>
-        <li class="topSep">
-        	<a id="convertlabel" href="#">Convert to label</a>
-        </li>
-        <li><a id="converttext" href="#">Convert to text</a></li>
-        <li><a id="convertcheckbox" href="#">Convert to checkbox</a></li>
-        <li><a id="converttextbox" href="#">Convert to textbox</a></li>
-        <li class="topSep">
-            <a id="delete" href="#">Delete</a>
-        </li>
-    </ul>
+ style="border: 1px solid gray; display: none; position: absolute">
+    <div class="cmenu">
+        <span><a id="newlabel" href="#">New label</a></span>
+        <span><a id="newtextbox" href="#">New textbox</a></span>
+        <span><a id="newcheckbox" href="#">New checkbox</a></span>
+        <span><a id="newtext" href="#">New text</a></span>
+        
+        <hr class="topSep"/>
+        <span><a id="convertlabel" href="#">Convert to label</a></span>
+        <span><a id="converttext" href="#">Convert to text</a></span>
+        <span><a id="convertcheckbox" href="#">Convert to checkbox</a></span>
+        <span><a id="converttextbox" href="#">Convert to textbox</a></span>
+
+        <hr class="bottomSep"/>
+        <span><a id="delete" href="#">Delete</a></span>
+    </div>
 </div>

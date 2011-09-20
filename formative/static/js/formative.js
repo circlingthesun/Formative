@@ -41,19 +41,24 @@ var expectResize = -1;  // New, will save the # of the selection handle if the
                         // mouse is over one.
 var mx, my; // mouse coordinates
 
+mainDrawOn = false;
+mainDrawInit = false;
+
  // when set to true, the canvas will redraw everything
 var canvasValid = false;
 
 // The node (if any) being selected.
 // If in the future we want to select multiple objects, this will get turned
 // into an array
-var mySel = null;
+var mySel = [];
+var lastSel;
 var mySelId = -1;
 var selArrow = false;
 var cursorPos = 0;
 var cursorAlpha = 1.0;
 var cursorOn = true;
 var CURSOR_INTERVAL = 500;
+var ctrlDown = false;
 
 // The selection color and width. Right now we have a red selection with a
 // small width
@@ -64,8 +69,10 @@ var mySelBoxSize = 6;
 
 
 // Context menu stuff
+var contextmenuisinit = false;
 var contextmenu;
 var contextMenuVisible = false;
+var cx, cy; // Context menu source
 var next_id = 10000; // id's for new features
 
 // since we can drag from anywhere in a node
@@ -76,20 +83,12 @@ var offsetx, offsety;
 // Padding and border style widths for mouse offsets
 var stylePaddingLeft, stylePaddingTop, styleBorderLeft, styleBorderTop;
 
+// Small rectangles for selectoion resize
 function SelectorRect(){
     this.x;
     this.y;
     this.w;
     this.h;
-}
-
-// Used so arrows have something to point to
-function Target(x, y){
-    this.type = 'TARGET'
-    this.x = x;
-    this.y = y;
-    this.w = 1;
-    this.h = 1;
 }
 
 
@@ -102,7 +101,7 @@ function clear(c) {
 // While draw is called as often as the INTERVAL variable demands,
 // It only ever does something if the canvas gets invalidated by our code
 function mainDraw() {
-    if (canvasValid == false) {
+    if (canvasValid == false && mainDrawOn === true) {
         clear(ctx);
 
         // Draw background image
@@ -110,7 +109,7 @@ function mainDraw() {
             ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
         }
         
-        if( $("#showresults").is(':checked') ){
+        if( $("#showresults").is(':checked')){
 
             // Draw all features
             for (idx in features) {
@@ -129,13 +128,13 @@ function myNonTextKey(e){
     else if (e.which) code = e.which;
 
     
-    if(mySel !== null &&
-            (mySel.type === 'TEXT' || mySel.type === 'LABEL')){
+    if(mySel.length !== 0 &&
+            (mySel[0].type === 'TEXT' || mySel[0].type === 'LABEL')){
         switch(code){
             case 8: // Backspace
-                if(mySel.val.length > 0 && cursorPos > 0){
-                    mySel.val = mySel.val.substring(0,cursorPos-1) +
-                        mySel.val.substring(cursorPos,mySel.val.length);
+                if(mySel[0].val.length > 0 && cursorPos > 0){
+                    mySel[0].val = mySel[0].val.substring(0,cursorPos-1) +
+                        mySel[0].val.substring(cursorPos,mySel[0].val.length);
                     cursorPos--;
                 }
                 break;
@@ -143,12 +142,12 @@ function myNonTextKey(e){
                 cursorPos = cursorPos > 0 ? cursorPos-1 : 0;
                 break;
             case 39: //right
-                cursorPos = cursorPos < mySel.val.length ? cursorPos+1 : mySel.val.length;
+                cursorPos = cursorPos < mySel[0].val.length ? cursorPos+1 : mySel[0].val.length;
                 break;
             case 46: // Delete
-                if(mySel.val.length > 0 && cursorPos < mySel.val.length){
-                    mySel.val = mySel.val.substring(0,cursorPos) +
-                        mySel.val.substring(cursorPos+1,mySel.val.length);
+                if(mySel[0].val.length > 0 && cursorPos < mySel[0].val.length){
+                    mySel[0].val = mySel[0].val.substring(0,cursorPos) +
+                        mySel[0].val.substring(cursorPos+1,mySel[0].val.length);
                 }
                 else {
                     deleteSelected();
@@ -157,22 +156,31 @@ function myNonTextKey(e){
         }
     }
     // Delete key
-    else if (code == 46){
+    else if (code === 46){
         deleteSelected();
     }
+
+    if(code === 17) // CTRL
+        ctrlDown = true;
 
     invalidate();
 }
 
 function deleteSelected(){
-    if(mySel !== null){
-        if((mySel.type === 'TEXTBOX' || mySel.type === 'CHECKBOX') &&
-                mySel.linked != -1){
-            var linked = features[mySel.linked];
-            linked.target = new Target(linked.x+linked.w+20, linked.y+linked.h);   
+    if(mySel.length !== 0){
+        if((mySel[0].type === 'TEXTBOX' || mySel[0].type === 'CHECKBOX') &&
+                mySel[0].linked != -1){
+            var linked = features[mySel[0].linked];
+            linked.target = {'x':linked.x+linked.w+20,
+                    'y':linked.y+linked.h, 'w':1, 'h':1};
+
         }
+        else if(mySel[0].type === 'LABEL' && !(mySel[0].target instanceof Object)){
+            features[mySel[0].target].linked = -1;
+        }
+
         delete features[mySelId];
-        mySel = null;
+        mySel = [];
         mySelId = -1;
         showContextMenu(false);
         invalidate();
@@ -186,20 +194,20 @@ function myKey(e){
     else if (e.which) code = e.which;  
 
     
-    if(mySel.type !== null &&
-            (mySel.type === 'TEXT' || mySel.type === 'LABEL')){
+    if(mySel.length !== 0 &&
+            (mySel[0].type === 'TEXT' || mySel[0].type === 'LABEL')){
 
         // Expand box if too small
-        var newText = mySel.val.substring(0,cursorPos) + 
+        var newText = mySel[0].val.substring(0,cursorPos) + 
                 String.fromCharCode(code) +
-                mySel.val.substring(cursorPos,mySel.val.length);
+                mySel[0].val.substring(cursorPos,mySel[0].val.length);
 
-        ctx.font = "bold " + mySel.h + "px sans-serif";
+        ctx.font = "bold " + mySel[0].h + "px sans-serif";
         var newWidth = ctx.measureText(newText).width;
-        if(newWidth > mySel.w){
-            mySel.w = newWidth;
+        if(newWidth > mySel[0].w){
+            mySel[0].w = newWidth;
         }
-        mySel.val = newText;
+        mySel[0].val = newText;
         
         cursorPos++;
 
@@ -220,58 +228,69 @@ function myMove(e){
     if (isDrag) {
         getMouse(e);
          if(!selArrow){
-            mySel.x = mx - offsetx;
-            mySel.y = my - offsety;
+            // Calculate offser relative to the last
+            // Selected item
+            var abs_x = mx - offsetx;
+            var abs_y = my - offsety;
+
+            var rel_x = abs_x - lastSel.x;
+            var rel_y = abs_y - lastSel.y;
+            
+            mySel.forEach(function(val, idx, array){
+                val.x += rel_x;
+                val.y += rel_y;
+            })
         }
         else{
-            mySel.target.x = mx;
-            mySel.target.y = my;
+            lastSel.target.x = mx;
+            lastSel.target.y = my;
         }
         
         // something is changing position so we better invalidate the canvas!
         invalidate();
+    // Resize the selection
     } else if (isResizeDrag && !selArrow) {
         // time ro resize!
-        var oldx = mySel.x;
-        var oldy = mySel.y;
+        var oldx = lastSel.x;
+        var oldy = lastSel.y;
         
         // 0    1    2
         // 3         4
         // 5    6    7
         switch (expectResize) {
             case 0:
-                mySel.x = mx;
-                mySel.y = my;
-                mySel.w += oldx - mx;
-                mySel.h += oldy - my;
+                lastSel.x = mx;
+                lastSel.y = my;
+                lastSel.w += oldx - mx;
+                lastSel.h += oldy - my;
                 break;
             case 1:
-                mySel.y = my;
-                mySel.h += oldy - my;
+                lastSel.y = my;
+                lastSel.h += oldy - my;
                 break;
             case 2:
-                mySel.y = my;
-                mySel.w = mx - oldx;
-                mySel.h += oldy - my;
+                lastSel.y = my;
+                lastSel.w = mx - oldx;
+                lastSel.h += oldy - my;
                 break;
             case 3:
-                mySel.x = mx;
-                mySel.w += oldx - mx;
+                lastSel.x = mx;
+                lastSel.w += oldx - mx;
                 break;
             case 4:
-                mySel.w = mx - oldx;
+                lastSel.w = mx - oldx;
                 break;
             case 5:
-                mySel.x = mx;
-                mySel.w += oldx - mx;
-                mySel.h = my - oldy;
+                lastSel.x = mx;
+                lastSel.w += oldx - mx;
+                lastSel.h = my - oldy;
                 break;
             case 6:
-                mySel.h = my - oldy;
+                lastSel.h = my - oldy;
                 break;
             case 7:
-                mySel.w = mx - oldx;
-                mySel.h = my - oldy;
+                lastSel.w = mx - oldx;
+                lastSel.h = my - oldy;
                 break;
         }
         
@@ -280,7 +299,7 @@ function myMove(e){
     
     getMouse(e);
     // if there's a selection see if we grabbed one of the selection handles
-    if (mySel !== null && !isResizeDrag) {
+    if (mySel.length !== 0 && !isResizeDrag) {
         for (var i = 0; i < 8; i++) {
             // 0    1    2
             // 3         4
@@ -357,29 +376,53 @@ function myDown(e){
         var index = (mx + my * imageData.width) * 4;
         
         // if the mouse pixel exists, select and break
-        var selection = imageData.data[0];
-        if (selection === 50 || selection === 200 ) {
-            if((features[idx].type === 'TEXT' || features[idx].type === 'LABEL') &&
-                mySel !== features[idx]    
-            )
-            cursorPos = features[idx].val.length;
+        var val = imageData.data[0];
+        if (val === 50 || val === 200 ) {
 
-            mySel = features[idx];
+            var selection = features[idx];
+            lastSel = features[idx];
+
+            // Check if the item is already selected selected
+            var alreadySelected = false;
+            for(var i = 0; i < mySel.length; i++){
+                if(mySel[i] === features[idx]){
+                    alreadySelected = true;
+                }
+            }
+
+            // Set cursor position if alreadySelected
+            if((features[idx].type === 'TEXT' || features[idx].type === 'LABEL') &&
+                alreadySelected 
+            ){
+                cursorPos = features[idx].val.length;
+            }
+
+
+            // Dont clear selection if ctrl is down
+            if(!ctrlDown && !alreadySelected){
+                mySel = [];
+            }
+            if(!alreadySelected){
+                mySel.push(features[idx]);
+            }
+
             mySelId = idx;
-            offsetx = mx - mySel.x;
-            offsety = my - mySel.y;
-            mySel.x = mx - offsetx;
-            mySel.y = my - offsety;
+            offsetx = mx - selection.x;
+            offsety = my - selection.y;
+            selection.x = mx - offsetx;
+            selection.y = my - offsety;
+
+            // Only drag on left click
             if(e.button != 2)
                 isDrag = true;
             
-            if(selection===200){
+            if(val===200){
                 selArrow = true;
                 // Unlink
-                if(!(mySel.target instanceof Object)){
-                    features[mySel.target].linked = -1;
+                if(!(selection.target instanceof Object)){
+                    features[selection.target].linked = -1;
                 }
-                mySel.target = new Target(mx,my);
+                selection.target = {'x':mx, 'y':my, 'w':1, 'h':1};
             }
             else{
                 selArrow = false;
@@ -398,7 +441,7 @@ function myDown(e){
         
     }
     // havent returned means we have selected nothing
-    mySel = null;
+    mySel = [];
     mySelId = -1;
 
     if(e.button === 2){
@@ -428,20 +471,21 @@ function myUp(e){
             var imageData = gctx.getImageData(mx, my, 1, 1);
             var index = (mx + my * imageData.width) * 4;
             
-            // if the mouse pixel exists, select and break
-            var selection = imageData.data[0];
-            if (selection === 50) {
+            // if the mouse pixel indicates a selection
+            // try to bind arrow to selection select and break
+            var pxVal = imageData.data[0];
+            if (pxVal === 50) {
                 var found = features[idx];
                 if((found.type == 'CHECKBOX' || found.type == 'TEXTBOX') &&
                         found.linked === -1){
                     // Link
                     found.linked = mySelId;
-                    mySel.target = idx;
+                    lastSel.target = idx;
                 }
                 // Moves it off invalid box
                 else{
-                    mySel.target = new Target(mySel.x + mySel.w+20,
-                            mySel.y + mySel.h);
+                    lastSel.target = {'x':lastSel.x + lastSel.w+20,
+                            'y':lastSel.y + lastSel.h, 'w':1, 'h':1};
                 }
 
                 invalidate();
@@ -557,7 +601,6 @@ function newFeature(type, x, h, w, h){
         features[idx].linked = -1;
     }
     else if(type === 'CHECKBOX'){
-        features[idx].w = 80;
         features[idx].linked = -1;
     }
     invalidate();
@@ -565,60 +608,75 @@ function newFeature(type, x, h, w, h){
 }
 
 function initContextMenu(){
+
+    if(contextmenuisinit){
+        return;
+    }
+    contextmenuisinit = true;
+
     window.oncontextmenu = function(){return false;};
     contextmenu.onmouseover = function(){contextMenuVisible=true}
     contextmenu.onmouseover = function(){contextMenuVisible=false}
-    $('#delete').click(deleteSelected);
+    $('#delete').click(function(){
+        deleteSelected();
+        return false;
+    });
 
     $('#newlabel').click(function(e){
         getMouse(e);
-        newFeature('LABEL');
+        newFeature('LABEL', cx, cy);
         showContextMenu(false);
         return false;
     });
     $('#newtextbox').click(function(e){
         getMouse(e);
-        newFeature('TEXTBOX');
+        newFeature('TEXTBOX', cx, cy);
         showContextMenu(false);
         return false;
     });
     $('#newcheckbox').click(function(e){
         getMouse(e);
-        newFeature('CHECKBOX');
+        newFeature('CHECKBOX', cx, cy);
         showContextMenu(false);
         return false;
     });
     $('#newtext').click(function(e){
         getMouse(e);
-        newFeature('TEXT');
+        newFeature('TEXT', cx, cy);
         showContextMenu(false);
         return false;
     });
 
     $('#convertlabel').click(function(){
-        mySel.type = "LABEL";
-        mySel.target = {'x':mySel.x+mySel.w+20, 'y':mySel.y+mySel.h, 'w':1, 'h':1}
+        mySel[0].type = "LABEL";
+        mySel[0].target = {'x':mySel[0].x+mySel[0].w+20, 'y':mySel[0].y+mySel[0].h, 'w':1, 'h':1}
         showContextMenu(false);
         invalidate();
         return false;
     });
     $('#converttext').click(function(){
-        mySel.type = "TEXT";
-        if(!(mySel.target instanceof Object))
-            features[mySel.target].linked = -1;
-        mySel.target = undefined;
+        mySel[0].type = "TEXT";
+        if(!(mySel[0].target instanceof Object))
+            features[mySel[0].target].linked = -1;
+        mySel[0].target = undefined;
         showContextMenu(false);
         invalidate();
         return false;
     });
     $('#converttextbox').click(function(){
-        mySel.type = "TEXTBOX";
+        mySel[0].type = "TEXTBOX";
         showContextMenu(false);
         invalidate();
         return false;
     });
     $('#convertcheckbox').click(function(){
-        mySel.type = "CHECKBOX";
+        mySel[0].type = "CHECKBOX";
+        showContextMenu(false);
+        invalidate();
+        return false;
+    });
+    $('#clone').click(function(){
+        mySel[0].type = "CHECKBOX";
         showContextMenu(false);
         invalidate();
         return false;
@@ -630,8 +688,18 @@ function showContextMenu(show){
         $('#contextmenu').hide();
         return
     }
+    
+    if(!mainDrawOn){
+        return;
+    }
 
-    var sel = mySel || {'type':'NONE'};
+    // set seed point
+    if(!contextMenuVisible){
+        cx = mx;
+        cy = cy;
+    }
+
+    var sel = mySel[0] || {'type':'NONE'};
     
     $('#convertlabel').hide();
     $('#convertcheckbox').hide();
@@ -645,6 +713,9 @@ function showContextMenu(show){
     $('#newtext').hide();
     $('#newcheckbox').hide();
 
+    $('.topSep').hide();
+    $('.bottomSep').show();
+
     switch(sel.type){
         case 'NONE':
             $('#newlabel').show();
@@ -652,6 +723,7 @@ function showContextMenu(show){
             $('#newtext').show();
             $('#newcheckbox').show();
             $('#delete').hide();
+            $('.bottomSep').hide();
             break;
         case 'TEXT':
             $('#convertlabel').show();
@@ -679,6 +751,9 @@ function setEvents(on){
         canvas.onmousemove = myMove;
         document.onkeypress = myKey;
         document.onkeydown = myNonTextKey;
+        document.onkeyup = function(){
+            ctrlDown = false;
+        }
         initContextMenu();
         
     }
@@ -724,8 +799,13 @@ function initVerify() {
     }
     
     // make mainDraw() fire every INTERVAL milliseconds
-    setInterval(mainDraw, INTERVAL);
-    setInterval(drawCursor, CURSOR_INTERVAL);
+    if(mainDrawInit === false){
+        setInterval(mainDraw, INTERVAL);
+        setInterval(drawCursor, CURSOR_INTERVAL);
+        mainDrawInit === true;
+    }
+
+    mainDrawOn = true;
 
     // set events
     setEvents($("#showresults").is(':checked'));
@@ -751,7 +831,10 @@ function initCanvas(){
     canvas.width = WIDTH;
     ctx = canvas.getContext('2d');
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-    invalidate();
+
+    mySel = [];
+    mySelId = -1;
+    mainDrawOn = false;
 }
 
 

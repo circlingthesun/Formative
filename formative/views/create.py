@@ -27,19 +27,11 @@ import formative_cv
 import Image, StringIO
 from datetime import datetime
 
-class FormSchema(Schema):
-    """
-    Schema for ajax submission
-    """
-    filter_extra_fields = True
-    allow_extra_fields = True
-    file = validators.String
-
 @view_config(context='formative:resources.Root',
                     renderer='/derived/create.mak',
                     name="create")
 def create(request):
-    form = Form(request, schema=FormSchema)
+    form = Form(request)
     return {"csrf":request.session.get_csrf_token()}
 
 
@@ -50,25 +42,34 @@ def create(request):
                     )
 def process(request):
     #print "hai"
-    form = Form(request, schema=FormSchema)
-    if form.validate():
-        form.data['file'] = form.data['file'].replace('data:image/png;base64,', '')
-        form.data['file'] = base64.decodestring(form.data['file'])
-        img = Image.open(StringIO.StringIO(form.data['file']))
-        #img.save("see.jpg", "JPEG")
-        raw_img = img.convert('RGB').tostring()
+
+    data = request.POST
+
+    data['file'] = data['file'].replace('data:image/png;base64,', '')
+    img_file = StringIO.StringIO(base64.decodestring(data['file']))
+    img = Image.open(img_file)
+
+    #img.save("see.jpg", "JPEG")
+    raw_img = img.convert('RGB').tostring()
+    
+    features = formative_cv.process(raw_img, img.size[0], img.size[1])
+    img = Image.fromstring("RGB", (img.size[0], img.size[1]), raw_img,
+            "raw", "BGR", 0, 1)
         
-        features = formative_cv.process(raw_img, img.size[0], img.size[1])
-        img = Image.fromstring("RGB", (img.size[0], img.size[1]), raw_img,
-                "raw", "BGR", 0, 1)
-        
-    if form.errors:
-        request.session.flash('There are errors in your form. %s' %
-                str(form.errors), queue='error')
-        return HTTPBadRequest()
+    #return HTTPBadRequest();
     #print "kthxbye"
 
     with open('json.txt', 'w') as out:
         out.write(json.dumps(features, indent=4))
 
     return features
+
+
+@view_config(context='formative:resources.Root',
+                    name="parse",
+                    renderer='json',
+                    xhr=True
+                    )
+def parse(request):
+    #print "hai"
+    pass;

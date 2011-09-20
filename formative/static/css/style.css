@@ -286,7 +286,10 @@ iframe {
 
 .cmenu {margin: 0; padding: 0.3em; list-style-type: none;
     background-color: white;}
-.cmenu li:hover {}
+.cmenu span:hover {}
+.cmenu span {
+    display:block;
+}
 .cmenu hr {border: 0; border-bottom: 1px solid gray;
     margin: 3px 0px 3px 0px; width: 10em;}
 .cmenu a {border: 0 !important;}

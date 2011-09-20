@@ -1,30 +1,30 @@
 function drawCursor(){
     context = ctx;
-    if(mySel != null && (mySel.type == 'TEXT' || mySel.type == 'LABEL') ){
+    if(mySel.length !== 0 && (mySel[0].type == 'TEXT' || mySel[0].type == 'LABEL') ){
         if(cursorOn){
 
             // Calculate the display text height
-            var text_height = mySel.h;
+            var text_height = mySel[0].h;
             context.font = "bold " + text_height + "px sans-serif";
-            var text_width = context.measureText(mySel.val).width;
+            var text_width = context.measureText(mySel[0].val).width;
 
             // Make text fit box
-            while(text_width > mySel.w){
+            while(text_width > mySel[0].w){
                 text_height -= 1;
                 context.font = "bold " + text_height + "px sans-serif";
-                text_width = context.measureText(mySel.val).width;
+                text_width = context.measureText(mySel[0].val).width;
             }
 
             // Get the text at the cursor position
             // WARNING does not meature white space
-            var text = mySel.val.substring(0,cursorPos);
-            var x = mySel.x + context.measureText(text).width;
+            var text = mySel[0].val.substring(0,cursorPos);
+            var x = mySel[0].x + context.measureText(text).width;
 
             context.strokeStyle = 'black';
             context.lineWidth   = 1;
             context.beginPath();
-            context.moveTo(x, mySel.y+2);
-            context.lineTo(x, mySel.y+mySel.h-2);
+            context.moveTo(x, mySel[0].y+2);
+            context.lineTo(x, mySel[0].y+mySel[0].h-2);
             context.closePath();
             context.stroke();
         }
@@ -260,36 +260,45 @@ var drawText = function(context, boxColor, ghostArrowColour) {
 }
 
 
-var drawHandles = function (context, boxColor, box){
+var drawHandles = function (context, boxColor, feature){
 
     // draw selection
-    if (mySel === box) {
+    // is it selected?
+    var isSelected = false;
+    for(var i = 0; i < mySel.length; i++){
+        if(mySel[i] === feature){
+            isSelected = true;
+            break;
+        }
+    }
+
+    if (isSelected) {
         context.strokeStyle = mySelColor;
         context.lineWidth = mySelWidth;
-        context.strokeRect(box.x,box.y,box.w,box.h);
+        context.strokeRect(feature.x,feature.y,feature.w,feature.h);
                 
         var half = mySelBoxSize / 2;
                 
         // top left, middle, right
-        selectionHandles[0].x = box.x-half;
-        selectionHandles[0].y = box.y-half;
-        selectionHandles[1].x = box.x+box.w/2-half;
-        selectionHandles[1].y = box.y-half;
-        selectionHandles[2].x = box.x+box.w-half;
-        selectionHandles[2].y = box.y-half;
+        selectionHandles[0].x = feature.x-half;
+        selectionHandles[0].y = feature.y-half;
+        selectionHandles[1].x = feature.x+feature.w/2-half;
+        selectionHandles[1].y = feature.y-half;
+        selectionHandles[2].x = feature.x+feature.w-half;
+        selectionHandles[2].y = feature.y-half;
         //middle left
-        selectionHandles[3].x = box.x-half;
-        selectionHandles[3].y = box.y+box.h/2-half;
+        selectionHandles[3].x = feature.x-half;
+        selectionHandles[3].y = feature.y+feature.h/2-half;
         //middle right
-        selectionHandles[4].x = box.x+box.w-half;
-        selectionHandles[4].y = box.y+box.h/2-half;
+        selectionHandles[4].x = feature.x+feature.w-half;
+        selectionHandles[4].y = feature.y+feature.h/2-half;
         //bottom left, middle, right
-        selectionHandles[6].x = box.x+box.w/2-half;
-        selectionHandles[6].y = box.y+box.h-half;
-        selectionHandles[5].x = box.x-half;
-        selectionHandles[5].y = box.y+box.h-half;
-        selectionHandles[7].x = box.x+box.w-half;
-        selectionHandles[7].y = box.y+box.h-half;
+        selectionHandles[6].x = feature.x+feature.w/2-half;
+        selectionHandles[6].y = feature.y+feature.h-half;
+        selectionHandles[5].x = feature.x-half;
+        selectionHandles[5].y = feature.y+feature.h-half;
+        selectionHandles[7].x = feature.x+feature.w-half;
+        selectionHandles[7].y = feature.y+feature.h-half;
 
         
         context.fillStyle = mySelBoxColor;
