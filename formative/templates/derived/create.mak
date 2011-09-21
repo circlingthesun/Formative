@@ -6,6 +6,8 @@
     ${parent.js()}
     ${self.js_link("/static/js/jquery-1.6.2.min.js")}
     ${self.js_link("/static/js/testdata.js")}
+    ${self.js_link("/static/js/helpers.js")}
+    ${self.js_link("/static/js/feature.js")}
     ${self.js_link("/static/js/formative.js")}
     ${self.js_link("/static/js/draw.js")}
 </%def>
@@ -58,8 +60,10 @@
         <a id="converttext" href="#"><span>Convert to text</span></a>
         <a id="convertcheckbox" href="#"><span>Convert to checkbox</span></a>
         <a id="converttextbox" href="#"><span>Convert to textbox</span></a>
-
         <hr class="bottomSep"/>
+        <a id="merge" href="#"><span>Merge</span></a>
+        <a id="split" href="#"><span>Split here</span></a>
+        <a id="clone" href="#"><span>Clone</span></a>
         <a id="delete" href="#"><span>Delete</span></a>
     </div>
 </div>

@@ -8,7 +8,7 @@ var image;
 var scale = 1;
 var submit_scale = 1;
 
-// Faetures found
+// Feature storage
 var features;
 
 // New, holds the 8 tiny boxes that will be our selection handles
@@ -60,9 +60,8 @@ var mySelId = [];
 var selArrow = false;
 var cursorPos = 0;
 var cursorAlpha = 1.0;
-var cursorOn = true;
-var CURSOR_INTERVAL = 500;
-var ctrlDown = false;
+var cursorOnTime = 1;
+var CURSOR_INTERVAL = 100;
 
 // The selection color and width. Right now we have a red selection with a
 // small width
@@ -140,13 +139,13 @@ function myNonTextKey(e){
     else if (e.which) code = e.which;
 
     
-    if(mySel.length !== 0 &&
-            (mySel[0].type === 'TEXT' || mySel[0].type === 'LABEL')){
+    if(mySel.length !== 0 && lastSel !== null &&
+            (lastSel.type === 'TEXT' || lastSel.type === 'LABEL')){
         switch(code){
             case 8: // Backspace
-                if(mySel[0].val.length > 0 && cursorPos > 0){
-                    mySel[0].val = mySel[0].val.substring(0,cursorPos-1) +
-                        mySel[0].val.substring(cursorPos,mySel[0].val.length);
+                if(lastSel.val.length > 0 && cursorPos > 0){
+                    lastSel.val = lastSel.val.substring(0,cursorPos-1) +
+                        lastSel.val.substring(cursorPos,lastSel.val.length);
                     cursorPos--;
                 }
                 break;
@@ -154,25 +153,24 @@ function myNonTextKey(e){
                 cursorPos = cursorPos > 0 ? cursorPos-1 : 0;
                 break;
             case 39: //right
-                cursorPos = cursorPos < mySel[0].val.length ? cursorPos+1 : mySel[0].val.length;
+                cursorPos = cursorPos < lastSel.val.length ?
+                        cursorPos+1 : lastSel.val.length;
                 break;
             case 46: // Delete
-                if(mySel[0].val.length > 0 && cursorPos < mySel[0].val.length){
-                    mySel[0].val = mySel[0].val.substring(0,cursorPos) +
-                        mySel[0].val.substring(cursorPos+1,mySel[0].val.length);
+                if(lastSel.val.length > 0 && cursorPos < lastSel.val.length){
+                    lastSel.val = lastSel.val.substring(0,cursorPos) +
+                        lastSel.val.substring(cursorPos+1,lastSel.val.length);
                 }
                 else {
                     deleteSelected();
                 }
                 break;
         }
+        cursorOnTime = 15;
     }
     // Delete key
     else if (code === 46){
         deleteSelected();
-    }
-    else if(code === 17){ // CTRL
-        ctrlDown = true;
     }
 
     // Select all
@@ -226,19 +224,19 @@ function myKey(e){
 
 
     if(mySel.length !== 0 &&
-            (mySel[0].type === 'TEXT' || mySel[0].type === 'LABEL')){
+            (lastSel.type === 'TEXT' || lastSel.type === 'LABEL')){
 
         // Expand box if too small
-        var newText = mySel[0].val.substring(0,cursorPos) + 
+        var newText = lastSel.val.substring(0,cursorPos) + 
                 String.fromCharCode(code) +
-                mySel[0].val.substring(cursorPos,mySel[0].val.length);
+                lastSel.val.substring(cursorPos,lastSel.val.length);
 
-        ctx.font = "bold " + mySel[0].h + "px sans-serif";
+        ctx.font = "bold " + lastSel.h + "px sans-serif";
         var newWidth = ctx.measureText(newText).width;
-        if(newWidth > mySel[0].w){
-            mySel[0].w = newWidth;
+        if(newWidth > lastSel.w){
+            lastSel.w = newWidth;
         }
-        mySel[0].val = newText;
+        lastSel.val = newText;
         
         cursorPos++;
 
@@ -247,9 +245,8 @@ function myKey(e){
             e.preventDefault();
             return false;
         }
-        // Keep cursor visible
-        cursorOn = true;
     }
+
     showContextMenu(false);
     invalidate();
 }
@@ -428,16 +425,36 @@ function myDown(e){
                 }
             }
 
-            // Set cursor position if alreadySelected
-            if((features[idx].type === 'TEXT' || features[idx].type === 'LABEL') &&
-                alreadySelected 
+            // Set cursor position
+            if((features[idx].type === 'TEXT' || features[idx].type === 'LABEL')
             ){
-                cursorPos = features[idx].val.length;
+                // If already selected
+                if(alreadySelected ){
+                    // Estimate cursor position
+                    var text_height = selection.h;
+                    ctx.font = "bold " + text_height + "px sans-serif";
+                    var text_width = ctx.measureText(selection.val).width;
+
+                    // Make text fit box
+                    while(text_width > selection.w){
+                        text_height -= 1;
+                        ctx.font = "bold " + text_height + "px sans-serif";
+                        text_width = ctx.measureText(selection.val).width;
+                    }
+
+                    var x_pos = mx-selection.x;
+                    var pos = (x_pos/text_width)*selection.val.length;
+                    cursorPos = pos;
+                }
+                else{
+                    cursorPos = selection.val.length;
+                }
+     
             }
 
 
             // Dont clear previous selection if ctrl is down
-            if(!ctrlDown && !alreadySelected){
+            if(!e.ctrlKey && !alreadySelected){
                 mySel = [];
                 mySelId = [];
             }
@@ -445,6 +462,15 @@ function myDown(e){
             if(!alreadySelected){
                 mySel.push(features[idx]);
                 mySelId.push(idx);
+            }
+            else if(e.ctrlKey){
+                mySel.forEach(function(val, id, array){
+                    if(val === selection){
+                        delete array[id];
+                        delete mySelId[id];
+                    }
+                });
+                return;
             }
 
             
@@ -454,7 +480,7 @@ function myDown(e){
             selection.y = my - offsety;
 
             // Only drag on left click
-            if(e.button != 2)
+            if(e.button !== 2)
                 isDrag = true;
             
             // If selected an arrow
@@ -483,7 +509,7 @@ function myDown(e){
     }
     // havent returned means we have selected nothing
     
-    if(!ctrlDown){
+    if(!e.ctrlKey){
         clearSelection();
     }
 
@@ -493,6 +519,7 @@ function myDown(e){
     }
     else{
         isSelectionDrag = true;
+        clearSelection();
         selX = mx;
         selY = my;
     }
@@ -505,8 +532,8 @@ function myDown(e){
 function clearSelection(){
     mySel = [];
     mySelId = [];
-    myLastSel = null;
-    myLastSelId = -1;
+    lastSel = null;
+    lastSelId = -1;
 }
 
 function myUp(e){
@@ -630,25 +657,6 @@ function handleFiles(files){
     
 }
 
-function calc_scale(max_x, max_y, img){
-    var width = img.width;
-    var height = img.height;
-
-    var scale_f = 1;
-    
-    if (width > height || max_y === 0) {
-        if (width > max_x) {
-            scale_f = max_x / width
-        }
-    } else {
-        if (height > max_y || max_x === 0) {
-            scale_f = max_y / height;
-        }
-    }
-
-    return scale_f;
-}
-
 function newFeature(type, x, h, w, h){
     var x = x || mx;
     var y = y || my;
@@ -656,36 +664,159 @@ function newFeature(type, x, h, w, h){
     var h = h || 25;
 
     var idx = next_id++;
-    features[idx] = {
-            'x' : mx,
-            'y' : my,
-            'w' : w,
-            'h' : h,
-            'draw' : draw,
-            'drawTextbox' : drawTextbox,
-            'drawCheckbox' : drawCheckbox,
-            'drawText' : drawText,
-            'drawLabel' : drawLabel,
-            'type' : type,
-    }
+    var feature = {'x' : mx, 'y' : my, 'w' : w, 'h' : h, 'type' : type};
+    
     if(type === 'LABEL'){
-        features[idx].w = 80;
-        features[idx].target = {'x':x+80+20, 'y':y+h, 'w':1, 'h':1};
-        features[idx].val = 'label';
+        feature.w = 80;
+        feature.target = {'x':x+80+20, 'y':y+h, 'w':1, 'h':1};
+        feature.val = 'label';
     }
     else if(type === 'TEXT'){
-        features[idx].val = 'text';
-        features[idx].w = 80;
+        feature.val = 'text';
+        feature.w = 80;
     }
     else if(type === 'TEXTBOX'){
-        features[idx].w = 80;
-        features[idx].linked = -1;
+        feature.w = 80;
+        feature.linked = -1;
     }
     else if(type === 'CHECKBOX'){
-        features[idx].linked = -1;
+        feature.linked = -1;
     }
     invalidate();
-    return features[idx];
+    features[idx] = new Feature(feature);
+
+}
+
+function cloneSelected(){
+    var newids = {};
+    var newSel = [];
+    var newSelId = [];
+    // Clone
+    mySelId.forEach(function(idx, array_id, array){
+        var newid = next_id++;
+        newids[idx] = newid;
+        // copy
+        features[newid] = new Feature(features[idx], 1);
+        // Offset slightly for visible effect
+        features[newid].x +=10;
+        features[newid].y +=10;
+
+
+        newSel.push(features[newid]);
+        newSelId.push(newid);
+    });
+
+    // Fix references
+    mySelId.forEach(function(idx, array_id, array){
+        var newf = features[newids[idx]];
+        // If label arrow is not dangling
+        if(newf.type === 'LABEL'){
+            // If the arrow is dangling
+            if(newf.target instanceof Object || newf.target === -1){
+                features[newids[idx]].target = 
+                        {'x':newf.x+80+20, 'y':newf.y+newf.h, 'w':1, 'h':1};
+            }
+
+            // If the target object has been cloned
+            if(newids[newf.target] !== undefined){
+                features[newids[idx]].target = newids[newf.target];
+            }
+
+        }
+        // If the label pointing to it has been not cloned
+        else if(newf.linked !== -1 &&
+                newids[newf.linked] === undefined){
+            features[newids[idx]].linked = -1;
+        }
+    });
+
+    // Make new selection
+    mySel = newSel;
+    mySelId = newSelId;
+    invalidate();
+}
+
+function splitText(){
+
+    var x_split = cx;
+
+    var right = lastSel.val.substring(cursorPos, lastSel.val.length);
+    var left = lastSel.val.substring(0, cursorPos);
+
+    ctx.font = "bold " + lastSel.h + "px sans-serif";
+    var left_width = ctx.measureText(left).width;
+    var right_width = ctx.measureText(right).width;
+
+    // on right
+    var id = next_id++;
+    features[id] = new Feature({'type': 'TEXT', 'x':lastSel.x+left_width,
+            'w':right_width, 'y':lastSel.y, 'h':lastSel.h,
+            'val':right});
+    
+
+    // Edit original box on left
+    lastSel.w = left_width;
+    lastSel.val = left;
+    invalidate();
+}
+
+function splitText(){
+
+    var x_split = cx;
+
+    var right = lastSel.val.substring(cursorPos, lastSel.val.length);
+    var left = lastSel.val.substring(0, cursorPos);
+
+    ctx.font = "bold " + lastSel.h + "px sans-serif";
+    var left_width = ctx.measureText(left).width;
+    var right_width = ctx.measureText(right).width;
+
+    // on right
+    var id = next_id++;
+    features[id] = new Feature({'type': 'TEXT', 'x':lastSel.x+left_width,
+            'w':right_width, 'y':lastSel.y, 'h':lastSel.h,
+            'val':right});
+    
+
+    // Edit original box on left
+    lastSel.w = left_width;
+    lastSel.val = left;
+    invalidate();
+}
+
+function mergeSelectedText(){
+    mySelId.sort(function(a,b){
+        if(features[a].y > features[b].y+features[b].h){
+            return true;
+        }
+        return features[a].x > features[b].x
+    });
+    var keep = features[mySelId[0]];
+    var keep_id = mySelId[0];
+
+    var newval = "";
+    var width = 0;
+    var last_y = keep.y;
+    var height = keep.w;
+    var max_width = keep.w;
+    mySelId.forEach(function(id, idx, array){
+        var delim = " ";
+        if(features[id].y > last_y){
+            delim = "\n"; // Work in progress
+            last_y = features[id].y;
+        }
+        newval+= features[id].val + delim;
+        width += features[id].w;
+        if(id !== keep_id)
+            delete features[id];
+    });
+
+    keep.val = newval;
+    keep.w = width;
+
+    mySel = [keep];
+    mySelId = [keep_id];
+    invalidate();
 }
 
 function initContextMenu(){
@@ -700,6 +831,22 @@ function initContextMenu(){
     contextmenu.onmouseover = function(){contextMenuVisible=false}
     $('#delete').click(function(){
         deleteSelected();
+        showContextMenu(false);
+        return false;
+    });
+    $('#clone').click(function(){
+        cloneSelected();
+        showContextMenu(false);
+        return false;
+    });
+    $('#split').click(function(){
+        splitText();
+        showContextMenu(false);
+        return false;
+    });
+    $('#merge').click(function(){
+        mergeSelectedText();
+        showContextMenu(false);
         return false;
     });
 
@@ -729,35 +876,30 @@ function initContextMenu(){
     });
 
     $('#convertlabel').click(function(){
-        mySel[0].type = "LABEL";
-        mySel[0].target = {'x':mySel[0].x+mySel[0].w+20, 'y':mySel[0].y+mySel[0].h, 'w':1, 'h':1}
+        lastSel.type = "LABEL";
+        lastSel.target = {'x':lastSel.x+lastSel.w+20, 'y':lastSel.y+lastSel.h, 'w':1, 'h':1}
         showContextMenu(false);
         invalidate();
         return false;
     });
     $('#converttext').click(function(){
-        mySel[0].type = "TEXT";
-        if(!(mySel[0].target instanceof Object))
+        lastSel.type = "TEXT";
+        if(!(lastSel.target instanceof Object))
             features[lastSel.target].linked = -1;
-        mySel[0].target = undefined;
+        lastSel.target = undefined;
         showContextMenu(false);
         invalidate();
         return false;
     });
     $('#converttextbox').click(function(){
-        mySel[0].type = "TEXTBOX";
+        lastSel.type = "TEXTBOX";
         showContextMenu(false);
         invalidate();
         return false;
     });
     $('#convertcheckbox').click(function(){
-        mySel[0].type = "CHECKBOX";
-        showContextMenu(false);
-        invalidate();
-        return false;
-    });
-    $('#clone').click(function(){
-        mySel[0].type = "CHECKBOX";
+        lastSel.type = "CHECKBOX";
+        lastSel.w = lastSel.h;
         showContextMenu(false);
         invalidate();
         return false;
@@ -780,35 +922,47 @@ function showContextMenu(show){
         cy = cy;
     }
 
-    var sel = lastSel || {'type':'NONE'};
-    if(mySel.length >1)
-        sel = "MULTI";
+    var type;
+    if(mySel.length > 1)
+        type = "MULTI";
+    else if(mySel.length === 1)
+        type = lastSel.type;
+    else
+        type = 'NONE';
     
+
+    $('#newlabel').hide();
+    $('#newtextbox').hide();
+    $('#newtext').hide();
+    $('#newcheckbox').hide();
+
     $('#convertlabel').hide();
     $('#convertcheckbox').hide();
     $('#converttextbox').hide();
     $('#converttext').hide();
 
     $('#delete').show();
-    
-    $('#newlabel').hide();
-    $('#newtextbox').hide();
-    $('#newtext').hide();
-    $('#newcheckbox').hide();
+    $('#clone').show();
+    $('#merge').hide();
+    $('#split').hide();
 
     $('.topSep').hide();
     $('.bottomSep').show();
 
-    switch(sel.type){
+    switch(type){
         case 'NONE':
             $('#newlabel').show();
             $('#newtextbox').show();
             $('#newtext').show();
             $('#newcheckbox').show();
             $('#delete').hide();
+            $('#clone').hide();
             $('.bottomSep').hide();
             break;
         case 'TEXT':
+            if(cursorPos !== lastSel.val.length){
+                $('#split').show();
+            }
             $('#convertlabel').show();
             break;
         case 'LABEL':
@@ -821,7 +975,15 @@ function showContextMenu(show){
             $('#convertcheckbox').show();
             break;
         case 'MULTI':
-            
+            $('.bottomSep').hide();
+            var can_merge = mySel.every(function(f){
+                // Need to take label into account
+                if(f.type === 'TEXT' || f.type === 'LABEL'){
+                    return true;
+                }
+            });
+            if(can_merge)
+                $('#merge').show();
             break;
     }
 
@@ -837,9 +999,6 @@ function setEvents(on){
         canvas.onmousemove = myMove;
         document.onkeypress = myKey;
         document.onkeydown = myNonTextKey;
-        document.onkeyup = function(){
-            ctrlDown = false;
-        }
         initContextMenu();
         
     }
@@ -902,6 +1061,8 @@ function initVerify() {
         selectionHandles.push(rect);
     }
 
+    invalidate();
+
 }
 
 function initCanvas(){
@@ -924,32 +1085,24 @@ function initCanvas(){
 
 
 function initFeatures(json){
-        features = json;
-        for(var id in features){
-            if(!features.hasOwnProperty(id)){
-                break;
-            }
-            features[id].x /=submit_scale/scale;
-            features[id].y /=submit_scale/scale;
-            features[id].w /=submit_scale/scale;
-            features[id].h /=submit_scale/scale;
-            features[id].draw = draw;
-            features[id].drawTextbox = drawTextbox;
-            features[id].drawCheckbox = drawCheckbox;
-            features[id].drawText = drawText;
-            features[id].drawLabel = drawLabel;
-
-            // Trim bounding boxes
-            if(features[id].type === 'TEXT' || features[id].type === 'LABEL'){
-                ctx.font = "bold " + features[id].h + "px sans-serif";
-                var text_width = ctx.measureText(features[id].val).width;
-                if(text_width < features[id].w){
-                    features[id].w = text_width;
-                }
-            }
-
+    for(var id in json){
+        if(!json.hasOwnProperty(id)){
+            break;
         }
-        initVerify();
+
+        features[id] = new Feature(json[id], scale/submit_scale);
+
+        // Trim bounding boxes
+        if(features[id].type === 'TEXT' || features[id].type === 'LABEL'){
+            ctx.font = "bold " + features[id].h + "px sans-serif";
+            var text_width = ctx.measureText(features[id].val).width;
+            if(text_width < features[id].w){
+                features[id].w = text_width;
+            }
+        }
+
+    }
+    initVerify();
 }
 
 function upload(){
