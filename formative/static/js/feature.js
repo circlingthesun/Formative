@@ -8,8 +8,16 @@ function Feature(ob, scale){
     this.length = ob.len;
     this.type = ob.type;
     this.linked = ob.linked; // key of label pointing to it
-    this.target = ob.target; // key of object label point to
+    if(!(ob.target instanceof Object)){
+        this.target = ob.target;
+    }
+    else if( ob.target !== undefined){
+        this.target = {'x': ob.target, 'y':ob.target.y,
+         'w':ob.target.w, 'h':ob.target.h};    
+    }
+     // key of object label point to
                              // or an object where the loose arrow points to
+
 }
 
 Feature.prototype = {

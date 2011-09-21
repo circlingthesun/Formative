@@ -16,3 +16,23 @@ function calc_scale(max_x, max_y, img){
 
     return scale_f;
 }
+
+// http://www.overset.com/2007/07/11/javascript-recursive-object-copy-deep-object-copy-pass-by-value/
+function deepObjCopy (dupeObj) {
+    var retObj = new Object();
+    if (dupeObj instanceof Object) {
+        if (typeof(dupeObj.length) != 'undefined')
+            var retObj = new Array();
+        for (var objInd in dupeObj) {   
+            if (dupeObj[objInd] instanceof Object) {
+                retObj[objInd] = deepObjCopy(dupeObj[objInd]);
+            } else if (dupeObj[objInd] instanceof String) {
+                retObj[objInd] = dupeObj[objInd];
+            } else if (dupeObj[objInd] instanceof Number) {
+                retObj[objInd] = dupeObj[objInd];
+            } else if (dupeObj[objInd] instanceof Boolean) {
+                ((dupeObj[objInd] == true) ? retObj[objInd] = true : retObj[objInd] = false);
+            }
+        }
+    }
+}

@@ -10,6 +10,7 @@ var submit_scale = 1;
 
 // Feature storage
 var features;
+var history = [];
 
 // New, holds the 8 tiny boxes that will be our selection handles
 // the selection handles will be in this order:
@@ -30,6 +31,11 @@ var WIDTH;
 var HEIGHT;
 var INTERVAL = 20;    // how often, in milliseconds, we check to see if a
                       // redraw is needed
+
+// MILISECONDS TO AFTER TO SAVE
+var SAVE_INTERVAL = 1000*60;
+
+var text_changed = false;
 
 // Checkbox refences
 //var showoriginal = $("#showoriginal");
@@ -94,6 +100,33 @@ function SelectorRect(){
     this.h;
 }
 
+var MAX_HISTORY;
+
+function saveState(){
+    /*history.push($.extend(true, {}, features));
+    if(history.length > MAX_HISTORY){
+        history.splice(0,1);
+    }*/
+    var histob = {};
+    for(id in features){
+        if(features.hasOwnProperty(id)){
+            histob[id] = new Feature(features[id]);
+        }
+    }
+    history.push(histob);
+}
+
+// A flash or some feedback would be nice
+function restoreState(){
+    if(history.length > 1){
+        features = history.splice(history.length-1,1)[0];
+    }
+    else if(history.length == 1){
+        features = history.splice(history.length-1,1)[0];
+        saveState();
+    }
+    invalidate();
+}
 
 //wipes the canvas context
 function clear(c) {
@@ -147,6 +180,7 @@ function myNonTextKey(e){
                     lastSel.val = lastSel.val.substring(0,cursorPos-1) +
                         lastSel.val.substring(cursorPos,lastSel.val.length);
                     cursorPos--;
+                    text_changed = true;
                 }
                 break;
             case 37: // Left
@@ -160,6 +194,7 @@ function myNonTextKey(e){
                 if(lastSel.val.length > 0 && cursorPos < lastSel.val.length){
                     lastSel.val = lastSel.val.substring(0,cursorPos) +
                         lastSel.val.substring(cursorPos+1,lastSel.val.length);
+                    text_changed = true;
                 }
                 else {
                     deleteSelected();
@@ -186,11 +221,17 @@ function myNonTextKey(e){
         return false;
     }
 
+    // CTRL - Z undo
+    if(e.ctrlKey && code === 90){
+        restoreState();
+        return false;
+    }
+
     invalidate();
 }
 
 function deleteSelected(){
-
+    saveState();
     mySelId.forEach(function(fid, idx, array){
         var feature = features[fid];
         if((feature.type === 'TEXTBOX' || feature.type === 'CHECKBOX') &&
@@ -239,7 +280,7 @@ function myKey(e){
         lastSel.val = newText;
         
         cursorPos++;
-
+        text_changed = true;
         // Disable default spacebar
         if(e.keyCode==32){
             e.preventDefault();
@@ -463,11 +504,16 @@ function myDown(e){
                 mySel.push(features[idx]);
                 mySelId.push(idx);
             }
+            // Subtract from selection
             else if(e.ctrlKey){
                 mySel.forEach(function(val, id, array){
                     if(val === selection){
                         delete array[id];
                         delete mySelId[id];
+                        if(mySelId.length !=0){
+                            lastSel = mySel[0];
+                            lastSelId = mySelId[0];
+                        }
                     }
                 });
                 return;
@@ -519,7 +565,6 @@ function myDown(e){
     }
     else{
         isSelectionDrag = true;
-        clearSelection();
         selX = mx;
         selY = my;
     }
@@ -530,6 +575,10 @@ function myDown(e){
 }
 
 function clearSelection(){
+    if(text_changed === true){
+        saveState();
+        text_changed = false;
+    }
     mySel = [];
     mySelId = [];
     lastSel = null;
@@ -583,7 +632,9 @@ function myUp(e){
     selArrow = false;
     showContextMenu(contextMenuVisible);
     if(isSelectionDrag){
-        clearSelection();
+        if(!e.ctrlKey){
+            clearSelection();
+        }
         for(idx in features){
             // Find center
             var f = features[idx];
@@ -807,8 +858,12 @@ function mergeSelectedText(){
         }
         newval+= features[id].val + delim;
         width += features[id].w;
-        if(id !== keep_id)
+        if(id !== keep_id){
+            if(features[id].type === 'LABEL' && !(features[id].target instanceof Object)){
+                features[features[id].target].linked = -1;
+            }
             delete features[id];
+        }
     });
 
     keep.val = newval;
@@ -835,40 +890,47 @@ function initContextMenu(){
         return false;
     });
     $('#clone').click(function(){
+        saveState();
         cloneSelected();
         showContextMenu(false);
         return false;
     });
     $('#split').click(function(){
+        saveState();
         splitText();
         showContextMenu(false);
         return false;
     });
     $('#merge').click(function(){
+        saveState();
         mergeSelectedText();
         showContextMenu(false);
         return false;
     });
 
     $('#newlabel').click(function(e){
+        saveState();
         getMouse(e);
         newFeature('LABEL', cx, cy);
         showContextMenu(false);
         return false;
     });
     $('#newtextbox').click(function(e){
+        saveState();
         getMouse(e);
         newFeature('TEXTBOX', cx, cy);
         showContextMenu(false);
         return false;
     });
     $('#newcheckbox').click(function(e){
+        saveState();
         getMouse(e);
         newFeature('CHECKBOX', cx, cy);
         showContextMenu(false);
         return false;
     });
     $('#newtext').click(function(e){
+        saveState();
         getMouse(e);
         newFeature('TEXT', cx, cy);
         showContextMenu(false);
@@ -876,6 +938,7 @@ function initContextMenu(){
     });
 
     $('#convertlabel').click(function(){
+        saveState();
         lastSel.type = "LABEL";
         lastSel.target = {'x':lastSel.x+lastSel.w+20, 'y':lastSel.y+lastSel.h, 'w':1, 'h':1}
         showContextMenu(false);
@@ -883,6 +946,7 @@ function initContextMenu(){
         return false;
     });
     $('#converttext').click(function(){
+        saveState();
         lastSel.type = "TEXT";
         if(!(lastSel.target instanceof Object))
             features[lastSel.target].linked = -1;
@@ -892,12 +956,14 @@ function initContextMenu(){
         return false;
     });
     $('#converttextbox').click(function(){
+        saveState();
         lastSel.type = "TEXTBOX";
         showContextMenu(false);
         invalidate();
         return false;
     });
     $('#convertcheckbox').click(function(){
+        saveState();
         lastSel.type = "CHECKBOX";
         lastSel.w = lastSel.h;
         showContextMenu(false);
@@ -1047,6 +1113,7 @@ function initVerify() {
     if(mainDrawInit === false){
         setInterval(mainDraw, INTERVAL);
         setInterval(drawCursor, CURSOR_INTERVAL);
+        //setInterval(saveState, SAVE_INTERVAL);
         mainDrawInit === true;
     }
 
@@ -1062,7 +1129,6 @@ function initVerify() {
     }
 
     invalidate();
-
 }
 
 function initCanvas(){
@@ -1102,6 +1168,8 @@ function initFeatures(json){
         }
 
     }
+    history = [];
+    saveState();
     initVerify();
 }
 
