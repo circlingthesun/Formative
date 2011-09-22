@@ -12,7 +12,7 @@ function Feature(ob, scale){
         this.target = ob.target;
     }
     else if( ob.target !== undefined){
-        this.target = {'x': ob.target, 'y':ob.target.y,
+        this.target = {'x': ob.target.x, 'y':ob.target.y,
          'w':ob.target.w, 'h':ob.target.h};    
     }
      // key of object label point to
@@ -72,8 +72,19 @@ Feature.prototype = {
         var fromW = this.w;
         var fromH = this.h;
 
+        var to;
         // Deal hanging pointers
-        var to = this.target instanceof Object ? this.target : features[this.target];
+        // In an ideal world I do not have to deal with this
+        if(this.target instanceof Object ){
+            to = this.target
+        }
+        else if(features[this.target] === undefined){
+            to = {'x':this.x+this.w+20, 'y':this.y+this.h,
+                    'w':1, 'h':1};
+        }
+        else{
+            to = features[this.target];
+        }
 
         var toX = to.x;
         var toY = to.y;

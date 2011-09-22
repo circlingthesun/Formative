@@ -32,9 +32,6 @@ var HEIGHT;
 var INTERVAL = 20;    // how often, in milliseconds, we check to see if a
                       // redraw is needed
 
-// MILISECONDS TO AFTER TO SAVE
-var SAVE_INTERVAL = 1000*60;
-
 var text_changed = false;
 
 // Checkbox refences
@@ -84,9 +81,7 @@ var contextMenuVisible = false;
 var cx, cy; // Context menu source
 var next_id = 10000; // id's for new features
 
-// since we can drag from anywhere in a node
-// instead of just its x/y corner, we need to save
-// the offset of the mouse when we start dragging.
+// save the offset of the mouse when we start dragging.
 var offsetx, offsety;
 
 // Padding and border style widths for mouse offsets
@@ -100,13 +95,13 @@ function SelectorRect(){
     this.h;
 }
 
-var MAX_HISTORY;
+var MAX_HISTORY = 10;
 
 function saveState(){
-    /*history.push($.extend(true, {}, features));
+    history.push($.extend(true, {}, features));
     if(history.length > MAX_HISTORY){
-        history.splice(0,1);
-    }*/
+        history.splice(1,1);
+    }
     var histob = {};
     for(id in features){
         if(features.hasOwnProperty(id)){
@@ -125,6 +120,7 @@ function restoreState(){
         features = history.splice(history.length-1,1)[0];
         saveState();
     }
+    text_changed = false;
     invalidate();
 }
 
@@ -715,26 +711,27 @@ function newFeature(type, x, h, w, h){
     var h = h || 25;
 
     var idx = next_id++;
-    var feature = {'x' : mx, 'y' : my, 'w' : w, 'h' : h, 'type' : type};
+    var f = {'x' : x, 'y' : y, 'w' : w, 'h' : h, 'type' : type};
     
     if(type === 'LABEL'){
-        feature.w = 80;
-        feature.target = {'x':x+80+20, 'y':y+h, 'w':1, 'h':1};
-        feature.val = 'label';
+        f.w = 80;
+        f.target = {'x':x+80+20, 'y':y+h, 'w':1, 'h':1};
+        f.val = 'label';
+        console.log(f);
     }
     else if(type === 'TEXT'){
-        feature.val = 'text';
-        feature.w = 80;
+        f.val = 'text';
+        f.w = 80;
     }
     else if(type === 'TEXTBOX'){
-        feature.w = 80;
-        feature.linked = -1;
+        f.w = 80;
+        f.linked = -1;
     }
     else if(type === 'CHECKBOX'){
-        feature.linked = -1;
+        f.linked = -1;
     }
     invalidate();
-    features[idx] = new Feature(feature);
+    features[idx] = new Feature(f, 1);
 
 }
 
@@ -811,30 +808,6 @@ function splitText(){
     invalidate();
 }
 
-function splitText(){
-
-    var x_split = cx;
-
-    var right = lastSel.val.substring(cursorPos, lastSel.val.length);
-    var left = lastSel.val.substring(0, cursorPos);
-
-    ctx.font = "bold " + lastSel.h + "px sans-serif";
-    var left_width = ctx.measureText(left).width;
-    var right_width = ctx.measureText(right).width;
-
-    // on right
-    var id = next_id++;
-    features[id] = new Feature({'type': 'TEXT', 'x':lastSel.x+left_width,
-            'w':right_width, 'y':lastSel.y, 'h':lastSel.h,
-            'val':right});
-    
-
-    // Edit original box on left
-    lastSel.w = left_width;
-    lastSel.val = left;
-    invalidate();
-}
-
 function mergeSelectedText(){
     mySelId.sort(function(a,b){
         if(features[a].y > features[b].y+features[b].h){
@@ -871,6 +844,8 @@ function mergeSelectedText(){
 
     mySel = [keep];
     mySelId = [keep_id];
+    lastSel = keep;
+    lastSelId = keep_id;
     invalidate();
 }
 
@@ -985,7 +960,7 @@ function showContextMenu(show){
     // set seed point
     if(!contextMenuVisible){
         cx = mx;
-        cy = cy;
+        cy = my;
     }
 
     var type;
@@ -1084,7 +1059,12 @@ function setEvents(on){
 // initialize our canvas, add a ghost canvas, set draw loop
 // then add everything we want to intially exist on the canvas
 function initVerify() {
+    $('#process').unbind('click');
     $("#process").hide();
+    $("#prevbutton").show();
+    $("#prevbutton").click(preview);
+    $("#done").click(finalise);
+    $("#done").show();
     $("#checkboxes").show();
     $("#checkboxes").click(invalidate);
     $("#showresults").click(function(){
@@ -1132,6 +1112,11 @@ function initVerify() {
 }
 
 function initCanvas(){
+    $("#done").hide();
+    $('#done').unbind('click');
+    $("#input").hide();
+    $("#prevbutton").hide();
+    $('#prevbutton').unbind('click');
     $("#process").show();
     $("#process").click(upload);
     $("#checkboxes").hide();
@@ -1198,4 +1183,34 @@ function upload(){
     }
 
     $.post(url, params, initFeatures, 'json');
+}
+
+function preview(){
+    if($("#prevbutton").val() === 'Edit'){
+        $("#prevbutton").val('Preview');
+        $("#canvas2").show();
+        $("#preview").hide();
+        $("#checkboxes").show();
+        return;
+    }
+    var url = '/preview'
+    var data = JSON.stringify(features);
+    var params = {"_csrf":csrf, "features": data}
+    $.post(url, params, function(html){
+        $("#inpreview").html(html);
+        $("#preview").show();
+        $("#canvas2").hide();
+        $("#prevbutton").val('Edit');
+        $("#checkboxes").hide();
+    }, "html");
+}
+
+
+function finalise(){
+    var url = '/finalise'
+    var data = JSON.stringify(features);
+    var params = {"_csrf":csrf, "features": data}
+    $.post(url, params, function(json){
+        window.location = '/form?id=' + json.id;
+    }, 'json');
 }

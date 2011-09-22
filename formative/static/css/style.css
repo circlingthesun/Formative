@@ -1,3 +1,31 @@
+/* I reset it all so now its gotta be set again*/
+
+h1{
+    margin:0;
+    padding:10px 0 10px 0;
+    color:#555555;
+    font-size:20px;
+    font-family:"Avant Garde", serif;
+}
+
+h2{
+    font-size:16px;
+    font-family:"Avant Garde", serif;
+}
+
+h3{
+    font-size:14px;
+    font-family:"Avant Garde", serif;
+}
+
+#inpreview > div{
+    padding:2px 2px 5px 2px;
+}
+
+input[type=button] {
+    padding:2px 4px 2px 4px;
+}
+
 /*
 * Structure. This is the box model
 */
@@ -57,18 +85,17 @@ body{
 #header{
     height:20px;
     margin:0 auto 0 auto;
-    padding:5px 0 10px 0;
-    width:975px;
+    padding:5px 0 10px 15px;
+    width:960px;
     background:#bbbbbb url(/static/images/grad400h.png) top repeat-x;
     /*background:#bbbbbb url(/static/images/logo.jpg) top;*/
-    text-align:center;
+    text-align:left;
 }
 
 /* gradient #01295a - #69abdb */
 
 #header h1{
 	margin:0;
-	/*float:center;*/
 	padding:5px 0 0 0;
 	color:#555555;
 	font-size:20px;
@@ -81,9 +108,7 @@ body{
 }
 
 #header p{
-	width:500px;
-	float:right;
-	text-align:center;
+	float:left;
 	color:#a0a0a0;
 	margin:0 0 0px 0;
 	font-size:0.8em;

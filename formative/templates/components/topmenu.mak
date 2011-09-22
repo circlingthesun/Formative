@@ -25,8 +25,8 @@
         
     <%
         menu = [
-            ["Create a form", {
-                "url" : "/create",
+            ["Create a new form", {
+                "url" : "/new",
             }],
         ]
         

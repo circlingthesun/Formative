@@ -32,12 +32,14 @@
 
 <div id="toolbox">
 	<input type="file" id="input">
-	<input id="process" type="button" value="process" style="display:none">
+    <input id="done" type="button" value="Finalise" style="display:none">
+	<input id="process" type="button" value="Process" style="display:none">
+    <input id="prevbutton" type="button" value="Preview" style="display:none">
 	<span id="checkboxes" style="display:none">
+        <input id="showoriginal" type="checkbox"/>
 		show original
-		<input id="showoriginal" type="checkbox"/>
-		show results
 		<input id="showresults" type="checkbox" checked />
+		show results
 	</span>
 </div>
 <hr />
@@ -46,6 +48,11 @@
     This text is displayed if your browser does not support HTML5 Canvas.
 </canvas>
 
+
+<div id="preview" style="display:none">
+
+<div id="inpreview"></div>
+</div>
 
 <div id="contextmenu"
  style="border: 1px solid gray; display: none; position: absolute">

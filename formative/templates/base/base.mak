@@ -28,8 +28,8 @@
 </%def>
 
 <%def name="css()">
-	${css_link('/static/css/style.css', 'all')}
     ${css_link('/static/css/reset-min.css', 'screen')}
+	${css_link('/static/css/style.css', 'all')}
 	${topmenu.css(self)}
 </%def>
 
