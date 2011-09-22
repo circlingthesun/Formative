@@ -144,9 +144,6 @@ def parse(data):
     # try set title
     if items[0]['h'] > agregate_font/text_items:
         items[0]['is_title'] = True
-         
-
-    print items[0]['val']
    
     return items
     
