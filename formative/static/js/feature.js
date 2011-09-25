@@ -1,3 +1,21 @@
+// Small rectangles for selectoion resize
+function SelectorRect(){
+    this.x;
+    this.y;
+    this.w;
+    this.h;
+}
+
+// New, holds the 8 tiny boxes that will be our selection handles
+// the selection handles will be in this order:
+// 0    1    2
+// 3         4
+// 5    6    7
+var selectionHandles = [];
+
+/*
+    Object that resprents form elements found
+*/
 function Feature(ob, scale){
     var scale = scale || 1;
     this.x = ob.x * scale;
@@ -13,13 +31,16 @@ function Feature(ob, scale){
     }
     else if( ob.target !== undefined){
         this.target = {'x': ob.target.x, 'y':ob.target.y,
-         'w':ob.target.w, 'h':ob.target.h};    
+            'w':ob.target.w, 'h':ob.target.h};    
     }
      // key of object label point to
                              // or an object where the loose arrow points to
 
 }
 
+/*
+    Define feature prototype
+*/
 Feature.prototype = {
 
     drawTextbox: function(context, ghostColour) {
@@ -34,7 +55,7 @@ Feature.prototype = {
             //context.fillRect(this.x,this.y,this.w,this.h);
             context.lineWidth = 2;
             context.strokeStyle = 'rgba(0,0,0,1.0)';
-            context.fillStyle = 'rgba(157,212,178,0.7)';
+            context.fillStyle = TEXTBOX_COLOUR;//'rgba(157,212,178,0.7)';
             roundRect(context, this.x, this.y, this.w, this.h, 5, true, true);
             
     },
@@ -52,7 +73,7 @@ Feature.prototype = {
             //context.fillRect(this.x,this.y,this.w,this.h);
             context.lineWidth = 2;
             context.strokeStyle = 'rgba(0,0,0,1.0)';
-            context.fillStyle = 'rgba(211,157,212,0.7)';
+            context.fillStyle = CHECKBOX_COLOUR;//'rgba(211,157,212,0.7)';
             roundRect(context, this.x, this.y, this.w, this.h, 5, true, true);
             cross(context, this.x, this.y, this.w, this.h, 4);
     },
@@ -97,8 +118,8 @@ Feature.prototype = {
             context.strokeStyle = ghostArrowColour;
         }
         else{
-            context.strokeStyle = 'rgba(255,50,50,1.0)';
-            context.fillStyle = 'rgba(255,50,50,1.0)';
+            context.strokeStyle = ARROW_COLOUR;//'rgba(255,50,50,1.0)';
+            context.fillStyle = ARROW_COLOUR;//'rgba(255,50,50,1.0)';
         }
 
         // Where is the target relative to the label?
@@ -160,7 +181,7 @@ Feature.prototype = {
         context.fill();
 
 
-        // Draw nice line ubder it
+        // Draw nice line under the text
         if(context !== gctx) {
             context.lineWidth = 1;
             context.strokeStyle = 'rgba(0,0,0,1.0)';

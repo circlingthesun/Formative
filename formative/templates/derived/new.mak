@@ -6,6 +6,7 @@
     ${parent.js()}
     ${self.js_link("/static/js/jquery-1.6.2.min.js")}
     ${self.js_link("/static/js/testdata.js")}
+    ${self.js_link("/static/js/settings.js")}
     ${self.js_link("/static/js/helpers.js")}
     ${self.js_link("/static/js/feature.js")}
     ${self.js_link("/static/js/formative.js")}
@@ -30,30 +31,29 @@
 	});
 </%def>
 
-<div id="toolbox">
-	<input type="file" id="input">
-    <input id="done" type="button" value="Finalise" style="display:none">
-	<input id="process" type="button" value="Process" style="display:none">
-    <input id="prevbutton" type="button" value="Preview" style="display:none">
-	<span id="checkboxes" style="display:none">
-        <input id="showoriginal" type="checkbox"/>
-		show original
-		<input id="showresults" type="checkbox" checked />
-		show results
-	</span>
+<%def name="toolbox()">
+    <div id="toolbox" class="container_12">
+    	<input type="file" id="input">
+        <input id="done" type="button" value="Finalise" style="display:none">
+    	<input id="process" type="button" value="Process" style="display:none">
+        <input id="prevbutton" type="button" value="Preview" style="display:none">
+    	<span id="checkboxes" style="display:none">
+            <input id="showoriginal" type="checkbox"/>
+    		show original
+    		<input id="showresults" type="checkbox" checked />
+    		show results
+    	</span>
+    </div>
+</%def>
+<div class="container_12">
+    <canvas id="canvas2" width="940" height="60">
+        This text is displayed if your browser does not support HTML5 Canvas.
+    </canvas>
+
+    <div id="preview" style="display:none">
+        <div id="inpreview"></div>
+    </div>
 </div>
-<hr />
-
-<canvas id="canvas2" width="900" height="60">
-    This text is displayed if your browser does not support HTML5 Canvas.
-</canvas>
-
-
-<div id="preview" style="display:none">
-
-<div id="inpreview"></div>
-</div>
-
 <div id="contextmenu"
  style="border: 1px solid gray; display: none; position: absolute">
     <div class="cmenu">

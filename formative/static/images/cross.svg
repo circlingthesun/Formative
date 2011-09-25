@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="128" height="128">
+  <desc/>
+  <defs/>
+  <path fill="#333333" stroke="none" d="M24.778,21.419 19.276,15.917 24.777,10.415 21.949,7.585 16.447,13.087 10.945,7.585 8.117,10.415 13.618,15.917 8.116,21.419 10.946,24.248 16.447,18.746 21.948,24.248" transform="scale(4)"/>
+  <rect x="0.5" y="0.5" width="128" height="128" r="0" rx="0" ry="0" fill="#000000" stroke="#000" style="opacity: 0; " opacity="0"/>
+</svg>

@@ -23,36 +23,24 @@
 
 <%def name="title()">Home</%def>
 
-<%def name="right_col()">    
-
-<p>
-<img alt="unisa" src="/static/images/unisa.jpg">
-</p>
-<br />
-
-<iframe src="http://www.facebook.com/plugins/likebox.php?id=141110852575588&amp;width=292&amp;connections=10&amp;stream=false&amp;header=true&amp;height=287" style="border:none; overflow:hidden; width:292px; height:287px;"></iframe>
-                
-</%def>
-<img style="float:right;padding:10px;" src="/static/images/fluffy.jpg"/>
-Fluffy welcomes you to to Formative.<br />
-You can <a href="/static/testform.zip">download this</a> form and try convert it by clicking the "Create Form" link above.
-
 <!-- home.mak -->
-
-<%
-    pages = request.db.pages.find({"published":True, "onfrontpage": True}, sort=[("created",-1)])
-    paginator = h.Page(pages, request, 5)
-%>
-
-% for page in paginator.getslice():
-    
-    <div class="node">
-        <h2><a href="/pages/${page['name']}">${page['title']}</a></h2>
-        <div class="page">
-            ${h.paragraphize(page['body']) | n}
-        </div>        	
+<div id="start">
+    <div class="grid_3">
+        <img src="/static/images/form.png">
+        <p>Load your form</p>
     </div>
-% endfor
+    <div class="grid_3">
+        <img src="/static/images/cloudUp.png">
+        <p>Process in cloud</p>
+    </div>
+    <div class="grid_3">
+        <img src="/static/images/pensil.png">
+        <p>Edit (a.k.a fix magic cloud mistakes)</p>
+    </div>
+    <div class="grid_3">
+        <img src="/static/images/users.png">
+        <p>Finalise &amp share</p>
+    </div>
+</div>
 
-${paginator.pager() | n}
 <!-- end home.mak -->

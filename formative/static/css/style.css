@@ -1,266 +1,110 @@
-/* I reset it all so now its gotta be set again*/
+/* 960 structure */
 
-h1{
-    margin:0;
-    padding:10px 0 10px 0;
-    color:#555555;
-    font-size:20px;
-    font-family:"Avant Garde", serif;
+body {
+  background: #fff;
+  color: #333;
+  font-size: 11px;
+  height: auto;
+  padding-bottom: 20px;
+  font-family: 'Hammersmith One', sans-serif;
+  font-size:1em;
 }
 
-h2{
-    font-size:16px;
-    font-family:"Avant Garde", serif;
+a {
+  color: #fff;
+  text-decoration: none;
 }
 
-h3{
-    font-size:14px;
-    font-family:"Avant Garde", serif;
+a:hover {
+  text-decoration: underline;
 }
 
+h1 {
+  font-weight: normal;
+}
+
+h2 {
+  padding-top: 20px;
+}
+
+p {
+  overflow: hidden;
+}
+
+/*.container_12 {
+  background-color: #fff;
+  background-repeat: repeat-y;
+  background-image: url(/static/images/12_col.gif);
+}*/
+
+/* Style */
+#header h1 a {
+    padding-top: 0px;
+    /*font-family: 'Loved by the King', cursive;*/
+    font-weight: 400;
+    font-size:25px;
+    text-align:left;
+    /* Letter oress effect */
+    color: #FFF;
+    text-shadow: 0px 2px 3px #555;
+}
+
+#header h1 a:hover {
+  text-decoration: none;
+}
+
+#header {
+    background: #222;
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#333333', endColorstr='#000000');
+    background: -webkit-gradient(linear, left top, left bottom, from(#333), to(#000));
+    background: -moz-linear-gradient(top,  #333,  #000); 
+}
+
+
+#footer {
+    background: #222;
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#333333', endColorstr='#000000');
+    background: -webkit-gradient(linear, left top, left bottom, from(#333), to(#000));
+    background: -moz-linear-gradient(top,  #333,  #000);
+    margin-bottom: 20px;
+    /* Letter oress effect */
+    color: #FFF;
+    text-shadow: 0px 2px 3px #555;
+}
+
+/* Inline list elements */
+#header ul{
+    float:right;
+    position:relative;
+    top:5px;
+}
+#header li {
+    display:inline;
+    list-style-type:none; 
+    padding-left:1em;
+    margin-left:1em;
+    border-left:1px solid #ccc
+}
+#header li:first-child {
+    border-left:none
+}
+
+
+/* Preview of the form */
 #inpreview > div{
     padding:2px 2px 5px 2px;
 }
 
-input[type=button] {
-    padding:2px 4px 2px 4px;
+#toolbox{
+    background:#CCCCCC;
+    border-bottom-right-radius: 5px;
+    border-bottom-left-radius: 5px;
 }
 
-/*
-* Structure. This is the box model
-*/
-
-body{
-	margin:0;
-	padding:0;
-	font-family: Gill, Helvetica, sans-serif;
-	font-size:0.9em;
-	color:#303030;
-	line-height:1.2em;
-}
-
-/* Alligns content in the middle */
-#page{
-	color:#000000;
-	margin:0 auto 0 auto;
-	padding:0;
-	width:975px;
-}
-
-#wrapper{
-    float:left;
-    width:943px;
-	background:#ffffff;
-	color:#303030;
-	padding:20px 15px 20px 15px;
-	border-right:solid #cccccc 1px;
-	border-left:solid #cccccc 1px;
-}
-
-#left { float:left; width:150px; margin:0; padding:0 10px 10px 10px; font-size:80%; }
-#right {
-    width:280px; margin:0 20px; padding:0 10px 10px 10px; font-size:80%;
-    border-left:solid #cccccc 1px;
-    position:relative;
-    float:right;
-    
-}
-#middle {
-    margin:0; font-size:80%; padding:0 10px 10px 10px;
-    width:582px;
-    float:left;
-}
-
-#middle-full{
-    margin:0; font-size:80%; padding:0 10px 10px 10px;
-}
-
-
-#logo{
-	float:left;
-	margin:0;
-}
-
-
-#header{
-    height:20px;
-    margin:0 auto 0 auto;
-    padding:5px 0 10px 15px;
-    width:960px;
-    background:#bbbbbb url(/static/images/grad400h.png) top repeat-x;
-    /*background:#bbbbbb url(/static/images/logo.jpg) top;*/
-    text-align:left;
-}
 
 /* gradient #01295a - #69abdb */
 
-#header h1{
-	margin:0;
-	padding:5px 0 0 0;
-	color:#555555;
-	font-size:20px;
-	font-family:"Avant Garde", serif;
-}
-
-#header a{
-    text-decoration:none;
-    color:#555555;
-}
-
-#header p{
-	float:left;
-	color:#a0a0a0;
-	margin:0 0 0px 0;
-	font-size:0.8em;
-	line-height:1.2em;
-	background-color:inherit;
-	padding:0;
-}
-
-h3{
-font-size:1.3em;
-margin:0 0 10px 0;
-}
-
-a{
-text-decoration:none;
-color:#286ea0;
-}
-
-a:hover{
-text-decoration:underline;
-/*color:#286ea0;*/
-}
-
-a img{
-border:0;
-}
-
-#footer{
-	clear:both;
-	border-top:4px solid #555555;
-	/*text-align:right;*/
-	color:#000000;
-	font-size:0.7em;
-	height:10px;
-	background:#eeeeee;
-	background:#bbbbbb url(/static/images/grad400h.png) top repeat-x;
-	padding:20px;
-	text-align:right;
-}
-
-#footer a{
-color:#808080;
-text-decoration:none;
-}
-
-#footer a:hover{
-text-decoration:underline;
-}
-
-.left{
-margin:10px 10px 5px 0;
-float:left;
-}
-
-.right{
-margin:10px 0 5px 10px;
-float:right;
-}
-
-.textright{
-text-align:right;
-}
-
-.center{
-text-align:center;
-}
-
-.small{
-font-size:0.8em;
-}
-
-.bold{
-font-weight:bold;
-}
-
-.hide{
-display:none;
-}
-
-
-/*TOP MENU*/
-#topmenu{
-  background:#555555;
-  margin:0;
-  padding:5px 5px 5px 15px;
-}
-
-#topmenu ul{
-  margin:0;
-}
-
-#topmenu li{
-  display:inline;
-  list-style:none;
-  padding-right:10px;
-}
-
-#topmenu a{
-  color:#ffffff;
-}
-
-
-#navlist li:before { content: "| "; }
-#navlist li:first-child:before { content: ""; }
-
-
-#imageContainer { height:309px; }  
-#imageContainer img { display:none; 	
-			position:absolute;
-			top:0px; left:0px; 	
-			height:309px;  	
-			width:500px; 	
-			opacity: -0.01; }
-			
-#frontpage{
-    float:left;
-    height:309px;
-    width:975px;
-    background:#000000;
-}
-
-#subheader{
-    float:left;
-    width:975px;
-}
-
-
-
-#topmenu li a{
-    margin:0;
-    font:Verdana,Tahoma,Arial,sans-serif;
-}
-
-.tabs li{
-    display:inline;
-    padding: 0 1em 0 1em;
-}
-
-
-.container-inline{
-    display:inline;
-}
-
-
-table tr th {
-    border-bottom-width: 1px;
-    border-bottom-style: ridge; 
-    border-bottom-color: #cccccc;
-    border-collapse: collapse;
-}
-
-
+/* Session flash messages */
 #flash {
     background: #ffc;
     padding: 5px;
@@ -269,6 +113,7 @@ table tr th {
     margin-left:auto;
     margin-right:auto;
 }
+
 #flash p { margin: 0px; padding: 0px; }
 
 #flash-error {
@@ -279,7 +124,11 @@ table tr th {
     margin-left:auto;
     margin-right:auto;
 }
-#flash-error p { margin: 0px; padding: 0px; }
+
+#flash-error p {
+    margin: 0px;
+    padding: 0px;
+}
 
 .error {
     font-weight: bold;
@@ -287,45 +136,49 @@ table tr th {
     margin-bottom: 0;
 }
 
-.error ul li{
-    /*display: inline;*/
-}
 
-iframe {
-    border: 0;
-    margin: 0;
-    overflow: hidden;
-}
-
-.edit_links {
-    text-align:right;
-    position:relative;
-    top:-30px;
-}
-
+/* Context menu style */
 #contextmenu {
     position: absolute;
     z-index:99999;
     color:#;
 }
 
-.cmenu {margin: 0; padding: 0.3em; list-style-type: none;
-    background-color: white;}
+.cmenu {
+    margin: 0;
+    padding: 0.3em;
+    list-style-type: none;
+    background-color: white;
+}
+
 .cmenu span:hover {
     background: #333333;
 }
+
 .cmenu span {
     display:block;
 }
-.cmenu hr {border: 0; border-bottom: 1px solid gray;
-    margin: 3px 0px 3px 0px; width: 10em;}
+
+.cmenu hr {
+    border: 0;
+    border-bottom: 1px solid gray;
+    margin: 3px 0px 3px 0px;
+    width: 10em;
+}
+
 .cmenu a {
     border: 0!important;
     color: #000000;
 }
+
 .cmenu a:hover {
     text-decoration: none;
     color: #FFFFFF;
 }
-.cmenu .topSep {font-size: 90%; border-top: 1px solid gray;
-    margin-top: 0.3em; padding-top: 0.3em;}
+
+.cmenu .topSep {
+    font-size: 90%;
+    border-top: 1px solid gray;
+    margin-top: 0.3em;
+    padding-top: 0.3em;
+}

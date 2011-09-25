@@ -1,4 +1,4 @@
-<%namespace name="topmenu" file="/components/topmenu.mak"/>
+<%namespace name="topmenu" file="/components/menu.mak"/>
 
 <%
     self.seen_css = set()
@@ -28,7 +28,10 @@
 </%def>
 
 <%def name="css()">
-    ${css_link('/static/css/reset-min.css', 'screen')}
+    ${css_link('http://fonts.googleapis.com/css?family=Loved+by+the+King', 'screen')}
+    ${css_link('http://fonts.googleapis.com/css?family=Hammersmith+One', 'screen')}
+    ${css_link('/static/css/reset.css', 'screen')}
+    ${css_link('/static/css/960.css', 'screen')}
 	${css_link('/static/css/style.css', 'all')}
 	${topmenu.css(self)}
 </%def>
@@ -40,9 +43,7 @@
 
 <%def name="title()"></%def>
 <%def name="footer()">Rickert Mulder 2011</%def>
-<%def name="analytics()">
-
-</%def>
+<%def name="analytics()"></%def>
 
 <%def name="flash()">
     % if request.session.peek_flash('error'):
@@ -62,6 +63,10 @@
 
 </%def>
 
+<%def name="toolbox()">
+
+</%def>
+
 <%def name="meta()"></%def>
 
 <!DOCTYPE html>
@@ -71,40 +76,36 @@
         <meta charset="UTF-8" />
         ${self.meta()}
         ${self.css()}
-        
-        <style>
-            ${self.style_section()}
-        </style>
-	
+        <style>${self.style_section()}</style>
     </head>
 
     <body>
 		
 	    <div id="header">
-	        <h1 id="name"><a href="/">Formative</a></h1>
+            <div class="container_12">
+	        <h1 id="name" class="grid_2"><a href="/">Formative</a></h1>
+            <div id="navigation" class="grid_10">${topmenu.topmenu("menu")}</div>
+            </div>
 	    </div>
-	
-	    <div id="page">
 
-            <div id="topmenu">
-            ${topmenu.topmenu("menu")}
-            </div>
+        ${self.toolbox()}
 
-            <!-- begin wrapper -->
-	        <div id="wrapper">
-                ${self.flash()}
-                <!-- begin content -->
-                ${next.body()}
-	            <!-- end content-->
-	
-            </div>
-            <!-- end wrapper -->
-            <div class="footer" id="footer">
-            ${self.footer()}
+	    <div id="page" class="container_12">
+            <div id="content">
+            ${self.flash()}
+	        ${next.body()}
             </div>
         </div>
-	    <!-- end page -->
+	    <!-- end container -->
 	    
+        <div class="footer" id="footer">
+        <div class="container_12">
+        <div class="grid_2 prefix_10">
+        ${self.footer()}
+        </div>
+        </div>
+        </div>
+
 	    <!-- scripts -->
 	    ${self.js()}
         <script type="text/javascript">

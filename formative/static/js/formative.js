@@ -12,13 +12,6 @@ var submit_scale = 1;
 var features;
 var history = [];
 
-// New, holds the 8 tiny boxes that will be our selection handles
-// the selection handles will be in this order:
-// 0    1    2
-// 3         4
-// 5    6    7
-var selectionHandles = [];
-
 // Hold canvas formativeation
 var canvas;
 var ctx;
@@ -29,8 +22,6 @@ var gctx;
 
 var WIDTH;
 var HEIGHT;
-var INTERVAL = 20;    // how often, in milliseconds, we check to see if a
-                      // redraw is needed
 
 var text_changed = false;
 
@@ -62,16 +53,7 @@ var mySel = [];
 var mySelId = [];
 var selArrow = false;
 var cursorPos = 0;
-var cursorAlpha = 1.0;
 var cursorOnTime = 1;
-var CURSOR_INTERVAL = 100;
-
-// The selection color and width. Right now we have a red selection with a
-// small width
-var mySelColor = '#CC0000';
-var mySelWidth = 2;
-var mySelBoxColor = 'darkred'; // New for selection boxes
-var mySelBoxSize = 6;
 
 
 // Context menu stuff
@@ -87,16 +69,9 @@ var offsetx, offsety;
 // Padding and border style widths for mouse offsets
 var stylePaddingLeft, stylePaddingTop, styleBorderLeft, styleBorderTop;
 
-// Small rectangles for selectoion resize
-function SelectorRect(){
-    this.x;
-    this.y;
-    this.w;
-    this.h;
-}
-
-var MAX_HISTORY = 10;
-
+/*
+    Saves the current progran state
+*/
 function saveState(){
     history.push($.extend(true, {}, features));
     if(history.length > MAX_HISTORY){
@@ -111,7 +86,10 @@ function saveState(){
     history.push(histob);
 }
 
-// A flash or some feedback would be nice
+/*
+    Restores the features object to the previous state
+    TODO: A flash or some feedback would be nice
+ */
 function restoreState(){
     if(history.length > 1){
         features = history.splice(history.length-1,1)[0];
@@ -124,16 +102,19 @@ function restoreState(){
     invalidate();
 }
 
-//wipes the canvas context
+/*
+    Clears the canvas
+*/
 function clear(c) {
     c.clearRect(0, 0, WIDTH, HEIGHT);
 }
 
-// Main draw loop.
-// While draw is called as often as the INTERVAL variable demands,
-// It only ever does something if the canvas gets invalidated by our code
+/*
+    Main draw loop runs every INTERVAL miliseconds
+    Only draws when invalidated
+*/
 function mainDraw() {
-    if (canvasValid == false && mainDrawOn === true) {
+    if (canvasValid === false && mainDrawOn === true) {
         clear(ctx);
 
         // Draw background image
@@ -154,8 +135,10 @@ function mainDraw() {
 
         // Draw selection
         if(isSelectionDrag){
-            context.fillStyle = 'rgba(212,30,75,0.3)';
+            context.strokeStyle = DRAG_SELECT_STROKE_COLOUR;
+            context.fillStyle = DRAG_SELECT_COLOUR;//'rgba(212,30,75,0.3)';
             context.fillRect(selX,selY,mx-selX,my-selY);
+            context.strokeRect(selX,selY,mx-selX,my-selY);
         }
         canvasValid = true;
     }
@@ -1120,7 +1103,7 @@ function initCanvas(){
     $("#process").show();
     $("#process").click(upload);
     $("#checkboxes").hide();
-    scale = calc_scale(960, 0, image);
+    scale = calc_scale(940, 0, image);
     HEIGHT = image.height*scale;
     WIDTH = image.width*scale;
 
@@ -1161,7 +1144,7 @@ function initFeatures(json){
 function upload(){
 
     // Resize image    
-    submit_scale = calc_scale(1262, 1772, image);
+    submit_scale = calc_scale(IMG_UPLOAD_MIN_X, IMG_UPLOAD_MIN_Y, image);
 
     var tmpCanvas = document.createElement("canvas");
     tmpCanvas.width = image.width*submit_scale;
@@ -1185,6 +1168,19 @@ function upload(){
     $.post(url, params, initFeatures, 'json');
 }
 
+function isLabelTargetsValid(){
+    for(idx in features){
+        if(features.hasOwnProperty(idx)){
+            console.log(features[idx]);
+            if(features[idx].type === 'LABEL'
+                    && features[idx].target instanceof Object){
+                return features[idx].val;            
+            }
+        }
+    }
+    return true;
+}
+
 function preview(){
     if($("#prevbutton").val() === 'Edit'){
         $("#prevbutton").val('Preview');
@@ -1193,6 +1189,14 @@ function preview(){
         $("#checkboxes").show();
         return;
     }
+    
+    var valid = isLabelTargetsValid();
+    if(valid !== true){
+            window.alert("Label '" + valid + "' is not pointing to a field," +
+            " please make sure all label arrows have targets.");
+            return false;
+    }
+
     var url = '/preview'
     var data = JSON.stringify(features);
     var params = {"_csrf":csrf, "features": data}
@@ -1207,6 +1211,12 @@ function preview(){
 
 
 function finalise(){
+    var valid = isLabelTargetsValid();
+    if(valid !== true){
+            window.alert("Label '" + valid + "' is not pointing to a field," +
+            " please make sure all label arrows have targets.");
+            return false;
+    }
     var url = '/finalise'
     var data = JSON.stringify(features);
     var params = {"_csrf":csrf, "features": data}
