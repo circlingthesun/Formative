@@ -8,3 +8,5 @@ docs/_build
 data/sessions
 *.so
 build
+*~
+docs/_*

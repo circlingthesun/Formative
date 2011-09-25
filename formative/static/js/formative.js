@@ -72,14 +72,14 @@ var stylePaddingLeft, stylePaddingTop, styleBorderLeft, styleBorderTop;
 /*
     Saves the current progran state
 */
-function saveState(){
+function saveState() {
     history.push($.extend(true, {}, features));
-    if(history.length > MAX_HISTORY){
+    if(history.length > MAX_HISTORY) {
         history.splice(1,1);
     }
     var histob = {};
-    for(id in features){
-        if(features.hasOwnProperty(id)){
+    for(id in features) {
+        if(features.hasOwnProperty(id)) {
             histob[id] = new Feature(features[id]);
         }
     }
@@ -90,11 +90,11 @@ function saveState(){
     Restores the features object to the previous state
     TODO: A flash or some feedback would be nice
  */
-function restoreState(){
-    if(history.length > 1){
+function restoreState() {
+    if(history.length > 1) {
         features = history.splice(history.length-1,1)[0];
     }
-    else if(history.length == 1){
+    else if(history.length === 1) {
         features = history.splice(history.length-1,1)[0];
         saveState();
     }
@@ -118,15 +118,15 @@ function mainDraw() {
         clear(ctx);
 
         // Draw background image
-        if( $("#showoriginal").is(':checked') ){
+        if( $("#showoriginal").is(':checked') ) {
             ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
         }
         
-        if( $("#showresults").is(':checked')){
+        if( $("#showresults").is(':checked')) {
 
             // Draw all features
             for (idx in features) {
-                if(!features.hasOwnProperty(idx)){
+                if(!features.hasOwnProperty(idx)) {
                     break;
                 }
                 features[idx].draw(ctx);
@@ -134,7 +134,7 @@ function mainDraw() {
         }
 
         // Draw selection
-        if(isSelectionDrag){
+        if(isSelectionDrag) {
             context.strokeStyle = DRAG_SELECT_STROKE_COLOUR;
             context.fillStyle = DRAG_SELECT_COLOUR;//'rgba(212,30,75,0.3)';
             context.fillRect(selX,selY,mx-selX,my-selY);
@@ -144,7 +144,7 @@ function mainDraw() {
     }
 }
 
-function myNonTextKey(e){
+function myNonTextKey(e) {
     var code;
     if (!e) var e = window.event;
     if (e.keyCode) code = e.keyCode;
@@ -152,10 +152,10 @@ function myNonTextKey(e){
 
     
     if(mySel.length !== 0 && lastSel !== null &&
-            (lastSel.type === 'TEXT' || lastSel.type === 'LABEL')){
-        switch(code){
+            (lastSel.type === 'TEXT' || lastSel.type === 'LABEL')) {
+        switch(code) {
             case 8: // Backspace
-                if(lastSel.val.length > 0 && cursorPos > 0){
+                if(lastSel.val.length > 0 && cursorPos > 0) {
                     lastSel.val = lastSel.val.substring(0,cursorPos-1) +
                         lastSel.val.substring(cursorPos,lastSel.val.length);
                     cursorPos--;
@@ -170,7 +170,7 @@ function myNonTextKey(e){
                         cursorPos+1 : lastSel.val.length;
                 break;
             case 46: // Delete
-                if(lastSel.val.length > 0 && cursorPos < lastSel.val.length){
+                if(lastSel.val.length > 0 && cursorPos < lastSel.val.length) {
                     lastSel.val = lastSel.val.substring(0,cursorPos) +
                         lastSel.val.substring(cursorPos+1,lastSel.val.length);
                     text_changed = true;
@@ -183,15 +183,15 @@ function myNonTextKey(e){
         cursorOnTime = 15;
     }
     // Delete key
-    else if (code === 46){
+    else if (code === 46) {
         deleteSelected();
     }
 
     // Select all
-    if(e.ctrlKey && code === 65){
+    if(e.ctrlKey && code === 65) {
         clearSelection();
-        for(idx in features){
-            if(features.hasOwnProperty(idx) && features[idx] != undefined){
+        for(idx in features) {
+            if(features.hasOwnProperty(idx) && features[idx] != undefined) {
                 mySel.push(features[idx]);
                 mySelId.push(idx);
             }
@@ -201,7 +201,7 @@ function myNonTextKey(e){
     }
 
     // CTRL - Z undo
-    if(e.ctrlKey && code === 90){
+    if(e.ctrlKey && code === 90) {
         restoreState();
         return false;
     }
@@ -209,12 +209,12 @@ function myNonTextKey(e){
     invalidate();
 }
 
-function deleteSelected(){
+function deleteSelected() {
     saveState();
-    mySelId.forEach(function(fid, idx, array){
+    mySelId.forEach(function(fid, idx, array) {
         var feature = features[fid];
         if((feature.type === 'TEXTBOX' || feature.type === 'CHECKBOX') &&
-                feature.linked != -1){
+                feature.linked != -1) {
             var lnk = features[feature.linked];
             features[feature.linked].target = {'x':lnk.x+lnk.w+20,
                     'y':lnk.y+lnk.h, 'w':1, 'h':1};
@@ -224,7 +224,7 @@ function deleteSelected(){
                 feature.type === 'LABEL' &&
                 !(feature.target instanceof Object) &&
                 features[feature.target] !== undefined              
-            ){
+            ) {
             features[feature.target].linked = -1;
         }
 
@@ -236,7 +236,7 @@ function deleteSelected(){
     invalidate();
 }
 
-function myKey(e){
+function myKey(e) {
     var code;
     if (!e) var e = window.event;
     if (e.keyCode) code = e.keyCode;
@@ -244,7 +244,7 @@ function myKey(e){
 
 
     if(mySel.length !== 0 &&
-            (lastSel.type === 'TEXT' || lastSel.type === 'LABEL')){
+            (lastSel.type === 'TEXT' || lastSel.type === 'LABEL')) {
 
         // Expand box if too small
         var newText = lastSel.val.substring(0,cursorPos) + 
@@ -253,7 +253,7 @@ function myKey(e){
 
         ctx.font = "bold " + lastSel.h + "px sans-serif";
         var newWidth = ctx.measureText(newText).width;
-        if(newWidth > lastSel.w){
+        if(newWidth > lastSel.w) {
             lastSel.w = newWidth;
         }
         lastSel.val = newText;
@@ -261,7 +261,7 @@ function myKey(e){
         cursorPos++;
         text_changed = true;
         // Disable default spacebar
-        if(e.keyCode==32){
+        if(e.keyCode==32) {
             e.preventDefault();
             return false;
         }
@@ -272,10 +272,10 @@ function myKey(e){
 }
 
 // Happens when the mouse is moving inside the canvas
-function myMove(e){
+function myMove(e) {
     if (isDrag) {
         getMouse(e);
-         if(!selArrow){
+         if(!selArrow) {
             // Calculate offser relative to the last
             // Selected item
             var abs_x = mx - offsetx;
@@ -284,7 +284,7 @@ function myMove(e){
             var rel_x = abs_x - lastSel.x;
             var rel_y = abs_y - lastSel.y;
             
-            mySel.forEach(function(val, idx, array){
+            mySel.forEach(function(val, idx, array) {
                 val.x += rel_x;
                 val.y += rel_y;
             })
@@ -344,7 +344,7 @@ function myMove(e){
         
         invalidate();
     }
-    else if(isSelectionDrag){
+    else if(isSelectionDrag) {
         invalidate();
     }
     
@@ -405,7 +405,7 @@ function myMove(e){
 }
 
 // Happens when the mouse is clicked in the canvas
-function myDown(e){
+function myDown(e) {
     getMouse(e);
     
 
@@ -417,7 +417,7 @@ function myDown(e){
 
     clear(gctx);
     for (idx in features) {
-        if(!features.hasOwnProperty(idx)){
+        if(!features.hasOwnProperty(idx)) {
                 break;
         }
         // draw shape onto ghost context
@@ -439,24 +439,24 @@ function myDown(e){
 
             // Check if the item is already selected selected
             var alreadySelected = false;
-            for(var i = 0; i < mySel.length; i++){
-                if(mySel[i] === features[idx]){
+            for(var i = 0; i < mySel.length; i++) {
+                if(mySel[i] === features[idx]) {
                     alreadySelected = true;
                 }
             }
 
             // Set cursor position
             if((features[idx].type === 'TEXT' || features[idx].type === 'LABEL')
-            ){
+            ) {
                 // If already selected
-                if(alreadySelected ){
+                if(alreadySelected ) {
                     // Estimate cursor position
                     var text_height = selection.h;
                     ctx.font = "bold " + text_height + "px sans-serif";
                     var text_width = ctx.measureText(selection.val).width;
 
                     // Make text fit box
-                    while(text_width > selection.w){
+                    while(text_width > selection.w) {
                         text_height -= 1;
                         ctx.font = "bold " + text_height + "px sans-serif";
                         text_width = ctx.measureText(selection.val).width;
@@ -474,22 +474,22 @@ function myDown(e){
 
 
             // Dont clear previous selection if ctrl is down
-            if(!e.ctrlKey && !alreadySelected){
+            if(!e.ctrlKey && !alreadySelected) {
                 mySel = [];
                 mySelId = [];
             }
 
-            if(!alreadySelected){
+            if(!alreadySelected) {
                 mySel.push(features[idx]);
                 mySelId.push(idx);
             }
             // Subtract from selection
-            else if(e.ctrlKey){
-                mySel.forEach(function(val, id, array){
-                    if(val === selection){
+            else if(e.ctrlKey) {
+                mySel.forEach(function(val, id, array) {
+                    if(val === selection) {
                         delete array[id];
                         delete mySelId[id];
-                        if(mySelId.length !=0){
+                        if(mySelId.length !=0) {
                             lastSel = mySel[0];
                             lastSelId = mySelId[0];
                         }
@@ -509,10 +509,10 @@ function myDown(e){
                 isDrag = true;
             
             // If selected an arrow
-            if(val===200){
+            if(val===200) {
                 selArrow = true;
                 // Unlink
-                if(!(selection.target instanceof Object)){
+                if(!(selection.target instanceof Object)) {
                     features[selection.target].linked = -1;
                 }
                 selection.target = {'x':mx, 'y':my, 'w':1, 'h':1};
@@ -522,7 +522,7 @@ function myDown(e){
             }
 
 
-            if(e.button === 2){
+            if(e.button === 2) {
                 showContextMenu(true);
                 $('#contextmenu').offset({top:e.pageY, left:e.pageX});
             }
@@ -534,11 +534,11 @@ function myDown(e){
     }
     // havent returned means we have selected nothing
     
-    if(!e.ctrlKey){
+    if(!e.ctrlKey) {
         clearSelection();
     }
 
-    if(e.button === 2){
+    if(e.button === 2) {
         showContextMenu(true);
         $('#contextmenu').offset({top:e.pageY, left:e.pageX});
     }
@@ -553,8 +553,8 @@ function myDown(e){
     invalidate();
 }
 
-function clearSelection(){
-    if(text_changed === true){
+function clearSelection() {
+    if(text_changed === true) {
         saveState();
         text_changed = false;
     }
@@ -564,15 +564,15 @@ function clearSelection(){
     lastSelId = -1;
 }
 
-function myUp(e){
+function myUp(e) {
     isDrag = false;
     isResizeDrag = false;
     expectResize = -1;
     // Is the arrow inside a box?
-    if(selArrow){
+    if(selArrow) {
         getMouse(e);
         for (idx in features) {
-            if(!features.hasOwnProperty(idx)){
+            if(!features.hasOwnProperty(idx)) {
                 break;
             }
             // draw shape onto ghost context
@@ -589,8 +589,8 @@ function myUp(e){
             var pxVal = imageData.data[0];
             if (pxVal === 50) {
                 var found = features[idx];
-                if((found.type == 'CHECKBOX' || found.type == 'TEXTBOX') &&
-                        found.linked === -1){
+                if((found.type === 'CHECKBOX' || found.type === 'TEXTBOX') &&
+                        found.linked === -1) {
                     // Link
                     found.linked = lastSelId;
                     lastSel.target = idx;
@@ -610,11 +610,11 @@ function myUp(e){
     }
     selArrow = false;
     showContextMenu(contextMenuVisible);
-    if(isSelectionDrag){
-        if(!e.ctrlKey){
+    if(isSelectionDrag) {
+        if(!e.ctrlKey) {
             clearSelection();
         }
-        for(idx in features){
+        for(idx in features) {
             // Find center
             var f = features[idx];
             var x = f.x+f.w/2;
@@ -627,7 +627,7 @@ function myUp(e){
             var max_y = selY > my ? selY : my;
 
             // If selection over center add it
-            if(x > min_x && x < max_x && y > min_y && y < max_y){
+            if(x > min_x && x < max_x && y > min_y && y < max_y) {
                 mySel.push(features[idx]);
                 mySelId.push(idx);
             }
@@ -670,7 +670,7 @@ function getMouse(e) {
             my = e.pageY - offsetY
 }
 
-function handleFiles(files){
+function handleFiles(files) {
 
     imagefile = this.files[0];
     if (!imagefile.type.match(/image.*/)) {
@@ -687,7 +687,7 @@ function handleFiles(files){
     
 }
 
-function newFeature(type, x, h, w, h){
+function newFeature(type, x, h, w, h) {
     var x = x || mx;
     var y = y || my;
     var w = w || 25;
@@ -696,21 +696,21 @@ function newFeature(type, x, h, w, h){
     var idx = next_id++;
     var f = {'x' : x, 'y' : y, 'w' : w, 'h' : h, 'type' : type};
     
-    if(type === 'LABEL'){
+    if(type === 'LABEL') {
         f.w = 80;
         f.target = {'x':x+80+20, 'y':y+h, 'w':1, 'h':1};
         f.val = 'label';
         console.log(f);
     }
-    else if(type === 'TEXT'){
+    else if(type === 'TEXT') {
         f.val = 'text';
         f.w = 80;
     }
-    else if(type === 'TEXTBOX'){
+    else if(type === 'TEXTBOX') {
         f.w = 80;
         f.linked = -1;
     }
-    else if(type === 'CHECKBOX'){
+    else if(type === 'CHECKBOX') {
         f.linked = -1;
     }
     invalidate();
@@ -718,12 +718,12 @@ function newFeature(type, x, h, w, h){
 
 }
 
-function cloneSelected(){
+function cloneSelected() {
     var newids = {};
     var newSel = [];
     var newSelId = [];
     // Clone
-    mySelId.forEach(function(idx, array_id, array){
+    mySelId.forEach(function(idx, array_id, array) {
         var newid = next_id++;
         newids[idx] = newid;
         // copy
@@ -738,25 +738,25 @@ function cloneSelected(){
     });
 
     // Fix references
-    mySelId.forEach(function(idx, array_id, array){
+    mySelId.forEach(function(idx, array_id, array) {
         var newf = features[newids[idx]];
         // If label arrow is not dangling
-        if(newf.type === 'LABEL'){
+        if(newf.type === 'LABEL') {
             // If the arrow is dangling
-            if(newf.target instanceof Object || newf.target === -1){
+            if(newf.target instanceof Object || newf.target === -1) {
                 features[newids[idx]].target = 
                         {'x':newf.x+80+20, 'y':newf.y+newf.h, 'w':1, 'h':1};
             }
 
             // If the target object has been cloned
-            if(newids[newf.target] !== undefined){
+            if(newids[newf.target] !== undefined) {
                 features[newids[idx]].target = newids[newf.target];
             }
 
         }
         // If the label pointing to it has been not cloned
         else if(newf.linked !== -1 &&
-                newids[newf.linked] === undefined){
+                newids[newf.linked] === undefined) {
             features[newids[idx]].linked = -1;
         }
     });
@@ -767,7 +767,7 @@ function cloneSelected(){
     invalidate();
 }
 
-function splitText(){
+function splitText() {
 
     var x_split = cx;
 
@@ -791,9 +791,9 @@ function splitText(){
     invalidate();
 }
 
-function mergeSelectedText(){
-    mySelId.sort(function(a,b){
-        if(features[a].y > features[b].y+features[b].h){
+function mergeSelectedText() {
+    mySelId.sort(function(a,b) {
+        if(features[a].y > features[b].y+features[b].h) {
             return true;
         }
         return features[a].x > features[b].x
@@ -806,16 +806,16 @@ function mergeSelectedText(){
     var last_y = keep.y;
     var height = keep.w;
     var max_width = keep.w;
-    mySelId.forEach(function(id, idx, array){
+    mySelId.forEach(function(id, idx, array) {
         var delim = " ";
-        if(features[id].y > last_y){
+        if(features[id].y > last_y) {
             delim = "\n"; // Work in progress
             last_y = features[id].y;
         }
         newval+= features[id].val + delim;
         width += features[id].w;
-        if(id !== keep_id){
-            if(features[id].type === 'LABEL' && !(features[id].target instanceof Object)){
+        if(id !== keep_id) {
+            if(features[id].type === 'LABEL' && !(features[id].target instanceof Object)) {
                 features[features[id].target].linked = -1;
             }
             delete features[id];
@@ -832,62 +832,62 @@ function mergeSelectedText(){
     invalidate();
 }
 
-function initContextMenu(){
+function initContextMenu() {
 
-    if(contextmenuisinit){
+    if(contextmenuisinit) {
         return;
     }
     contextmenuisinit = true;
 
-    window.oncontextmenu = function(){return false;};
-    contextmenu.onmouseover = function(){contextMenuVisible=true}
-    contextmenu.onmouseover = function(){contextMenuVisible=false}
-    $('#delete').click(function(){
+    window.oncontextmenu = function() {return false;};
+    contextmenu.onmouseover = function() {contextMenuVisible=true}
+    contextmenu.onmouseover = function() {contextMenuVisible=false}
+    $('#delete').click(function() {
         deleteSelected();
         showContextMenu(false);
         return false;
     });
-    $('#clone').click(function(){
+    $('#clone').click(function() {
         saveState();
         cloneSelected();
         showContextMenu(false);
         return false;
     });
-    $('#split').click(function(){
+    $('#split').click(function() {
         saveState();
         splitText();
         showContextMenu(false);
         return false;
     });
-    $('#merge').click(function(){
+    $('#merge').click(function() {
         saveState();
         mergeSelectedText();
         showContextMenu(false);
         return false;
     });
 
-    $('#newlabel').click(function(e){
+    $('#newlabel').click(function(e) {
         saveState();
         getMouse(e);
         newFeature('LABEL', cx, cy);
         showContextMenu(false);
         return false;
     });
-    $('#newtextbox').click(function(e){
+    $('#newtextbox').click(function(e) {
         saveState();
         getMouse(e);
         newFeature('TEXTBOX', cx, cy);
         showContextMenu(false);
         return false;
     });
-    $('#newcheckbox').click(function(e){
+    $('#newcheckbox').click(function(e) {
         saveState();
         getMouse(e);
         newFeature('CHECKBOX', cx, cy);
         showContextMenu(false);
         return false;
     });
-    $('#newtext').click(function(e){
+    $('#newtext').click(function(e) {
         saveState();
         getMouse(e);
         newFeature('TEXT', cx, cy);
@@ -895,7 +895,7 @@ function initContextMenu(){
         return false;
     });
 
-    $('#convertlabel').click(function(){
+    $('#convertlabel').click(function() {
         saveState();
         lastSel.type = "LABEL";
         lastSel.target = {'x':lastSel.x+lastSel.w+20, 'y':lastSel.y+lastSel.h, 'w':1, 'h':1}
@@ -903,7 +903,7 @@ function initContextMenu(){
         invalidate();
         return false;
     });
-    $('#converttext').click(function(){
+    $('#converttext').click(function() {
         saveState();
         lastSel.type = "TEXT";
         if(!(lastSel.target instanceof Object))
@@ -913,14 +913,14 @@ function initContextMenu(){
         invalidate();
         return false;
     });
-    $('#converttextbox').click(function(){
+    $('#converttextbox').click(function() {
         saveState();
         lastSel.type = "TEXTBOX";
         showContextMenu(false);
         invalidate();
         return false;
     });
-    $('#convertcheckbox').click(function(){
+    $('#convertcheckbox').click(function() {
         saveState();
         lastSel.type = "CHECKBOX";
         lastSel.w = lastSel.h;
@@ -930,18 +930,18 @@ function initContextMenu(){
     });
 }
 
-function showContextMenu(show){
-    if(!show){
+function showContextMenu(show) {
+    if(!show) {
         $('#contextmenu').hide();
         return
     }
     
-    if(!mainDrawOn){
+    if(!mainDrawOn) {
         return;
     }
 
     // set seed point
-    if(!contextMenuVisible){
+    if(!contextMenuVisible) {
         cx = mx;
         cy = my;
     }
@@ -973,7 +973,7 @@ function showContextMenu(show){
     $('.topSep').hide();
     $('.bottomSep').show();
 
-    switch(type){
+    switch(type) {
         case 'NONE':
             $('#newlabel').show();
             $('#newtextbox').show();
@@ -984,7 +984,7 @@ function showContextMenu(show){
             $('.bottomSep').hide();
             break;
         case 'TEXT':
-            if(cursorPos !== lastSel.val.length){
+            if(cursorPos !== lastSel.val.length) {
                 $('#split').show();
             }
             $('#convertlabel').show();
@@ -1000,9 +1000,9 @@ function showContextMenu(show){
             break;
         case 'MULTI':
             $('.bottomSep').hide();
-            var can_merge = mySel.every(function(f){
+            var can_merge = mySel.every(function(f) {
                 // Need to take label into account
-                if(f.type === 'TEXT' || f.type === 'LABEL'){
+                if(f.type === 'TEXT' || f.type === 'LABEL') {
                     return true;
                 }
             });
@@ -1015,8 +1015,8 @@ function showContextMenu(show){
 }
 
 
-function setEvents(on){
-    if(on){
+function setEvents(on) {
+    if(on) {
         canvas.onmousedown = myDown;
         canvas.onmouseup = myUp;
         canvas.ondblclick = myDblClick;
@@ -1050,7 +1050,7 @@ function initVerify() {
     $("#done").show();
     $("#checkboxes").show();
     $("#checkboxes").click(invalidate);
-    $("#showresults").click(function(){
+    $("#showresults").click(function() {
         setEvents($("#showresults").is(':checked'));
     });
 
@@ -1073,7 +1073,7 @@ function initVerify() {
     }
     
     // make mainDraw() fire every INTERVAL milliseconds
-    if(mainDrawInit === false){
+    if(mainDrawInit === false) {
         setInterval(mainDraw, INTERVAL);
         setInterval(drawCursor, CURSOR_INTERVAL);
         //setInterval(saveState, SAVE_INTERVAL);
@@ -1094,7 +1094,7 @@ function initVerify() {
     invalidate();
 }
 
-function initCanvas(){
+function initCanvas() {
     $("#done").hide();
     $('#done').unbind('click');
     $("#input").hide();
@@ -1118,19 +1118,19 @@ function initCanvas(){
 }
 
 
-function initFeatures(json){
-    for(var id in json){
-        if(!json.hasOwnProperty(id)){
+function initFeatures(json) {
+    for(var id in json) {
+        if(!json.hasOwnProperty(id)) {
             break;
         }
 
         features[id] = new Feature(json[id], scale/submit_scale);
 
         // Trim bounding boxes
-        if(features[id].type === 'TEXT' || features[id].type === 'LABEL'){
+        if(features[id].type === 'TEXT' || features[id].type === 'LABEL') {
             ctx.font = "bold " + features[id].h + "px sans-serif";
             var text_width = ctx.measureText(features[id].val).width;
-            if(text_width < features[id].w){
+            if(text_width < features[id].w) {
                 features[id].w = text_width;
             }
         }
@@ -1139,9 +1139,12 @@ function initFeatures(json){
     history = [];
     saveState();
     initVerify();
+    $("#throbber").hide();
 }
 
-function upload(){
+function upload() {
+
+    $("#throbber").show();
 
     // Resize image    
     submit_scale = calc_scale(IMG_UPLOAD_MIN_X, IMG_UPLOAD_MIN_Y, image);
@@ -1160,20 +1163,24 @@ function upload(){
     var dataurl = tmpCanvas.toDataURL("image/png");
     var params = {"_csrf":csrf, "file": dataurl}
 
-    if(fakeit){
+    if(fakeit) {
         initFeatures(testdata);
         return;
     }
 
-    $.post(url, params, initFeatures, 'json');
+    var post = $.post(url, params, initFeatures, 'json');
+
+    post.error(function() {
+        alert("Something terrible happened. I cannot upload your form");
+        $("#throbber").hide();
+    });
 }
 
-function isLabelTargetsValid(){
-    for(idx in features){
-        if(features.hasOwnProperty(idx)){
-            console.log(features[idx]);
+function isLabelTargetsValid() {
+    for(idx in features) {
+        if(features.hasOwnProperty(idx)) {
             if(features[idx].type === 'LABEL'
-                    && features[idx].target instanceof Object){
+                    && features[idx].target instanceof Object) {
                 return features[idx].val;            
             }
         }
@@ -1181,8 +1188,8 @@ function isLabelTargetsValid(){
     return true;
 }
 
-function preview(){
-    if($("#prevbutton").val() === 'Edit'){
+function preview() {
+    if($("#prevbutton").val() === 'Edit') {
         $("#prevbutton").val('Preview');
         $("#canvas2").show();
         $("#preview").hide();
@@ -1191,36 +1198,70 @@ function preview(){
     }
     
     var valid = isLabelTargetsValid();
-    if(valid !== true){
+    if(valid !== true) {
             window.alert("Label '" + valid + "' is not pointing to a field," +
             " please make sure all label arrows have targets.");
             return false;
     }
-
+    $("#throbber").show();
     var url = '/preview'
     var data = JSON.stringify(features);
     var params = {"_csrf":csrf, "features": data}
-    $.post(url, params, function(html){
+    var post = $.post(url, params, function(html) {
         $("#inpreview").html(html);
         $("#preview").show();
         $("#canvas2").hide();
         $("#prevbutton").val('Edit');
         $("#checkboxes").hide();
+        $("#throbber").hide();
     }, "html");
+
+    post.error(function() {
+        alert("Something terrible happened. I cannot show you the preview");
+        $("#throbber").hide();
+    });
+
 }
 
 
-function finalise(){
+function finalise() {
     var valid = isLabelTargetsValid();
-    if(valid !== true){
+    if(valid !== true) {
             window.alert("Label '" + valid + "' is not pointing to a field," +
             " please make sure all label arrows have targets.");
             return false;
     }
+
+    $("#throbber").show();
+
     var url = '/finalise'
     var data = JSON.stringify(features);
     var params = {"_csrf":csrf, "features": data}
-    $.post(url, params, function(json){
+    var post = $.post(url, params, function(json) {
         window.location = '/form?id=' + json.id;
     }, 'json');
+
+    post.error(function() {
+        alert("Something terrible happened. I cannot finalise your form");
+        $("#throbber").hide();
+    });
+}
+
+function calc_scale(max_x, max_y, img){
+    var width = img.width;
+    var height = img.height;
+
+    var scale_f = 1;
+    
+    if (width > height || max_y === 0) {
+        if (width > max_x) {
+            scale_f = max_x / width
+        }
+    } else {
+        if (height > max_y || max_x === 0) {
+            scale_f = max_y / height;
+        }
+    }
+
+    return scale_f;
 }

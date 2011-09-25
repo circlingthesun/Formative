@@ -1,8 +1,8 @@
-function drawCursor(){
+function drawCursor() {
     context = ctx;
     cursorOnTime--;
-    if(mySel.length !== 0 && lastSel != null && (lastSel.type == 'TEXT' || lastSel.type == 'LABEL') ){
-        if(cursorOnTime > 5){
+    if(mySel.length !== 0 && lastSel != null && (lastSel.type === 'TEXT' || lastSel.type === 'LABEL') ) {
+        if(cursorOnTime > 5) {
 
             // Calculate the display text height
             var text_height = lastSel.h;
@@ -10,7 +10,7 @@ function drawCursor(){
             var text_width = context.measureText(lastSel.val).width;
 
             // Make text fit box
-            while(text_width > lastSel.w){
+            while(text_width > lastSel.w) {
                 text_height -= 1;
                 context.font = "bold " + text_height + "px sans-serif";
                 text_width = context.measureText(lastSel.val).width;
@@ -29,10 +29,10 @@ function drawCursor(){
             context.closePath();
             context.stroke();
         }
-        if(cursorOnTime === 5){
+        if(cursorOnTime === 5) {
             invalidate();
         }
-        else if(cursorOnTime <= 0){
+        else if(cursorOnTime <= 0) {
             cursorOnTime = 10;
         }
     }
@@ -45,7 +45,7 @@ function drawCursor(){
  * Draws a rounded rectangle using the current state of the canvas. 
  */
 function roundRect(context, x, y, width, height, radius, fill, stroke) {
-    if (typeof stroke == "undefined" ) {
+    if (typeof stroke === "undefined" ) {
         stroke = true;
     }
         if (typeof radius === "undefined") {
@@ -70,7 +70,10 @@ function roundRect(context, x, y, width, height, radius, fill, stroke) {
     }
 }
 
-function cross(context, x, y, w, h, pad){
+/*
+    Draws a cross
+*/
+function cross(context, x, y, w, h, pad) {
     context.beginPath();
     context.moveTo(x+pad, y+pad);
     context.lineTo(x + w - pad, y + h - pad);

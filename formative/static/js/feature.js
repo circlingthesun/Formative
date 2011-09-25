@@ -1,5 +1,5 @@
 // Small rectangles for selectoion resize
-function SelectorRect(){
+function SelectorRect() {
     this.x;
     this.y;
     this.w;
@@ -16,7 +16,7 @@ var selectionHandles = [];
 /*
     Object that resprents form elements found
 */
-function Feature(ob, scale){
+function Feature(ob, scale) {
     var scale = scale || 1;
     this.x = ob.x * scale;
     this.y = ob.y * scale;
@@ -26,10 +26,10 @@ function Feature(ob, scale){
     this.length = ob.len;
     this.type = ob.type;
     this.linked = ob.linked; // key of label pointing to it
-    if(!(ob.target instanceof Object)){
+    if(!(ob.target instanceof Object)) {
         this.target = ob.target;
     }
-    else if( ob.target !== undefined){
+    else if( ob.target !== undefined) {
         this.target = {'x': ob.target.x, 'y':ob.target.y,
             'w':ob.target.w, 'h':ob.target.h};    
     }
@@ -96,10 +96,10 @@ Feature.prototype = {
         var to;
         // Deal hanging pointers
         // In an ideal world I do not have to deal with this
-        if(this.target instanceof Object ){
+        if(this.target instanceof Object ) {
             to = this.target
         }
-        else if(features[this.target] === undefined){
+        else if(features[this.target] === undefined) {
             to = {'x':this.x+this.w+20, 'y':this.y+this.h,
                     'w':1, 'h':1};
         }
@@ -113,7 +113,7 @@ Feature.prototype = {
         var toH = to.h;
         
         // Only draw the end of the arrow for the ghost canvas
-        if(context === gctx){
+        if(context === gctx) {
             context.fillStyle = ghostArrowColour;
             context.strokeStyle = ghostArrowColour;
         }
@@ -124,13 +124,13 @@ Feature.prototype = {
 
         // Where is the target relative to the label?
         // If right
-        if(to.x > from.x + from.w){
+        if(to.x > from.x + from.w) {
            toY = to.y + to.h/2;
            fromY = from.y+from.h/2;
            fromX = from.x+from.w;
         }
         // If left
-        else if(to.x + to.w < from.x){
+        else if(to.x + to.w < from.x) {
             toY = to.y + to.h/2;
             toX = to.x + to.w;
             fromY = from.y+from.h/2;
@@ -140,12 +140,12 @@ Feature.prototype = {
         else{
             toX = to.x + to.w/2;
             // If ontop
-            if(to.y+to.h < from.y){
+            if(to.y+to.h < from.y) {
                 fromX = from.x + from.w/2;
                 toY = to.y + to.h;
             }
             // If bottom
-            else if(to.y > from.y+from.h){
+            else if(to.y > from.y+from.h) {
                 fromX = from.x+from.w/2;
                 fromY = from.y+from.h;
             }
@@ -161,7 +161,7 @@ Feature.prototype = {
 
 
         // Line
-        if(context === ctx){
+        if(context === ctx) {
             context.beginPath();
             context.moveTo(fromX, fromY);
             context.lineTo(toX, toY);
@@ -207,7 +207,7 @@ Feature.prototype = {
         context.fillRect(this.x,this.y,this.w,this.h);
 
         // No text for ghost canvas
-        if(context === gctx){
+        if(context === gctx) {
             return;
         }
 
@@ -218,7 +218,7 @@ Feature.prototype = {
         var text_width = context.measureText(this.val).width;
 
         // Make text fit box
-        while(text_width > this.w){
+        while(text_width > this.w) {
             text_height -= 1;
             context.font = "bold " + text_height + "px sans-serif";
             text_width = context.measureText(this.val).width;
@@ -230,13 +230,13 @@ Feature.prototype = {
     },
 
 
-    drawHandles: function (context, ghostColour){
+    drawHandles: function (context, ghostColour) {
 
         // draw selection
         // is it selected?
         var isSelected = false;
-        for(var i = 0; i < mySel.length; i++){
-            if(mySel[i] === this){
+        for(var i = 0; i < mySel.length; i++) {
+            if(mySel[i] === this) {
                 isSelected = true;
                 break;
             }
@@ -291,7 +291,7 @@ Feature.prototype = {
                 context.fillStyle = ghostColour;
             }
 
-            switch(this.type){
+            switch(this.type) {
                 case 'TEXTBOX':
                     this.drawTextbox(context, ghostColour);
                     break;

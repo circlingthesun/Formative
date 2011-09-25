@@ -7,7 +7,6 @@
     ${self.js_link("/static/js/jquery-1.6.2.min.js")}
     ${self.js_link("/static/js/testdata.js")}
     ${self.js_link("/static/js/settings.js")}
-    ${self.js_link("/static/js/helpers.js")}
     ${self.js_link("/static/js/feature.js")}
     ${self.js_link("/static/js/formative.js")}
     ${self.js_link("/static/js/draw.js")}
@@ -43,6 +42,7 @@
     		<input id="showresults" type="checkbox" checked />
     		show results
     	</span>
+        <img src="/static/images/ajax-loader.gif" id="throbber" style="display:none"/>
     </div>
 </%def>
 <div class="container_12">
@@ -50,10 +50,12 @@
         This text is displayed if your browser does not support HTML5 Canvas.
     </canvas>
 
-    <div id="preview" style="display:none">
+    <div id="preview" style="display:none" class="grid_12">
         <div id="inpreview"></div>
     </div>
 </div>
+
+
 <div id="contextmenu"
  style="border: 1px solid gray; display: none; position: absolute">
     <div class="cmenu">
