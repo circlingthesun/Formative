@@ -51,8 +51,8 @@ def process(request):
     img = Image.fromstring("RGB", (img.size[0], img.size[1]), raw_img,
             "raw", "BGR", 0, 1)
         
-    with open('json.txt', 'w') as out:
-        out.write(json.dumps(features, indent=4))
+    #with open('json.txt', 'w') as out:
+    #    out.write(json.dumps(features, indent=4))
 
     return features
 
