@@ -84,6 +84,7 @@ function saveState() {
         }
     }
     history.push(histob);
+    $('#undo').removeAttr("disabled");
 }
 
 /*
@@ -95,8 +96,9 @@ function restoreState() {
         features = history.splice(history.length-1,1)[0];
     }
     else if(history.length === 1) {
+        $('#undo').attr("disabled", "disabled");
         features = history.splice(history.length-1,1)[0];
-        saveState();
+        //saveState();
     }
     text_changed = false;
     invalidate();
@@ -1042,6 +1044,8 @@ function setEvents(on) {
 // initialize our canvas, add a ghost canvas, set draw loop
 // then add everything we want to intially exist on the canvas
 function initVerify() {
+    $('#undo').show();
+    $('#undo').click(restoreState);
     $('#process').unbind('click');
     $("#process").hide();
     $("#prevbutton").show();
@@ -1137,7 +1141,7 @@ function initFeatures(json) {
 
     }
     history = [];
-    saveState();
+    //saveState();
     initVerify();
     $("#throbber").hide();
 }

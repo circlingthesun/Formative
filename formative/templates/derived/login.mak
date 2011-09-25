@@ -3,7 +3,7 @@
     ${renderer.begin(request.resource_url(request.root, 'login'))}
     ${renderer.csrf_token()}
     <div class="field">
-      Username <br />
+      Email <br />
         ${renderer.errorlist("username")}
         ${renderer.text("username", size=60)}
     </div>
@@ -36,4 +36,6 @@
     ${renderer.end()}
 </%def>
 
+<div class="grid_12">
 ${login()}
+</div>

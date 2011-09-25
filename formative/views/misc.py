@@ -67,7 +67,7 @@ def login_view(request):
     form = Form(request, schema=LoginSchema)
         
     if form.validate():
-        username = authenticate(form.data['username'], form.data['password'], request)
+        username = authenticate(form.data['username'], form.data['password'], request.db)
         
         if username:
             headers = remember(request, username)

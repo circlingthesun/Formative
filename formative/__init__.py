@@ -8,7 +8,7 @@ from pyramid.authorization import ACLAuthorizationPolicy
 import pyramid_beaker
 
 from formative.resources import Root
-from formative.helpers.populatedb import initialize_mongo
+from formative.helpers.setup import initialize_mongo
 from formative.helpers import helpers, dbupdates
 from formative.security import groupfinder
 

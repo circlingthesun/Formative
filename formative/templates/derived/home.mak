@@ -24,23 +24,40 @@
 <%def name="title()">Home</%def>
 
 <!-- home.mak -->
-<div id="start">
-    <div class="grid_3">
-        <img src="/static/images/form.png">
-        <p>Load your form</p>
+
+    <div class="grid_3 center top_margin_10">
+        <img src="/static/images/page.png">
+        <p>1. Load your form</p>
     </div>
-    <div class="grid_3">
+    <div class="grid_3 center top_margin_10">
         <img src="/static/images/cloudUp.png">
-        <p>Process in cloud</p>
+        <p>2. Process in cloud</p>
     </div>
-    <div class="grid_3">
+    <div class="grid_3 center top_margin_10">
         <img src="/static/images/pensil.png">
-        <p>Edit (a.k.a fix magic cloud mistakes)</p>
+        <p>3. Fix any mistakes</p>
     </div>
-    <div class="grid_3">
+    <div class="grid_3 center top_margin_10">
         <img src="/static/images/users.png">
-        <p>Finalise &amp share</p>
+        <p>4. Finalise &amp share</p>
     </div>
-</div>
+
+    <p class="grid_12">
+        Formative is aimed at making it easier for you to convert existing paper
+        forms into digital web forms. We achieve this by letting computers do most
+        of the boring work for you. However because our computers are not as smart as you,
+        they may make some silly mistakes. We therefore let you edit the form and fix
+        little mistakes or make additions. When you are happy, we will generate the final
+        web form and give you a link to it. We also give you a link that lets you view
+        form submissions and export them.
+    </p>
+        <div class="grid_12 top_margin_10 center">
+        <a href="/new">
+        <button class="big_button">Get started</button>
+        </a>
+    </div>
+
+
+
 
 <!-- end home.mak -->

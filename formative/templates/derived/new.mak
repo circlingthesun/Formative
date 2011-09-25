@@ -32,6 +32,7 @@
 
 <%def name="toolbox()">
     <div id="toolbox" class="container_12">
+        <div class="grid_12">
     	<input type="file" id="input">
         <input id="done" type="button" value="Finalise" style="display:none">
     	<input id="process" type="button" value="Process" style="display:none">
@@ -42,7 +43,9 @@
     		<input id="showresults" type="checkbox" checked />
     		show results
     	</span>
+        <input id="undo" type="button" value="Undo" style="display:none;disabled:true;float:right;">
         <img src="/static/images/ajax-loader.gif" id="throbber" style="display:none"/>
+        </div>
     </div>
 </%def>
 <div class="container_12">

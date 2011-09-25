@@ -28,9 +28,8 @@
 </%def>
 
 <%def name="css()">
-    ${css_link('http://fonts.googleapis.com/css?family=Loved+by+the+King', 'screen')}
     ${css_link('http://fonts.googleapis.com/css?family=Hammersmith+One', 'screen')}
-    ${css_link('/static/css/reset.css', 'screen')}
+    ${css_link('/static/css/normalize.css', 'screen')}
     ${css_link('/static/css/960.css', 'screen')}
 	${css_link('/static/css/style.css', 'all')}
 	${topmenu.css(self)}
@@ -81,29 +80,32 @@
 
     <body>
 		
-	    <div id="header">
-            <div class="container_12">
-	        <h1 id="name" class="grid_2"><a href="/">Formative</a></h1>
-            <div id="navigation" class="grid_10">${topmenu.topmenu("menu")}</div>
-            </div>
-	    </div>
+        <div id="page">
+    	    <div id="header">
+                <div class="container_12">
+    	        <h1 id="name" class="grid_2"><a href="/" class="shadow_text">Formative</a></h1>
+                <div id="navigation" class="grid_10 shadow_text">${topmenu.topmenu("menu")}</div>
+                </div>
+    	    </div>
 
-        ${self.toolbox()}
+            ${self.toolbox()}
 
-	    <div id="page" class="container_12">
-            <div id="content">
+	    
+            <div id="content" class="container_12">
             ${self.flash()}
 	        ${next.body()}
             </div>
         </div>
 	    <!-- end container -->
 	    
+        <div class="push"></div>
+
         <div class="footer" id="footer">
-        <div class="container_12">
-        <div class="grid_2 prefix_10">
-        ${self.footer()}
-        </div>
-        </div>
+            <div class="container_12">
+                <div class="grid_2 prefix_10 shadow_text2">
+                ${self.footer()}
+                </div>
+            </div>
         </div>
 
 	    <!-- scripts -->

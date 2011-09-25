@@ -34,7 +34,6 @@ requires = [
     'pyramid_beaker',
     'pymongo',
     'webhelpers',
-    'pyparsing',
     #'PIL',
     'pyDNS',
     ]
