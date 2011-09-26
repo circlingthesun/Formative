@@ -95,10 +95,11 @@
             ${self.flash()}
 	        ${next.body()}
             </div>
+            <div class="push"></div>
         </div>
 	    <!-- end container -->
 	    
-        <div class="push"></div>
+        
 
         <div class="footer" id="footer">
             <div class="container_12">

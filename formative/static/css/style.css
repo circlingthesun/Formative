@@ -3,16 +3,14 @@
 html, body {
     background: #fff;
     color: #333;
-    padding-bottom: 20px;
     font-family: 'Hammersmith One', sans-serif;
     font-size:1em;
-
     height: auto;
     height: 100%;
 }
 
 a {
-    color: #fff;
+    color: #333;
     text-decoration: none;
 }
 
@@ -55,12 +53,14 @@ p {
 /* Style */
 #header h1{
     margin-top: 20px;
+    font-size:25px;
+    text-align:left;
 }
+
 
 #header h1 a {
     font-weight: 400;
-    font-size:25px;
-    text-align:left;
+    color:#fff;
 }
 
 #header h1 a:hover {
@@ -78,7 +78,7 @@ p {
     min-height: 100%;
     height: auto !important;
     height: 100%;
-    margin: 0 auto -4em;
+    margin: 0 auto -2em;
 }
 
 #footer{
@@ -89,8 +89,7 @@ p {
 }
 
 #footer, .push{
-    height: 30px;
-    margin:0;
+    height: 2em;
 }
 
 .center{

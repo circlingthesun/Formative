@@ -27,29 +27,40 @@
 	$(function(){
 	    var inputElement = document.getElementById("input");  
 		inputElement.addEventListener("change", handleFiles, false);
+        // Point to upload button
+        var canvas = document.getElementById('canvas2');
+        var context = canvas.getContext('2d');
+        context.lineWidth = 10;
+        context.strokeStyle = ARROW_COLOUR;
+        context.fillStyle = ARROW_COLOUR;
+        arrow(context, 65, 50, 65, 10, 25);
 	});
 </%def>
 
 <%def name="toolbox()">
     <div id="toolbox" class="container_12">
         <div class="grid_12">
-    	<input type="file" id="input">
         <input id="done" type="button" value="Finalise" style="display:none">
-    	<input id="process" type="button" value="Process" style="display:none">
-        <input id="prevbutton" type="button" value="Preview" style="display:none">
+    	<input id="process" type="button" value="Process"
+                style="display:none">
+        <input id="input" type="file">
+        <input id="prevbutton" type="button" value="Preview"
+                style="display:none">
     	<span id="checkboxes" style="display:none">
             <input id="showoriginal" type="checkbox"/>
     		show original
     		<input id="showresults" type="checkbox" checked />
     		show results
     	</span>
-        <input id="undo" type="button" value="Undo" style="display:none;disabled:true;float:right;">
-        <img src="/static/images/ajax-loader.gif" id="throbber" style="display:none"/>
+        <input id="undo" type="button" value="Undo"
+                style="display:none;disabled:disabled;float:right;">
+        <img src="/static/images/ajax-loader.gif" id="throbber"
+                style="display:none;float:right"/>
         </div>
     </div>
 </%def>
 <div class="container_12">
-    <canvas id="canvas2" width="940" height="60">
+    <canvas id="canvas2" class="grid_12" width="940" height="200">
         This text is displayed if your browser does not support HTML5 Canvas.
     </canvas>
 

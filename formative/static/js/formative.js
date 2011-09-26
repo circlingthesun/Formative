@@ -73,7 +73,6 @@ var stylePaddingLeft, stylePaddingTop, styleBorderLeft, styleBorderTop;
     Saves the current progran state
 */
 function saveState() {
-    history.push($.extend(true, {}, features));
     if(history.length > MAX_HISTORY) {
         history.splice(1,1);
     }
@@ -146,7 +145,7 @@ function mainDraw() {
     }
 }
 
-function myNonTextKey(e) {
+function onControlKey(e) {
     var code;
     if (!e) var e = window.event;
     if (e.keyCode) code = e.keyCode;
@@ -238,7 +237,7 @@ function deleteSelected() {
     invalidate();
 }
 
-function myKey(e) {
+function onKey(e) {
     var code;
     if (!e) var e = window.event;
     if (e.keyCode) code = e.keyCode;
@@ -273,8 +272,8 @@ function myKey(e) {
     invalidate();
 }
 
-// Happens when the mouse is moving inside the canvas
-function myMove(e) {
+// Mouse is moving inside the canvas
+function onMove(e) {
     if (isDrag) {
         getMouse(e);
          if(!selArrow) {
@@ -407,7 +406,7 @@ function myMove(e) {
 }
 
 // Happens when the mouse is clicked in the canvas
-function myDown(e) {
+function onDown(e) {
     getMouse(e);
     
 
@@ -457,15 +456,25 @@ function myDown(e) {
                     ctx.font = "bold " + text_height + "px sans-serif";
                     var text_width = ctx.measureText(selection.val).width;
 
-                    // Make text fit box
+                    // Adjust text size to fit box
                     while(text_width > selection.w) {
                         text_height -= 1;
                         ctx.font = "bold " + text_height + "px sans-serif";
                         text_width = ctx.measureText(selection.val).width;
                     }
 
+                    // Find position
                     var x_pos = mx-selection.x;
                     var pos = (x_pos/text_width)*selection.val.length;
+                    var x_est = ctx.measureText(selection.val.slice(0,pos)).width;
+                    var delta = delta = x_pos-x_est;
+                    var limit = 5; // Incase something goes terribly wrong
+                    while(Math.abs(delta) > text_height/4 && limit > 0){
+                        pos = delta<0 ? pos-1 : pos+1; 
+                        x_est = ctx.measureText(selection.val.slice(0,pos)).width;
+                        delta = x_pos-x_est;
+                        limit--;
+                    }
                     cursorPos = pos;
                 }
                 else{
@@ -566,7 +575,7 @@ function clearSelection() {
     lastSelId = -1;
 }
 
-function myUp(e) {
+function onUp(e) {
     isDrag = false;
     isResizeDrag = false;
     expectResize = -1;
@@ -795,8 +804,10 @@ function splitText() {
 
 function mergeSelectedText() {
     mySelId.sort(function(a,b) {
-        if(features[a].y > features[b].y+features[b].h) {
-            return true;
+        var mean_height = (features[a].h+features[b].h)/2;
+        var delta = Math.abs(features[a].y - features[b].y);
+        if(delta > mean_height) {
+            return features[a].y > features[b].y;
         }
         return features[a].x > features[b].x
     });
@@ -1019,12 +1030,12 @@ function showContextMenu(show) {
 
 function setEvents(on) {
     if(on) {
-        canvas.onmousedown = myDown;
-        canvas.onmouseup = myUp;
+        canvas.onmousedown = onDown;
+        canvas.onmouseup = onUp;
         canvas.ondblclick = myDblClick;
-        canvas.onmousemove = myMove;
-        document.onkeypress = myKey;
-        document.onkeydown = myNonTextKey;
+        canvas.onmousemove = onMove;
+        document.onkeypress = onKey;
+        document.onkeydown = onControlKey;
         initContextMenu();
         
     }
@@ -1033,8 +1044,8 @@ function setEvents(on) {
         canvas.onmouseup =  undefined;
         canvas.ondblclick = undefined;
         canvas.onmousemove = undefined;
-        document.onkeypress = myKey;
-        document.onkeydown = myNonTextKey;
+        document.onkeypress = onKey;
+        document.onkeydown = onControlKey;
         window.oncontextmenu = undefined;
         contextmenu.onmouseover = undefined;
         contextmenu.onmouseover = undefined;
@@ -1044,7 +1055,9 @@ function setEvents(on) {
 // initialize our canvas, add a ghost canvas, set draw loop
 // then add everything we want to intially exist on the canvas
 function initVerify() {
+    $("#input").hide();
     $('#undo').show();
+    $('#undo').attr("disabled", "disabled");
     $('#undo').click(restoreState);
     $('#process').unbind('click');
     $("#process").hide();
@@ -1101,7 +1114,6 @@ function initVerify() {
 function initCanvas() {
     $("#done").hide();
     $('#done').unbind('click');
-    $("#input").hide();
     $("#prevbutton").hide();
     $('#prevbutton').unbind('click');
     $("#process").show();
@@ -1242,7 +1254,7 @@ function finalise() {
     var data = JSON.stringify(features);
     var params = {"_csrf":csrf, "features": data}
     var post = $.post(url, params, function(json) {
-        window.location = '/form?id=' + json.id;
+        window.location = '/form/' + json.id;
     }, 'json');
 
     post.error(function() {

@@ -19,6 +19,7 @@ from pymongo.objectid import ObjectId
 
 from pyramid.security import remember
 from pyramid.security import forget
+from pyramid.security import authenticated_userid
 
 from formative.security import authenticate
 
@@ -75,16 +76,37 @@ def preview(request):
 def finalise(request):
     result = json.loads(request.POST['features'])
     data = parse(result)
-    _id = request.db.formschemas.save({"items":data})
-    return {'id':str(_id)}
+    user_id = authenticated_userid(request)
+
+    form_label = None
+    # Assign unique label
+    while True:
+        # Base 16 is easier to remember and write
+        # 32 bits should be enough for now
+        form_label = base64.b16encode(os.urandom(4))
+        found = request.db.formschemas.find_one({ 'label' : form_label})
+        if not found:
+            break
+
+    request.db.formschemas.save({
+            "user_id":ObjectId(user_id),
+            "label":form_label,
+            "items":data
+    })
+
+    return {'id':form_label}
 
 
 @view_config(context='formative:resources.Root',
                     renderer='/derived/form.mak',
                     name="form")
 def view_form(request):
-    formid = request.GET['id']
-    data = request.db.formschemas.find_one(_id=ObjectId(formid));
+    if not request.subpath:
+        return NotFound()
+
+    form_label = request.subpath[0]
+    
+    data = request.db.formschemas.find_one({ 'label' : form_label});
     if not data:
         data = {"items":[]}
     return {"data":data['items'], "csrf":request.session.get_csrf_token()}

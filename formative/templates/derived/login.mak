@@ -36,6 +36,6 @@
     ${renderer.end()}
 </%def>
 
-<div class="grid_12">
+<div class="grid_12 top_margin_10">
 ${login()}
 </div>

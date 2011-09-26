@@ -32,6 +32,20 @@
         
         if authenticated_userid(request):
             menu.append(
+                ["My profile", {
+                    "url" : "/profile",
+                }]
+            )
+
+        if authenticated_userid(request):
+            menu.append(
+                ["My forms", {
+                    "url" : "/list-forms",
+                }]
+            )
+
+        if authenticated_userid(request):
+            menu.append(
                 ["Logout", {
                     "url" : "/logout",
                 }]

@@ -83,3 +83,38 @@ function cross(context, x, y, w, h, pad) {
     context.closePath();
     context.stroke();
 }
+
+function arrow(context, x1, y1, x2, y2, headlen){
+        var angle = Math.atan2(y2-y1,x2-x1);
+
+        var headline = Math.sqrt(headlen*headlen*2)*0.6;
+
+        var dist = Math.sqrt(Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2));
+
+        var vX=(x2-x1)/dist;
+        var vY=(y2-y1)/dist;
+
+        x2-=headline*vX;
+        y2-=headline*vY;
+
+        // Line
+        context.beginPath();
+        context.moveTo(x1, y1);
+        context.lineTo(x2, y2);
+        context.closePath();
+        context.stroke();
+
+        x2+=headline*vX;
+        y2+=headline*vY;
+
+        //Head
+        context.beginPath();
+        context.moveTo(x2, y2);
+        context.lineTo(x2-headlen*Math.cos(angle-Math.PI/6),
+                y2-headlen*Math.sin(angle-Math.PI/6));
+        context.lineTo(x2-headlen*Math.cos(angle+Math.PI/6),
+                y2-headlen*Math.sin(angle+Math.PI/6));
+        context.lineTo(x2, y2);
+        context.closePath();
+        context.fill();
+}

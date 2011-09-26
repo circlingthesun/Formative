@@ -31,6 +31,8 @@ Make sure you have the python development headers installed.
 
 ``sudo apt-get install python-dev``
 
+You also need the boost libraries.
+
 All other the Python dependencies should work out of the box.
 
 It is recommended that the application be run in a virtual python environment.
