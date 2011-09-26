@@ -21,6 +21,13 @@ README = open(os.path.join(here, 'README.txt')).read()
 CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 
 pkgstuff = pkgconfig('opencv')
+if 'include_dirs' not in pkgstuff:
+    pkgstuff['include_dirs'] = []
+if 'libraries' not in pkgstuff:
+    pkgstuff['libraries'] = []
+if 'extra_compile_args' not in pkgstuff:
+    pkgstuff['extra_compile_args'] = []
+    
 pkgstuff['include_dirs'].append('/usr/local/include/tesseract/')
 pkgstuff['libraries'].append('tesseract_api')
 pkgstuff['extra_compile_args'] = ['-g',]

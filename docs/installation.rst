@@ -17,6 +17,13 @@ http://code.google.com/p/leptonica/
 
 You will need to install CMake to install OpenCV. There are no debian packages currently availible for OpenCV 2.3. Earlier versions contain a small bug which causes index out of bound errors during contour detection that my crash Formative at times.
 
+``cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D BUILD_PYTHON_SUPPORT=OFF -D WITH_GTK=OFF -D WITH_FFMPEG=OFF -D WITH_JASPER=OFF .``
+
+``make``
+``sudo make install``
+
+``sudo cp unix-install/opencv.pc /usr/share/pkgconfig/``
+
 Formative also relies on the Python Image Library. In order to install this with png support you will need zlib.
 
 ``sudo apt-get install zlib1g-dev``
