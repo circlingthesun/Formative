@@ -1,12 +1,46 @@
 <%! from pyramid.security import has_permission %>
 <%inherit file="/base/base.mak" />
+
+<%def name="script_section()">
+	${parent.script_section()}
+	function SelectAll(id) {
+	    document.getElementById(id).focus();
+	    document.getElementById(id).select();
+	}
+</%def>
+
 <div class="grid_12">
 <h2>My Forms</h2>
+<hr />
 % if forms.count() > 0:
-	% for form in forms:
-		<a href="/form/${form['label']}">${form['label']}</a>
-		<a href="/form/${form['label']}/submissions">view submissions</a> | delete<br />
+	<% i = 0 %>
+	<% paginator = h.Page(forms, request, 10, "c") %>
+	${paginator.pager() | n}
+	% for form in paginator.getslice():
+		<h3><a href="/form/${form['label']}">${form['title']}</a></h3>
+
+		<a href="/form/${form['label']}/submissions">
+			view submissions
+		</a>
+		|
+		<a href="/form/${form['label']}/del">
+		delete
+		</a>
+		<br /><br />
+
+		<strong>Link to form</strong>
+		<br/>
+		<input id="link${i}" type="textfield" size="60" onclick="SelectAll('link${i}');" value="${request.application_url}/form/${form['label']}">
+		<br />
+		<br />
+		<strong>Mobile link to form</strong>
+		<br/>
+		<input id="mlink${i}" type="textfield" size="60" onclick="SelectAll('mlink${i}');" value="${request.application_url}/mform/${form['label']}">
+		<br /><br />
+		<hr />
+		<% i = i+1 %>
 	% endfor
+	${paginator.pager() | n}
 % else:
 	<strong>No forms found. Perhaps create one and come back.</strong>
 % endif

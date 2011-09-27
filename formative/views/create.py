@@ -32,7 +32,8 @@ import formative_cv
         renderer='/derived/create.mak',
         name="new"
     )
-def new(request):
+def create(request):
+    ''' Brings up the JavaScript application'''
     user_id = authenticated_userid(request)
     logged_on = "false"
     if user_id:
@@ -75,6 +76,7 @@ def process(request):
         xhr=True
     )
 def preview(request):
+    '''Genrates a preview of the form'''
     result = json.loads(request.POST['features'])
     data = parse(result)
     return {"data":data}
@@ -83,9 +85,11 @@ def preview(request):
         context='formative:resources.Root',
         name="save",
         renderer='json',
-        xhr=True
+        xhr=True,
+        permission='account'
     )
 def save(request):
+    ''' Saves the form to the database'''
     result = json.loads(request.POST['features'])
     data = parse(result)
     user_id = authenticated_userid(request)
@@ -103,7 +107,8 @@ def save(request):
     request.db.formschemas.save({
             "user_id":ObjectId(user_id),
             "label":form_label,
-            "items":data
+            "items":data,
+            "title":request.POST['title'],
     })
 
     return {'id':form_label}

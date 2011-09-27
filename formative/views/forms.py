@@ -15,9 +15,14 @@ from pymongo.objectid import ObjectId
 
 from pyramid.security import remember
 from pyramid.security import forget
+from pyramid.security import authenticated_userid
+
+from pyramid_simpleform import Form
+from pyramid_simpleform.renderers import FormRenderer
+from formencode import Schema
 
 from formative.security import authenticate
-from pyramid.security import authenticated_userid
+
 
 @view_config(context='formative:resources.Root',
                     renderer='/derived/myforms.mak',
@@ -119,3 +124,31 @@ def submission_csv(form, request):
     request.response.content_disposition = 'attachment; filename=%s.csv' % form['label']
 
     return request.response
+
+
+@view_config(context='formative:resources.Form',
+                    renderer='/derived/delete.mak',
+                    name="del",
+                    permission='account')
+def paper_del(form, request):
+    
+    form2 = Form(request, schema=Schema)
+    
+    if request.POST:
+        if 'delete' in request.POST:
+
+            # remove submissions
+            for sub in request.db.formsubmissions.find({'form_id':form['_id']}):
+                request.db.formsubmissions.remove(sub)
+
+            # remove schema
+            request.db.formschemas.remove(form)
+                
+
+            request.session.flash('Form deleted.', queue='info')
+            return HTTPFound('/myforms')
+        elif 'cancel' in request.POST:
+            request.session.flash('Paper deletion canceled.', queue='info')
+            return HTTPFound('/myforms')
+    
+    return {'item':form['title'], "renderer":FormRenderer(form2)}

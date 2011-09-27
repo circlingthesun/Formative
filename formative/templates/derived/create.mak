@@ -93,11 +93,28 @@
     </div>
 </div>
 
-<div id="signup" style="display:none;">
+<div id="signup" class="modal" style="display:none;">
     <strong>Please provide your email address so we may save your form.</strong>
     <br />
     <input id="email" type="text" size="50">
     <div id="email_error" class="error"></div>
     <br />
     <input id="signup_button" type="button" value="Save" onclick="signUp();">
+</div>
+
+<div id="form_title" class="modal" style="display:none;">
+    <strong>Please enter a form title</strong>
+    <br />
+    <input id="title" type="text" size="50">
+    <div id="title_error" class="error"></div>
+    <br />
+    <input id="title_button" type="button" value="Save" onclick="setTitle();">
+</div>
+
+<div id="unlinked" class="modal" style="display:none;">
+    <strong id="unlinked_msg"></strong>
+    <br />
+    <img src="/static/images/unlinked.gif" />
+    <br />
+    <input type="button" value="Whoops, okay" onclick="$.modal.close();">
 </div>

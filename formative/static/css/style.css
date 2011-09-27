@@ -10,8 +10,8 @@ html, body {
 }
 
 a {
-    color: #333;
-    text-decoration: none;
+    color: #000;
+    text-decoration: underline;
 }
 
 a:hover {
@@ -58,8 +58,12 @@ p {
 }
 
 
-#header h1 a {
+#header h1 {
     font-weight: 400;
+}
+
+#header a{
+    text-decoration: none;
     color:#fff;
 }
 
@@ -206,6 +210,7 @@ p {
 .cmenu a {
     border: 0!important;
     color: #000000;
+    text-decoration: none;
 }
 
 .cmenu a:hover {
@@ -232,7 +237,7 @@ p {
     cursor:pointer;
 }
 
-#signup {
+.modal {
     background:#333333;
     color:#FFFFFF;
     padding:30px;

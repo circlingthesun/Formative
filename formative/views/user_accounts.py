@@ -37,6 +37,7 @@ class LoginSchema(Schema):
                     renderer='/derived/login.mak',
                     name='login')
 def login_view(request):
+    '''Login page'''
     
     referrer = request.session.get('referrer', '')
     if not referrer:
@@ -65,22 +66,25 @@ def login_view(request):
 
 @view_config(context='formative:resources.Root',
                     name='logout')
-def logout_view(request):    
+def logout_view(request):
+    '''Logs the user out'''
+
     headers = forget(request)
     request.session.flash( 'You have been logged out!', queue='info')
     return HTTPFound(location = request.resource_url(request.root), headers=headers)
 
 class ForgotPasswordSchema(Schema):
+    '''Forgotten password form schema'''
     filter_extra_fields = True
     allow_extra_fields = True
-    
     email = validators.Email(not_empty=True,
             messages={'empty':'Please enter a email.'})
 
 @view_config(context='formative:resources.Root',
                     renderer="/derived/forgot.mak",
                     name='forgot-password')
-def forgot_password_view(request):    
+def forgot_password_view(request):
+    '''Forgotten password page'''  
     form = Form(request, schema=ForgotPasswordSchema)
     if form.validate():
         user = request.db.users.find_one({'email':form.data['email']})
@@ -120,7 +124,7 @@ def forgot_password_view(request):
                     renderer="/derived/signup.mak",
                     name='signup')
 def signup(request):
-
+    '''Shows the signup page'''
     form = Form(request, schema=ForgotPasswordSchema)
         
     if form.validate():
@@ -151,7 +155,7 @@ def signup(request):
             mailer.send_immediately(message)
 
             request.session.flash('Signup successful.', queue='info')
-            return HTTPFound(location = '/', headers = headers)
+            return HTTPFound(location = '/account', headers = headers)
         else:
             request.session.flash(
                     '"%s" is already registered.' % form.data['email'],
@@ -165,6 +169,7 @@ def signup(request):
                     xhr=True,
                     name='signup')
 def ajax_signup(request):
+    '''Processes ajax signups'''
 
     email = None
     try:
@@ -206,6 +211,7 @@ def ajax_signup(request):
 
 
 class AccountSchema(Schema):
+    '''Schema for account modification form'''
 
     def validate_email(value_dict, state, validator):
         account = state.db.users.find_one({'email' : value_dict['email']})
@@ -213,8 +219,6 @@ class AccountSchema(Schema):
         if account and str(account['user_id']) != state.user_id:
             return {'email': '"%s" belongs to another account' % value_dict['email']} 
         
-        
-
     chained_validators = [SimpleFormValidator(validate_email)]
 
     filter_extra_fields = True
@@ -226,9 +230,10 @@ class AccountSchema(Schema):
 
 @view_config(context='formative:resources.Account',
                     renderer="/derived/account.mak",
-                    permission='edit'
+                    permission='account'
                     )
 def account(user, request):
+    '''Shows the user account modification page'''
 
     form = Form(request, schema=AccountSchema,
             state=State(db=request.db, user_id=authenticated_userid(request))
@@ -257,7 +262,7 @@ def account(user, request):
                   recipients=[user['email']],
                   body=body,
                   extra_headers = {"From": from_}
-                  )
+            )
         
         mailer.send_immediately(message)
 

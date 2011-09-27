@@ -25,9 +25,7 @@ var HEIGHT;
 
 var text_changed = false;
 
-// Checkbox refences
-//var showoriginal = $("#showoriginal");
-//var showresults = $("#showresults");
+var form_title = "";
 
 var isDrag = false;
 var isSelectionDrag = false;
@@ -852,7 +850,6 @@ function initContextMenu() {
     }
     contextmenuisinit = true;
 
-    window.oncontextmenu = function() {return false;};
     contextmenu.onmouseover = function() {contextMenuVisible=true}
     contextmenu.onmouseover = function() {contextMenuVisible=false}
     $('#delete').click(function() {
@@ -1036,6 +1033,7 @@ function setEvents(on) {
         canvas.onmousemove = onMove;
         document.onkeypress = onKey;
         document.onkeydown = onControlKey;
+        window.oncontextmenu = function() {return false;};
         initContextMenu();
         
     }
@@ -1044,11 +1042,9 @@ function setEvents(on) {
         canvas.onmouseup =  undefined;
         canvas.ondblclick = undefined;
         canvas.onmousemove = undefined;
-        document.onkeypress = onKey;
-        document.onkeydown = onControlKey;
+        document.onkeypress = undefined;
+        document.onkeydown = undefined;
         window.oncontextmenu = undefined;
-        contextmenu.onmouseover = undefined;
-        contextmenu.onmouseover = undefined;
     }
 }
 
@@ -1063,7 +1059,7 @@ function initVerify() {
     $("#process").hide();
     $("#prevbutton").show();
     $("#prevbutton").click(preview);
-    $("#done").click(finalise);
+    $("#done").click(save);
     $("#done").show();
     $("#checkboxes").show();
     $("#checkboxes").click(invalidate);
@@ -1210,15 +1206,22 @@ function preview() {
         $("#canvas2").show();
         $("#preview").hide();
         $("#checkboxes").show();
+        setEvents(true);
         return;
     }
-    
+
     var valid = isLabelTargetsValid();
     if(valid !== true) {
-            window.alert("Label '" + valid + "' is not pointing to a field," +
-            " please make sure all label arrows have targets.");
+            
+            var msg = "Label '" + valid + "' is not pointing to a field," +
+                    " please make sure all label arrows have targets.";
+            unlinked(msg);
             return false;
     }
+
+    // Avoid editing form during preview
+    setEvents(false);
+
     $("#throbber").show();
     var url = '/preview'
     var data = JSON.stringify(features);
@@ -1240,7 +1243,6 @@ function preview() {
 }
 
 function signUp(){
-    console.log("clicked");
     $("#throbber").show();
     var url = '/signup'
     var email = $('#email').val();
@@ -1251,7 +1253,7 @@ function signUp(){
             console.log(json);
             $.modal.close();
             logged_on=true;
-            finalise();
+            save();
         }
         else{
             $('#email_error').html(json.error);
@@ -1259,14 +1261,51 @@ function signUp(){
     }, 'json');
 
     post.error(function() {
-        alert("Something terrible happened. I cannot finalise your form");
+        alert("Something terrible happened. I cannot save your form");
         $("#throbber").hide();
     });
 }
 
 
+function setTitle(){
+    var title = $("#title").val();
+    if(title.length < 3){
+        $("#title_error").html("The title needs to be 3 letters or longer.");
+    }
+    else{
+        form_title = title;
+        $.modal.close();
+        // Does not work without delay
+        setTimeout(save,500);
+        //save();
+    }
+}
 
-function finalise() {
+/*
+    Shows error unlinked labels error message
+*/
+function unlinked(msg){
+    $("#unlinked").modal();
+    $('#unlinked_msg').html(msg);
+}
+
+/*
+    Attempts to save the generated form to the server
+*/
+function save() {
+    var valid = isLabelTargetsValid();
+    if(valid !== true) {
+            var msg = "Label '" + valid + "' is not pointing to a field," +
+                    " please make sure all label arrows have targets.";
+            unlinked(msg);
+            return false;
+    }
+
+    // Get a form title
+    if(form_title.length < 3){
+        $("#form_title").modal();
+        return;
+    }
 
     // Make user signup first
     if(!logged_on){
@@ -1274,20 +1313,13 @@ function finalise() {
         return;
     }
 
-    var valid = isLabelTargetsValid();
-    if(valid !== true) {
-            window.alert("Label '" + valid + "' is not pointing to a field," +
-            " please make sure all label arrows have targets.");
-            return false;
-    }
-
     $("#throbber").show();
 
     var url = '/save'
     var data = JSON.stringify(features);
-    var params = {"_csrf":csrf, "features": data}
+    var params = {"_csrf":csrf, "features": data, "title":form_title}
     var post = $.post(url, params, function(json) {
-        window.location = '/form/' + json.id;
+        window.location = '/form/' + json.id + '/created';
     }, 'json');
 
     post.error(function() {

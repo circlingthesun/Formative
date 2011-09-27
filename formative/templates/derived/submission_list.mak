@@ -1,6 +1,6 @@
 <%inherit file="/base/base.mak" />
 <div class="grid_12">
-<h2>Submissions of Form ${form['label']}</h2>
+<h2>Submissions of ${form['title']}</h2>
 % if submissions.count() > 0:
 	<a href="/form/${form['label']}/csv">Export to CSV</a><br /><br />
 	<table border="1">
@@ -11,10 +11,12 @@
 	% for sub in submissions:
 		<tr>
 			<td>
-			<a href="/form/${str(sub['_id'])}">${sub['timestamp'].strftime('%Y-%m-%d %H:%M')}</a>
+				<a href="/form/${str(sub['_id'])}">
+					${sub['timestamp'].strftime('%Y-%m-%d %H:%M')}
+				</a>
 			</td>
 			<td>
-			 view | delete<br />
+			 	view | delete<br />
 			</td>
 		</tr>
 	% endfor

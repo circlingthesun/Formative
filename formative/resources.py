@@ -25,11 +25,6 @@ class Account(dict):
 
         user = request.db.users.find_one(ObjectId(user_id))
         self.update(user)
-        self.__acl__ = [
-                (Allow, 'group:admin', 'view'),
-                (Allow, user_id, 'edit'),
-                DENY_ALL
-        ]
                 
         self.__name__ = None
         self.__parent__ = None 
