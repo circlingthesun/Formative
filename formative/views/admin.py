@@ -21,14 +21,17 @@ from pyramid.security import authenticated_userid
 
 @view_config(context='formative:resources.Root',
                     renderer='/derived/list_forms.mak',
-                    name="list-forms")
+                    name='myforms',
+                    permission='account'
+                    )
 def list_forms(request):
     user_id = authenticated_userid(request)
-    forms = request.db.formschemas.find(user_id=ObjectId(user_id))
+    forms = request.db.formschemas.find({'user_id':ObjectId(user_id)})
     return {"csrf":request.session.get_csrf_token(), "forms":forms}
 
 @view_config(context='formative:resources.Root',
                     renderer='/derived/list_submissions.mak',
-                    name="list-submissions")
+                    permission='account',
+                    name="submissions")
 def list_submissions(request):
     return {"csrf":request.session.get_csrf_token()}

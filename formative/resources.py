@@ -1,6 +1,9 @@
-from pyramid.security import Allow, Deny, DENY_ALL, Everyone, Authenticated
-# Return Objects
+from pymongo.objectid import ObjectId
 
+from pyramid.security import Allow, Deny, DENY_ALL, Everyone, Authenticated
+from pyramid.security import authenticated_userid
+
+# Return Objects
 class Form(dict):
     def __init__(self, a_dict):
         if not a_dict:
@@ -9,78 +12,56 @@ class Form(dict):
         self.update(a_dict)
         self.__name__ = None
         self.__parent__ = None
-        
-class Page(dict):
-    def __init__(self, a_dict):
-        if not a_dict:
+
+
+class Account(dict):
+    def __init__(self, request):
+        user_id = authenticated_userid(request)
+
+        if not user_id:
             raise KeyError
-        super(Page, self).__init__(self)
-        self.update(a_dict)        
         
-        if not self['published']:
-            
-            self.__acl__ = [ (Allow, 'group:admin', 'view'),
-                (Allow, 'group:admin', 'edit'),
-                DENY_ALL ]
+        super(Account, self).__init__(self)
+
+        user = request.db.users.find_one(ObjectId(user_id))
+        self.update(user)
+        print user
+        self.__acl__ = [
+                (Allow, 'group:admin', 'view'),
+                (Allow, user_id, 'edit'),
+                DENY_ALL
+        ]
                 
         self.__name__ = None
-        self.__parent__ = None
-    
-class GridFSName(object):
-    def __init__(self, name):
-        self.name = name
-        self.__name__ = None
-        self.__parent__ = None
+        self.__parent__ = None 
 
 class Contact(object):
     def __init__(self, request):
         self.__name__ = None
         self.__parent__ = None
 
-# Traversals
-
-
 class Forms(object):
     def __init__(self, request):
-        self.collection = request.db.forms
+        self.collection = request.db.formschemas
         self.request = request
     
     def __getitem__(self, path):
-        story = Form(self.collection.find_one({"name": path}))
-        return _assign(story, path, self)
+        form = Form(self.collection.find_one({"label": path}))
+        return _assign(form, path, self)
 
-class Pages(object):
-    def __init__(self, request):
-        self.collection = request.db.pages
-        self.request = request
-    
-    def __getitem__(self, path):
-        page = Page(self.collection.find_one({"name": path}))
-        return _assign(page, path, self)
-
-class Files(object):
-    def __init__(self, request):
-        self.fs = request.fs
-        self.request = request
-    
-    def __getitem__(self, name):
-        if not self.fs.exists(filename = name):
-            return KeyError
-        afile = GridFSName(name)
-        return _assign(afile, name, self)
 
 class Root(object):
     __name__ = None
     __parent__ = None
     __acl__ = [ (Allow, Everyone, 'view'),
+                (Allow, Authenticated, 'account'),
                 (Allow, 'group:admin', 'edit'),
                 DENY_ALL ]
 
     def __init__(self, request):
         self.children = {
-                'forms': Forms,
-                'pages': Pages,
-                'file': Files,
+                'form': Forms,
+                'account': Account,
                 'contact': Contact,
                 }
         self.request = request

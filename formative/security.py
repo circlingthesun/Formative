@@ -32,6 +32,9 @@ def new_user(email, password, db, groups=['standard']):
     """Creates a new user"""
     existing_account = db.users.find_one({'email':email})
 
+    if existing_account:
+        return False
+
     salt = base64.b64encode(urandom(8))
     m = sha1()
     m.update(password)
@@ -44,4 +47,33 @@ def new_user(email, password, db, groups=['standard']):
         'salt': salt,
         'groups': groups,
     }
-    db.users.save(user)
+    
+    return str(db.users.save(user))
+
+def change_password(email, password, db):
+    """Creates a new user"""
+    existing_account = db.users.find_one({'email':email})
+
+    if not existing_account:
+        return False
+
+    salt = base64.b64encode(urandom(8))
+    m = sha1()
+    m.update(password)
+    m.update(salt)
+    password_hash = base64.b64encode(m.digest())
+
+    existing_account['password_hash'] = password_hash
+    existing_account['salt'] = salt
+    
+    db.users.save(existing_account)
+
+    return True
+
+def hash_password(password):
+    salt = base64.b64encode(urandom(8))
+    m = sha1()
+    m.update(password)
+    m.update(salt)
+    password_hash = base64.b64encode(m.digest())
+    return (password_hash, salt)

@@ -219,3 +219,22 @@ p {
     margin-top: 0.3em;
     padding-top: 0.3em;
 }
+
+#simplemodal-container a.modalCloseImg {
+    background:url('/static/images/x.png') no-repeat; /* adjust url as required */
+    width:25px;
+    height:29px;
+    display:inline;
+    z-index:3200;
+    position:absolute;
+    top:-15px;
+    right:-18px;
+    cursor:pointer;
+}
+
+#signup {
+    background:#333333;
+    color:#FFFFFF;
+    padding:30px;
+    border-radius: 10px;
+}

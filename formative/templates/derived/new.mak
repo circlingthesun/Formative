@@ -5,6 +5,7 @@
 <%def name="js()">
     ${parent.js()}
     ${self.js_link("/static/js/jquery-1.6.2.min.js")}
+    ${self.js_link("/static/js/jquery.simplemodal.1.4.1.min.js")}
     ${self.js_link("/static/js/testdata.js")}
     ${self.js_link("/static/js/settings.js")}
     ${self.js_link("/static/js/feature.js")}
@@ -23,6 +24,7 @@
 <%def name="script_section()">
 	${parent.script_section()}
 	var csrf = "${csrf}";
+    var logged_on = ${logged_on};
 	var fakeit = true;
 	$(function(){
 	    var inputElement = document.getElementById("input");  
@@ -40,7 +42,7 @@
 <%def name="toolbox()">
     <div id="toolbox" class="container_12">
         <div class="grid_12">
-        <input id="done" type="button" value="Finalise" style="display:none">
+        <input id="done" type="button" value="Save" style="display:none">
     	<input id="process" type="button" value="Process"
                 style="display:none">
         <input id="input" type="file">
@@ -89,4 +91,13 @@
         <a id="clone" href="#"><span>Clone</span></a>
         <a id="delete" href="#"><span>Delete</span></a>
     </div>
+</div>
+
+<div id="signup" style="display:none;">
+    <strong>Please provide your email address so we may save your form.</strong>
+    <br />
+    <input id="email" type="text" size="30">
+    <div id="email_error" class="error"></div>
+    <br />
+    <input id="signup_button" type="button" value="Save" onclick="signUp();">
 </div>

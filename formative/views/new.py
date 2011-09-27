@@ -27,18 +27,28 @@ import formative_cv
 
 
 
-@view_config(context='formative:resources.Root',
-                    renderer='/derived/new.mak',
-                    name="new")
+@view_config(
+        context='formative:resources.Root',
+        renderer='/derived/new.mak',
+        name="new"
+    )
 def new(request):
-    return {"csrf":request.session.get_csrf_token()}
+    user_id = authenticated_userid(request)
+    logged_on = "false"
+    if user_id:
+        logged_on = "true"
+    return {
+        "csrf":request.session.get_csrf_token(),
+        "logged_on": logged_on
+    }
 
 
-@view_config(context='formative:resources.Root',
-                    name="process",
-                    renderer='json',
-                    xhr=True
-                    )
+@view_config(
+        context='formative:resources.Root',
+        name="process",
+        renderer='json',
+        xhr=True
+    )
 def process(request):
     data = request.POST
 
@@ -58,22 +68,24 @@ def process(request):
     return features
 
 
-@view_config(context='formative:resources.Root',
-                    name="preview",
-                    renderer='/components/form.mak',
-                    xhr=True
-                    )
+@view_config(
+        context='formative:resources.Root',
+        name="preview",
+        renderer='/components/form.mak',
+        xhr=True
+    )
 def preview(request):
     result = json.loads(request.POST['features'])
     data = parse(result)
     return {"data":data}
 
-@view_config(context='formative:resources.Root',
-                    name="finalise",
-                    renderer='json',
-                    xhr=True
-                    )
-def finalise(request):
+@view_config(
+        context='formative:resources.Root',
+        name="finalise",
+        renderer='json',
+        xhr=True
+    )
+def save(request):
     result = json.loads(request.POST['features'])
     data = parse(result)
     user_id = authenticated_userid(request)
@@ -81,7 +93,7 @@ def finalise(request):
     form_label = None
     # Assign unique label
     while True:
-        # Base 16 is easier to remember and write
+        # Base 16 is easier to remember and write down
         # 32 bits should be enough for now
         form_label = base64.b16encode(os.urandom(4))
         found = request.db.formschemas.find_one({ 'label' : form_label})
@@ -97,23 +109,14 @@ def finalise(request):
     return {'id':form_label}
 
 
-@view_config(context='formative:resources.Root',
-                    renderer='/derived/form.mak',
-                    name="form")
-def view_form(request):
-    if not request.subpath:
-        return NotFound()
-
-    form_label = request.subpath[0]
-    
-    data = request.db.formschemas.find_one({ 'label' : form_label});
-    if not data:
-        data = {"items":[]}
-    return {"data":data['items'], "csrf":request.session.get_csrf_token()}
+@view_config(
+        context='formative:resources.Form',
+        renderer='/derived/form.mak'
+    )
+def view_form(form, request):    
+    return {"data":form['items'], "csrf":request.session.get_csrf_token()}
 
 def parse(data):
-    
-
     # New representation
     items = []
 
@@ -145,10 +148,6 @@ def parse(data):
             item['w'] = int(item['w'])
             item['h'] = int(item['h'])
             items.append(item)
-
-    # iterate over and set font size
-    #for item in items:
-    #    if item['h']
 
     # negative for smaller
     # is a smaller than b

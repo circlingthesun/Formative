@@ -39,7 +39,7 @@
     </div>
     <div class="grid_3 center top_margin_10">
         <img src="/static/images/users.png">
-        <p>4. Finalise &amp share</p>
+        <p>4. Save &amp share</p>
     </div>
 
     <p class="grid_12">

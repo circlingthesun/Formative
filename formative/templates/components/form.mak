@@ -3,7 +3,7 @@
 % for item in data:
     % if item['type'] == 'TEXT':
     	% if item['is_title']:
-    		<h1>${item['val']}</h1>
+    		<h2>${item['val']}</h2>
     	% else:
         	<div>${item['val']}</div>
         % endif

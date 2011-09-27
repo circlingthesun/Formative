@@ -32,15 +32,15 @@
         
         if authenticated_userid(request):
             menu.append(
-                ["My profile", {
-                    "url" : "/profile",
+                ["My account", {
+                    "url" : "/account",
                 }]
             )
 
         if authenticated_userid(request):
             menu.append(
                 ["My forms", {
-                    "url" : "/list-forms",
+                    "url" : "/myforms",
                 }]
             )
 
@@ -51,6 +51,11 @@
                 }]
             )
         else:
+            menu.append(
+                ["Signup", {
+                    "url" : "/signup",
+                }]
+            )
             menu.append(
                 ["Login", {
                     "url" : "/login",

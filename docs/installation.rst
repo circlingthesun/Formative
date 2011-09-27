@@ -46,6 +46,8 @@ It is recommended that the application be run in a virtual python environment.
 
 ``sudo apt-get install python-virtualenv``
 
+``virtualenv env --no-site-packages``
+
 ``sudo apt-get install mongodb``
 
 Once all dependencies have been installed Formative can be compiled and installed via ``python setup.py develop``
