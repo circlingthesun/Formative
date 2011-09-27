@@ -81,7 +81,7 @@ def preview(request):
 
 @view_config(
         context='formative:resources.Root',
-        name="finalise",
+        name="save",
         renderer='json',
         xhr=True
     )

@@ -1118,7 +1118,7 @@ function initCanvas() {
     $('#prevbutton').unbind('click');
     $("#process").show();
     $("#process").click(upload);
-    $("#checkboxes").hide();
+    $("#checkboxes").hide();    
     scale = calc_scale(940, 0, image);
     HEIGHT = image.height*scale;
     WIDTH = image.width*scale;
@@ -1239,8 +1239,41 @@ function preview() {
 
 }
 
+function signUp(){
+    console.log("clicked");
+    $("#throbber").show();
+    var url = '/signup'
+    var email = $('#email').val();
+    var params = {"_csrf":csrf, "email":email }
+    var post = $.post(url, params, function(json) {
+        $("#throbber").hide();
+        if(json.success){
+            console.log(json);
+            $.modal.close();
+            logged_on=true;
+            finalise();
+        }
+        else{
+            $('#email_error').html(json.error);
+        }
+    }, 'json');
+
+    post.error(function() {
+        alert("Something terrible happened. I cannot finalise your form");
+        $("#throbber").hide();
+    });
+}
+
+
 
 function finalise() {
+
+    // Make user signup first
+    if(!logged_on){
+        $("#signup").modal();
+        return;
+    }
+
     var valid = isLabelTargetsValid();
     if(valid !== true) {
             window.alert("Label '" + valid + "' is not pointing to a field," +
@@ -1250,15 +1283,15 @@ function finalise() {
 
     $("#throbber").show();
 
-    var url = '/finalise'
+    var url = '/save'
     var data = JSON.stringify(features);
     var params = {"_csrf":csrf, "features": data}
     var post = $.post(url, params, function(json) {
-        window.location = '/form/' + json.id + '/created';
+        window.location = '/form/' + json.id;
     }, 'json');
 
     post.error(function() {
-        alert("Something terrible happened. I cannot finalise your form");
+        alert("You crashed the server. I cannot save your form");
         $("#throbber").hide();
     });
 }
