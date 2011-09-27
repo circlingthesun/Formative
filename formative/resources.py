@@ -25,7 +25,6 @@ class Account(dict):
 
         user = request.db.users.find_one(ObjectId(user_id))
         self.update(user)
-        print user
         self.__acl__ = [
                 (Allow, 'group:admin', 'view'),
                 (Allow, user_id, 'edit'),
