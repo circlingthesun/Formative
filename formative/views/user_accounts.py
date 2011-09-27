@@ -157,7 +157,7 @@ def signup(request):
                     '"%s" is already registered.' % form.data['email'],
                     queue='error'
                     )  
-    
+
     return {"renderer":FormRenderer(form)}
 
 @view_config(context='formative:resources.Root',
@@ -243,10 +243,10 @@ def account(user, request):
             user['password_hash'] = password_hash
             user['salt'] = salt
 
-        if form.data['email'] and user['email'] != form.data['email']:
+        if form.data['email'] and user['email'].lower() != form.data['email']:
             body = body + "Your email has changed from %s to %s\n"\
                 % (user['email'], form.data['email'])
-            user['email'] = form.data['email']
+            user['email'] = form.data['email'].lower()
 
         mailer = request.registry['mailer']
         office_email = request.registry.settings['office.email']

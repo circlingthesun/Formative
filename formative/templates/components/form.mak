@@ -9,17 +9,17 @@
         % endif
     % elif item['type'] == 'CHECKBOX':
         <div>
-        <input type="checkbox" name="item['name']"/>
+        <input type="checkbox" name="${item['name']}" value="yes"/>
         ${item['label']}
         </div>
     % elif item['type'] == 'TEXTBOX':
         <div>${item['label']}<br/>
-        <input type="textbox" name="item['label']" size="${item['w']/item['h']}"/>
+        <input type="textbox" name="${item['name']}" size="${item['w']/item['h']}"/>
         </div>
     % endif
     
 % endfor
-<input type="submit" name="Submit"/>
 </%def>
 
 ${form()}
+<input type="submit" name="Submit"/>

@@ -96,7 +96,7 @@
 <div id="signup" style="display:none;">
     <strong>Please provide your email address so we may save your form.</strong>
     <br />
-    <input id="email" type="text" size="30">
+    <input id="email" type="text" size="50">
     <div id="email_error" class="error"></div>
     <br />
     <input id="signup_button" type="button" value="Save" onclick="signUp();">

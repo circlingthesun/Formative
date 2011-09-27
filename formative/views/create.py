@@ -29,7 +29,7 @@ import formative_cv
 
 @view_config(
         context='formative:resources.Root',
-        renderer='/derived/new.mak',
+        renderer='/derived/create.mak',
         name="new"
     )
 def new(request):
@@ -110,11 +110,12 @@ def save(request):
 
 
 @view_config(
-        context='formative:resources.Form',
-        renderer='/derived/form.mak'
+        context='formative:resources.Root',
+        renderer='/derived/submitted.mak',
+        name="submitted"
     )
-def view_form(form, request):    
-    return {"data":form['items'], "csrf":request.session.get_csrf_token()}
+def view_submitted(form, request):
+    return {}
 
 def parse(data):
     # New representation
@@ -134,7 +135,8 @@ def parse(data):
             item['y'] = value['y']
             item['h'] = value['h']
             item['label'] = value['val']
-            item['name'] = base64.b64encode(value['val'])
+
+            item['name'] = base64.b32encode(os.urandom(5))
         elif value['type'] == 'TEXT':
             item = value
             item['is_title'] = False
@@ -167,4 +169,3 @@ def parse(data):
         items[0]['is_title'] = True
    
     return items
-    

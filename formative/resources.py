@@ -46,7 +46,7 @@ class Forms(object):
         self.request = request
     
     def __getitem__(self, path):
-        form = Form(self.collection.find_one({"label": path}))
+        form = Form(self.collection.find_one({"label": path.upper()}))
         return _assign(form, path, self)
 
 

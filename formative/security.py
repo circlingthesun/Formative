@@ -5,6 +5,7 @@ from pymongo.objectid import ObjectId
 
 def authenticate(email, password, db):
     """Checks user credetials"""
+    email = email.lower()
     user = db.users.find_one({'email': email})
     if user:
 
@@ -30,6 +31,7 @@ def groupfinder(_id, request):
 
 def new_user(email, password, db, groups=['standard']):
     """Creates a new user"""
+    email = email.lower()
     existing_account = db.users.find_one({'email':email})
 
     if existing_account:
@@ -52,6 +54,7 @@ def new_user(email, password, db, groups=['standard']):
 
 def change_password(email, password, db):
     """Creates a new user"""
+    email = email.lower()
     existing_account = db.users.find_one({'email':email})
 
     if not existing_account:
