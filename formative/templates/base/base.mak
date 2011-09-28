@@ -63,7 +63,6 @@
 </%def>
 
 <%def name="toolbox()">
-
 </%def>
 
 <%def name="meta()"></%def>

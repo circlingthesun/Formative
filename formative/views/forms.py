@@ -30,6 +30,7 @@ from formative.security import authenticate
                     permission='account'
                     )
 def myforms(request):
+    '''Shows all the forms a user has created'''
     user_id = authenticated_userid(request)
     forms = request.db.formschemas.find({'user_id':ObjectId(user_id)})
     return {"csrf":request.session.get_csrf_token(), "forms":forms}
@@ -39,6 +40,7 @@ def myforms(request):
                     permission='account',
                     name="submissions")
 def formsubmissions(request):
+    '''Lists all complted forms'''
     return {"csrf":request.session.get_csrf_token()}
 
 
@@ -52,15 +54,43 @@ def view_form(form, request):
 
     # if submitted
     if request.POST:
+
+        p = request.POST
+
+        # Filter out non fields
         items = [f for f in form['items'] if 
                 f['type'] =='TEXTBOX' or f['type'] =='CHECKBOX']
+
+        # Validate textboxes here
+        errors = {}
+
+        for f in items:
+            if f['type'] != 'TEXTBOX':
+                continue;
+
+            if f['not_empty'] and not p[f['name']]:
+                errors[f['name']] = "Field cannot be empty"
+            elif f['min_len'] != 0 and len(p[f['name']]) < f['min_len']:
+                errors[f['name']] = "Too short. Minimum length is %d." % f['min_len']
+            elif f['max_len'] != 0 and len(p[f['name']]) > f['max_len']:
+                errors[f['name']] = "Too long. Maximum length is %d." % f['max_len']
+
+        
         for field in items:
             key = field['name']
-            val = request.POST.get(field['name'], "no")
+            val = p.get(field['name'], "no")
             fields[key] = val
 
-        # Save submission
+        if errors:
+            return {
+                "data":form['items'],
+                "errors": errors,
+                "filled": fields,
+                "csrf":request.session.get_csrf_token()
+                }
 
+
+        # Save submission
         submission = {
                 'fields': fields,
                 'form_id': form['_id'],
@@ -72,7 +102,12 @@ def view_form(form, request):
         # Redirect to submitted page
         return HTTPFound('/submitted')
     
-    return {"data":form['items'], "csrf":request.session.get_csrf_token()}
+    return {
+        "data":form['items'],
+        "errors": {},
+        "filled": {},
+        "csrf":request.session.get_csrf_token()
+        }
 
 @view_config(
         context='formative:resources.Form',
@@ -89,9 +124,12 @@ def created_form(form, request):
         permission='account'
     )
 def submission_list(form, request):
+    items = [ (f['name'], f['label']) for f in form['items'] if 
+                f['type'] =='TEXTBOX' or f['type'] =='CHECKBOX']
+
     submissions = request.db.formsubmissions\
             .find({'form_id':form['_id']}).sort('timestamp', -1 )
-    return {"submissions":submissions, 'form':form}
+    return {"submissions":submissions, 'form':form, 'items':items}
 
 @view_config(
         context='formative:resources.Form',

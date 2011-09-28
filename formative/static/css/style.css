@@ -112,6 +112,10 @@ p {
     font-size:25px;
 }
 
+div#header{
+    height:72px;
+}
+
 /* Inline list elements */
 #header ul{
     float:right;
@@ -143,8 +147,12 @@ p {
     border-bottom-right-radius: 5px;
     border-bottom-left-radius: 5px;
     padding:5px 0 5px 0;
+    position:absolute;
 }
 
+#push_toolbox{
+    height:50px;
+}
 /* Session flash messages */
 #flash {
     background: #ffc;
@@ -242,4 +250,14 @@ p {
     color:#FFFFFF;
     padding:30px;
     border-radius: 10px;
+}
+
+
+.scroll {
+    width:940px;
+    overflow-x:scroll;
+}
+
+.scroll table {
+    width:auto;
 }

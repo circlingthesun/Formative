@@ -63,8 +63,8 @@ def process(request):
     img = Image.fromstring("RGB", (img.size[0], img.size[1]), raw_img,
             "raw", "BGR", 0, 1)
         
-    #with open('json.txt', 'w') as out:
-    #    out.write(json.dumps(features, indent=4))
+    with open('json.txt', 'w') as out:
+        out.write(json.dumps(features, indent=4))
 
     return features
 
@@ -79,7 +79,7 @@ def preview(request):
     '''Genrates a preview of the form'''
     result = json.loads(request.POST['features'])
     data = parse(result)
-    return {"data":data}
+    return {"data":data, "errors": {}, "filled": {}}
 
 @view_config(
         context='formative:resources.Root',

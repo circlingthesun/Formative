@@ -93,14 +93,16 @@ formative_cv_process(PyObject *self, PyObject *args)
                 break;
             case RECT:
                 val = Py_BuildValue(
-                    "{s:s,s:i,s:i,s:i,s:i,s:s,s:i,s:i}",
+                    "{s:s,s:i,s:i,s:i,s:i,s:s,s:i,s:i,s:i,s:i}",
                     "type", "TEXTBOX",
                     "x", it->box.x,
                     "y", it->box.y,
                     "w", it->box.width,
                     "h", it->box.height,
                     "val", it->text.c_str(),
-                    "len", it->length,
+                    "max_len", it->length,
+                    "min_len", 0,
+                    "not_empty", 0,
                     "linked", linked
                 );
                 break;
@@ -109,13 +111,16 @@ formative_cv_process(PyObject *self, PyObject *args)
                 it->box.y -= Feature::text_mean;
                 it->box.height += Feature::text_mean;
                 val = Py_BuildValue(
-                    "{s:s,s:i,s:i,s:i,s:i,s:s,s:i}",
+                    "{s:s,s:i,s:i,s:i,s:i,s:s,s:i,s:i,s:i,s:i}",
                     "type", "TEXTBOX",
                     "x", it->box.x,
                     "y", it->box.y,
                     "w", it->box.width,
                     "h", it->box.height,
                     "val", it->text.c_str(),
+                    "max_len", 0,
+                    "min_len", 0,
+                    "not_empty", 0,
                     "linked", linked
                 );
                 break;

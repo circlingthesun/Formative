@@ -14,7 +14,7 @@ function SelectorRect() {
 var selectionHandles = [];
 
 /*
-    Object that resprents form elements found
+    Feature resprents form elements found
 */
 function Feature(ob, scale) {
     var scale = scale || 1;
@@ -23,7 +23,9 @@ function Feature(ob, scale) {
     this.w = ob.w * scale;
     this.h = ob.h * scale;
     this.val = ob.val; // Text
-    this.length = ob.len;
+    this.max_len = ob.max_len;
+    this.min_len = ob.min_len;
+    this.not_empty = ob.not_empty;
     this.type = ob.type;
     this.linked = ob.linked; // key of label pointing to it
     if(!(ob.target instanceof Object)) {
@@ -33,8 +35,6 @@ function Feature(ob, scale) {
         this.target = {'x': ob.target.x, 'y':ob.target.y,
             'w':ob.target.w, 'h':ob.target.h};    
     }
-     // key of object label point to
-                             // or an object where the loose arrow points to
 
 }
 

@@ -1,4 +1,4 @@
-var testdata = {
+{
     "3": {
         "h": 26, 
         "w": 27, 
@@ -40,9 +40,11 @@ var testdata = {
         "linked": 309
     }, 
     "39": {
+        "not_empty": 0, 
         "val": "OFFICE PHONE NUMBER WITH CODE", 
+        "min_len": 0, 
         "h": 35, 
-        "len": 20, 
+        "max_len": 20, 
         "w": 743, 
         "y": 928, 
         "x": 433, 
@@ -50,9 +52,11 @@ var testdata = {
         "linked": 337
     }, 
     "60": {
+        "not_empty": 0, 
         "val": "HOME PHONE NUMBER WITH CODE", 
+        "min_len": 0, 
         "h": 34, 
-        "len": 20, 
+        "max_len": 20, 
         "w": 743, 
         "y": 877, 
         "x": 433, 
@@ -60,8 +64,11 @@ var testdata = {
         "linked": 338
     }, 
     "82": {
+        "not_empty": 0, 
         "val": "COUNTRY. IF OUTSIDE R.S.A.", 
+        "min_len": 0, 
         "h": 21, 
+        "max_len": 0, 
         "w": 339, 
         "y": 836, 
         "x": 340, 
@@ -69,8 +76,11 @@ var testdata = {
         "linked": 340
     }, 
     "83": {
+        "not_empty": 0, 
         "val": "OCCUPATION", 
+        "min_len": 0, 
         "h": 22, 
+        "max_len": 0, 
         "w": 322, 
         "y": 835, 
         "x": 859, 
@@ -78,8 +88,11 @@ var testdata = {
         "linked": 339
     }, 
     "85": {
+        "not_empty": 0, 
         "val": "2011 LICENCE NUMBER", 
+        "min_len": 0, 
         "h": 23, 
+        "max_len": 0, 
         "w": 332, 
         "y": 789, 
         "x": 848, 
@@ -87,8 +100,11 @@ var testdata = {
         "linked": 341
     }, 
     "86": {
+        "not_empty": 0, 
         "val": "PROVINCE", 
+        "min_len": 0, 
         "h": 22, 
+        "max_len": 0, 
         "w": 428, 
         "y": 788, 
         "x": 172, 
@@ -96,8 +112,11 @@ var testdata = {
         "linked": 342
     }, 
     "89": {
+        "not_empty": 0, 
         "val": "ATHLETIC CLUB NAME (IN FULL)", 
+        "min_len": 0, 
         "h": 23, 
+        "max_len": 0, 
         "w": 811, 
         "y": 742, 
         "x": 371, 
@@ -105,9 +124,11 @@ var testdata = {
         "linked": 343
     }, 
     "92": {
+        "not_empty": 0, 
         "val": "ID NUMBER:", 
+        "min_len": 0, 
         "h": 36, 
-        "len": 13, 
+        "max_len": 13, 
         "w": 528, 
         "y": 690, 
         "x": 204, 
@@ -115,9 +136,11 @@ var testdata = {
         "linked": -1
     }, 
     "106": {
+        "not_empty": 0, 
         "val": "F (FEMALE)", 
+        "min_len": 0, 
         "h": 34, 
-        "len": 0, 
+        "max_len": 0, 
         "w": 80, 
         "y": 650, 
         "x": 1042, 
@@ -125,9 +148,11 @@ var testdata = {
         "linked": 349
     }, 
     "108": {
+        "not_empty": 0, 
         "val": "M (MALE)", 
+        "min_len": 0, 
         "h": 34, 
-        "len": 0, 
+        "max_len": 0, 
         "w": 81, 
         "y": 650, 
         "x": 744, 
@@ -135,9 +160,11 @@ var testdata = {
         "linked": 350
     }, 
     "110": {
+        "not_empty": 0, 
         "val": "AGE ON DAY OF RACE", 
+        "min_len": 0, 
         "h": 33, 
-        "len": 2, 
+        "max_len": 2, 
         "w": 76, 
         "y": 650, 
         "x": 468, 
@@ -145,9 +172,11 @@ var testdata = {
         "linked": 348
     }, 
     "113": {
+        "not_empty": 0, 
         "val": "Dov", 
+        "min_len": 0, 
         "h": 34, 
-        "len": 6, 
+        "max_len": 6, 
         "w": 232, 
         "y": 649, 
         "x": 66, 
@@ -155,8 +184,11 @@ var testdata = {
         "linked": 346
     }, 
     "121": {
+        "not_empty": 0, 
         "val": "E-MAIL ADDRESS:", 
+        "min_len": 0, 
         "h": 23, 
+        "max_len": 0, 
         "w": 928, 
         "y": 572, 
         "x": 250, 
@@ -164,9 +196,11 @@ var testdata = {
         "linked": 352
     }, 
     "123": {
+        "not_empty": 0, 
         "val": "POSTAL CODE", 
+        "min_len": 0, 
         "h": 34, 
-        "len": 4, 
+        "max_len": 4, 
         "w": 153, 
         "y": 523, 
         "x": 1028, 
@@ -174,9 +208,11 @@ var testdata = {
         "linked": 353
     }, 
     "128": {
+        "not_empty": 0, 
         "val": "POSTAL ADDRESS", 
+        "min_len": 0, 
         "h": 34, 
-        "len": 23, 
+        "max_len": 23, 
         "w": 923, 
         "y": 520, 
         "x": 66, 
@@ -184,9 +220,11 @@ var testdata = {
         "linked": -1
     }, 
     "153": {
+        "not_empty": 0, 
         "val": "POSTAL ADDRESS", 
+        "min_len": 0, 
         "h": 35, 
-        "len": 24, 
+        "max_len": 24, 
         "w": 923, 
         "y": 475, 
         "x": 66, 
@@ -194,9 +232,11 @@ var testdata = {
         "linked": -1
     }, 
     "179": {
+        "not_empty": 0, 
         "val": "POSTAL ADDRESS", 
+        "min_len": 0, 
         "h": 35, 
-        "len": 24, 
+        "max_len": 24, 
         "w": 923, 
         "y": 430, 
         "x": 66, 
@@ -204,9 +244,11 @@ var testdata = {
         "linked": 354
     }, 
     "206": {
+        "not_empty": 0, 
         "val": "INITIIALS I", 
+        "min_len": 0, 
         "h": 34, 
-        "len": 4, 
+        "max_len": 4, 
         "w": 153, 
         "y": 357, 
         "x": 1038, 
@@ -214,9 +256,11 @@ var testdata = {
         "linked": 355
     }, 
     "211": {
+        "not_empty": 0, 
         "val": "FIRST NAME", 
+        "min_len": 0, 
         "h": 34, 
-        "len": 20, 
+        "max_len": 20, 
         "w": 743, 
         "y": 356, 
         "x": 195, 
@@ -224,9 +268,11 @@ var testdata = {
         "linked": 356
     }, 
     "232": {
+        "not_empty": 0, 
         "val": "SURNAME", 
+        "min_len": 0, 
         "h": 34, 
-        "len": 20, 
+        "max_len": 20, 
         "w": 744, 
         "y": 312, 
         "x": 197, 
@@ -234,9 +280,11 @@ var testdata = {
         "linked": 357
     }, 
     "259": {
+        "not_empty": 0, 
         "val": "FOR OFFICIAL USE ONLY", 
+        "min_len": 0, 
         "h": 41, 
-        "len": 7, 
+        "max_len": 7, 
         "w": 263, 
         "y": 230, 
         "x": 919, 
@@ -244,9 +292,11 @@ var testdata = {
         "linked": -1
     }, 
     "280": {
+        "not_empty": 0, 
         "val": "", 
+        "min_len": 0, 
         "h": 29, 
-        "len": 0, 
+        "max_len": 0, 
         "w": 45, 
         "y": 163, 
         "x": 1100, 
@@ -254,9 +304,11 @@ var testdata = {
         "linked": -1
     }, 
     "281": {
+        "not_empty": 0, 
         "val": "FOR OFFICIAL USE ONLY", 
+        "min_len": 0, 
         "h": 30, 
-        "len": 0, 
+        "max_len": 0, 
         "w": 46, 
         "y": 162, 
         "x": 1053, 
@@ -264,9 +316,11 @@ var testdata = {
         "linked": 364
     }, 
     "282": {
+        "not_empty": 0, 
         "val": "PHoTocoPIEs ACCEPTABLE", 
+        "min_len": 0, 
         "h": 30, 
-        "len": 0, 
+        "max_len": 0, 
         "w": 45, 
         "y": 162, 
         "x": 1007, 
@@ -274,9 +328,11 @@ var testdata = {
         "linked": 365
     }, 
     "283": {
+        "not_empty": 0, 
         "val": "", 
+        "min_len": 0, 
         "h": 29, 
-        "len": 0, 
+        "max_len": 0, 
         "w": 45, 
         "y": 162, 
         "x": 961, 
@@ -292,9 +348,11 @@ var testdata = {
         "linked": -1
     }, 
     "295": {
+        "not_empty": 0, 
         "val": "", 
+        "min_len": 0, 
         "h": 42, 
-        "len": 0, 
+        "max_len": 0, 
         "w": 28, 
         "y": 154, 
         "x": 297, 
@@ -302,9 +360,11 @@ var testdata = {
         "linked": -1
     }, 
     "300": {
+        "not_empty": 0, 
         "val": "CLUB CODE\nRACE NUMBER", 
+        "min_len": 0, 
         "h": 157, 
-        "len": 0, 
+        "max_len": 0, 
         "w": 311, 
         "y": 129, 
         "x": 886, 

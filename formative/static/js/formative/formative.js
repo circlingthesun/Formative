@@ -12,7 +12,7 @@ var submit_scale = 1;
 var features;
 var history = [];
 
-// Hold canvas formativeation
+// Hold canvas references
 var canvas;
 var ctx;
 
@@ -20,22 +20,32 @@ var ctx;
 var ghostcanvas;
 var gctx;
 
+// Canvase width & height
 var WIDTH;
 var HEIGHT;
 
+// Has the selected object's text changed?
 var text_changed = false;
 
+// Title of the form to be created
 var form_title = "";
 
+// Drag variables
 var isDrag = false;
 var isSelectionDrag = false;
 var isResizeDrag = false;
-var expectResize = -1;  // New, will save the # of the selection handle if the
-                        // mouse is over one.
-var mx, my; // mouse coordinates
 
-var selX, selY; // Selection start
+// Saves the # of the selection handle if the
+// mouse is over one.
+var expectResize = -1;  
 
+// Mouse coordinates relavtive to canvas
+var mx, my;
+
+// Drag selection start point
+var selX, selY;
+
+// Should the main draw loop draw
 mainDrawOn = false;
 mainDrawInit = false;
 
@@ -143,71 +153,10 @@ function mainDraw() {
     }
 }
 
-function onControlKey(e) {
-    var code;
-    if (!e) var e = window.event;
-    if (e.keyCode) code = e.keyCode;
-    else if (e.which) code = e.which;
 
-    
-    if(mySel.length !== 0 && lastSel !== null &&
-            (lastSel.type === 'TEXT' || lastSel.type === 'LABEL')) {
-        switch(code) {
-            case 8: // Backspace
-                if(lastSel.val.length > 0 && cursorPos > 0) {
-                    lastSel.val = lastSel.val.substring(0,cursorPos-1) +
-                        lastSel.val.substring(cursorPos,lastSel.val.length);
-                    cursorPos--;
-                    text_changed = true;
-                }
-                break;
-            case 37: // Left
-                cursorPos = cursorPos > 0 ? cursorPos-1 : 0;
-                break;
-            case 39: //right
-                cursorPos = cursorPos < lastSel.val.length ?
-                        cursorPos+1 : lastSel.val.length;
-                break;
-            case 46: // Delete
-                if(lastSel.val.length > 0 && cursorPos < lastSel.val.length) {
-                    lastSel.val = lastSel.val.substring(0,cursorPos) +
-                        lastSel.val.substring(cursorPos+1,lastSel.val.length);
-                    text_changed = true;
-                }
-                else {
-                    deleteSelected();
-                }
-                break;
-        }
-        cursorOnTime = 15;
-    }
-    // Delete key
-    else if (code === 46) {
-        deleteSelected();
-    }
-
-    // Select all
-    if(e.ctrlKey && code === 65) {
-        clearSelection();
-        for(idx in features) {
-            if(features.hasOwnProperty(idx) && features[idx] != undefined) {
-                mySel.push(features[idx]);
-                mySelId.push(idx);
-            }
-        }
-        invalidate();
-        return false;
-    }
-
-    // CTRL - Z undo
-    if(e.ctrlKey && code === 90) {
-        restoreState();
-        return false;
-    }
-
-    invalidate();
-}
-
+/*
+    Deletes all selected items
+*/
 function deleteSelected() {
     saveState();
     mySelId.forEach(function(fid, idx, array) {
@@ -233,334 +182,11 @@ function deleteSelected() {
     clearSelection();
     showContextMenu(false); 
     invalidate();
+    $('#textbox_restrictions').fadeOut();
 }
 
-function onKey(e) {
-    var code;
-    if (!e) var e = window.event;
-    if (e.keyCode) code = e.keyCode;
-    else if (e.which) code = e.which;  
 
 
-    if(mySel.length !== 0 &&
-            (lastSel.type === 'TEXT' || lastSel.type === 'LABEL')) {
-
-        // Expand box if too small
-        var newText = lastSel.val.substring(0,cursorPos) + 
-                String.fromCharCode(code) +
-                lastSel.val.substring(cursorPos,lastSel.val.length);
-
-        ctx.font = "bold " + lastSel.h + "px sans-serif";
-        var newWidth = ctx.measureText(newText).width;
-        if(newWidth > lastSel.w) {
-            lastSel.w = newWidth;
-        }
-        lastSel.val = newText;
-        
-        cursorPos++;
-        text_changed = true;
-        // Disable default spacebar
-        if(e.keyCode==32) {
-            e.preventDefault();
-            return false;
-        }
-    }
-
-    showContextMenu(false);
-    invalidate();
-}
-
-// Mouse is moving inside the canvas
-function onMove(e) {
-    if (isDrag) {
-        getMouse(e);
-         if(!selArrow) {
-            // Calculate offser relative to the last
-            // Selected item
-            var abs_x = mx - offsetx;
-            var abs_y = my - offsety;
-
-            var rel_x = abs_x - lastSel.x;
-            var rel_y = abs_y - lastSel.y;
-            
-            mySel.forEach(function(val, idx, array) {
-                val.x += rel_x;
-                val.y += rel_y;
-            })
-        }
-        else{
-            lastSel.target.x = mx;
-            lastSel.target.y = my;
-        }
-        
-        // something is changing position so we better invalidate the canvas!
-        invalidate();
-    // Resize the selection
-    } else if (isResizeDrag && !selArrow) {
-        // time ro resize!
-        var oldx = lastSel.x;
-        var oldy = lastSel.y;
-        
-        // 0    1    2
-        // 3         4
-        // 5    6    7
-        switch (expectResize) {
-            case 0:
-                lastSel.x = mx;
-                lastSel.y = my;
-                lastSel.w += oldx - mx;
-                lastSel.h += oldy - my;
-                break;
-            case 1:
-                lastSel.y = my;
-                lastSel.h += oldy - my;
-                break;
-            case 2:
-                lastSel.y = my;
-                lastSel.w = mx - oldx;
-                lastSel.h += oldy - my;
-                break;
-            case 3:
-                lastSel.x = mx;
-                lastSel.w += oldx - mx;
-                break;
-            case 4:
-                lastSel.w = mx - oldx;
-                break;
-            case 5:
-                lastSel.x = mx;
-                lastSel.w += oldx - mx;
-                lastSel.h = my - oldy;
-                break;
-            case 6:
-                lastSel.h = my - oldy;
-                break;
-            case 7:
-                lastSel.w = mx - oldx;
-                lastSel.h = my - oldy;
-                break;
-        }
-        
-        invalidate();
-    }
-    else if(isSelectionDrag) {
-        invalidate();
-    }
-    
-    getMouse(e);
-    // if there's a selection see if we grabbed one of the selection handles
-    if (mySel.length !== 0 && !isResizeDrag && !isSelectionDrag) {
-        for (var i = 0; i < 8; i++) {
-            // 0    1    2
-            // 3         4
-            // 5    6    7
-            
-            var cur = selectionHandles[i];
-            
-            // we dont need to use the ghost context because
-            // selection handles will always be rectangles
-            if (mx >= cur.x && mx <= cur.x + mySelBoxSize &&
-                    my >= cur.y && my <= cur.y + mySelBoxSize) {
-                // we found one!
-                expectResize = i;
-                invalidate();
-                
-                switch (i) {
-                    case 0:
-                        this.style.cursor='nw-resize';
-                        break;
-                    case 1:
-                        this.style.cursor='n-resize';
-                        break;
-                    case 2:
-                        this.style.cursor='ne-resize';
-                        break;
-                    case 3:
-                        this.style.cursor='w-resize';
-                        break;
-                    case 4:
-                        this.style.cursor='e-resize';
-                        break;
-                    case 5:
-                        this.style.cursor='sw-resize';
-                        break;
-                    case 6:
-                        this.style.cursor='s-resize';
-                        break;
-                    case 7:
-                        this.style.cursor='se-resize';
-                        break;
-                }
-                return;
-            }
-            
-        }
-        // not over a selection box, return to normal
-        isResizeDrag = false;
-        expectResize = -1;
-        this.style.cursor='auto';
-    }
-    
-}
-
-// Happens when the mouse is clicked in the canvas
-function onDown(e) {
-    getMouse(e);
-    
-
-    //we are over a selection box
-    if (expectResize !== -1) {
-        isResizeDrag = true;
-        return;
-    }
-
-    clear(gctx);
-    for (idx in features) {
-        if(!features.hasOwnProperty(idx)) {
-                break;
-        }
-        // draw shape onto ghost context
-        var box_color = 'rgba(50,50,50,1)';
-        var arrow_color = 'rgba(200,200,200,1)';
-        features[idx].draw(gctx, box_color, arrow_color);
-        
-        // get image data at the mouse x,y pixel
-        var imageData = gctx.getImageData(mx, my, 1, 1);
-        var index = (mx + my * imageData.width) * 4;
-        
-        // if the mouse pixel exists, select and break
-        var val = imageData.data[0];
-        if (val === 50 || val === 200 ) {
-
-            var selection = features[idx];
-            lastSel = features[idx];
-            lastSelId = idx;
-
-            // Check if the item is already selected selected
-            var alreadySelected = false;
-            for(var i = 0; i < mySel.length; i++) {
-                if(mySel[i] === features[idx]) {
-                    alreadySelected = true;
-                }
-            }
-
-            // Set cursor position
-            if((features[idx].type === 'TEXT' || features[idx].type === 'LABEL')
-            ) {
-                // If already selected
-                if(alreadySelected ) {
-                    // Estimate cursor position
-                    var text_height = selection.h;
-                    ctx.font = "bold " + text_height + "px sans-serif";
-                    var text_width = ctx.measureText(selection.val).width;
-
-                    // Adjust text size to fit box
-                    while(text_width > selection.w) {
-                        text_height -= 1;
-                        ctx.font = "bold " + text_height + "px sans-serif";
-                        text_width = ctx.measureText(selection.val).width;
-                    }
-
-                    // Find position
-                    var x_pos = mx-selection.x;
-                    var pos = (x_pos/text_width)*selection.val.length;
-                    var x_est = ctx.measureText(selection.val.slice(0,pos)).width;
-                    var delta = delta = x_pos-x_est;
-                    var limit = 5; // Incase something goes terribly wrong
-                    while(Math.abs(delta) > text_height/4 && limit > 0){
-                        pos = delta<0 ? pos-1 : pos+1; 
-                        x_est = ctx.measureText(selection.val.slice(0,pos)).width;
-                        delta = x_pos-x_est;
-                        limit--;
-                    }
-                    cursorPos = pos;
-                }
-                else{
-                    cursorPos = selection.val.length;
-                }
-     
-            }
-
-
-            // Dont clear previous selection if ctrl is down
-            if(!e.ctrlKey && !alreadySelected) {
-                mySel = [];
-                mySelId = [];
-            }
-
-            if(!alreadySelected) {
-                mySel.push(features[idx]);
-                mySelId.push(idx);
-            }
-            // Subtract from selection
-            else if(e.ctrlKey) {
-                mySel.forEach(function(val, id, array) {
-                    if(val === selection) {
-                        delete array[id];
-                        delete mySelId[id];
-                        if(mySelId.length !=0) {
-                            lastSel = mySel[0];
-                            lastSelId = mySelId[0];
-                        }
-                    }
-                });
-                return;
-            }
-
-            
-            offsetx = mx - selection.x;
-            offsety = my - selection.y;
-            selection.x = mx - offsetx;
-            selection.y = my - offsety;
-
-            // Only drag on left click
-            if(e.button !== 2)
-                isDrag = true;
-            
-            // If selected an arrow
-            if(val===200) {
-                selArrow = true;
-                // Unlink
-                if(!(selection.target instanceof Object)) {
-                    features[selection.target].linked = -1;
-                }
-                selection.target = {'x':mx, 'y':my, 'w':1, 'h':1};
-            }
-            else{
-                selArrow = false;
-            }
-
-
-            if(e.button === 2) {
-                showContextMenu(true);
-                $('#contextmenu').offset({top:e.pageY, left:e.pageX});
-            }
-
-            invalidate();
-            clear(gctx);
-            return;
-        }
-    }
-    // havent returned means we have selected nothing
-    
-    if(!e.ctrlKey) {
-        clearSelection();
-    }
-
-    if(e.button === 2) {
-        showContextMenu(true);
-        $('#contextmenu').offset({top:e.pageY, left:e.pageX});
-    }
-    else{
-        isSelectionDrag = true;
-        selX = mx;
-        selY = my;
-    }
-    // clear the ghost canvas for next time
-    clear(gctx);
-    // invalidate because we might need the selection border to disappear
-    invalidate();
-}
 
 function clearSelection() {
     if(text_changed === true) {
@@ -573,84 +199,6 @@ function clearSelection() {
     lastSelId = -1;
 }
 
-function onUp(e) {
-    isDrag = false;
-    isResizeDrag = false;
-    expectResize = -1;
-    // Is the arrow inside a box?
-    if(selArrow) {
-        getMouse(e);
-        for (idx in features) {
-            if(!features.hasOwnProperty(idx)) {
-                break;
-            }
-            // draw shape onto ghost context
-            var box_color = 'rgba(50,50,50,1)';
-            var arrow_color = 'rgba(200,200,200,1)';
-            features[idx].draw(gctx, box_color, arrow_color);
-            
-            // get image data at the mouse x,y pixel
-            var imageData = gctx.getImageData(mx, my, 1, 1);
-            var index = (mx + my * imageData.width) * 4;
-            
-            // if the mouse pixel indicates a selection
-            // try to bind arrow to selection select and break
-            var pxVal = imageData.data[0];
-            if (pxVal === 50) {
-                var found = features[idx];
-                if((found.type === 'CHECKBOX' || found.type === 'TEXTBOX') &&
-                        found.linked === -1) {
-                    // Link
-                    found.linked = lastSelId;
-                    lastSel.target = idx;
-                }
-                // Moves it off invalid box
-                else{
-                    lastSel.target = {'x':lastSel.x + lastSel.w+20,
-                            'y':lastSel.y + lastSel.h, 'w':1, 'h':1};
-                }
-
-                invalidate();
-                clear(gctx);
-                return;
-            }
-            
-        }
-    }
-    selArrow = false;
-    showContextMenu(contextMenuVisible);
-    if(isSelectionDrag) {
-        if(!e.ctrlKey) {
-            clearSelection();
-        }
-        for(idx in features) {
-            // Find center
-            var f = features[idx];
-            var x = f.x+f.w/2;
-            var y = f.y+f.h/2;
-
-            // determine bounds
-            var min_x = selX < mx ? selX : mx;
-            var max_x = selX > mx ? selX : mx;
-            var min_y = selY < my ? selY : my;
-            var max_y = selY > my ? selY : my;
-
-            // If selection over center add it
-            if(x > min_x && x < max_x && y > min_y && y < max_y) {
-                mySel.push(features[idx]);
-                mySelId.push(idx);
-            }
-        }
-    }
-    isSelectionDrag = false;
-    invalidate();
-}
-
-// adds a new node
-function myDblClick(e) {
-    getMouse(e);
-    
-}
 
 function invalidate() {
     canvasValid = false;
@@ -694,37 +242,6 @@ function handleFiles(files) {
         features = {};
     }
     
-}
-
-function newFeature(type, x, h, w, h) {
-    var x = x || mx;
-    var y = y || my;
-    var w = w || 25;
-    var h = h || 25;
-
-    var idx = next_id++;
-    var f = {'x' : x, 'y' : y, 'w' : w, 'h' : h, 'type' : type};
-    
-    if(type === 'LABEL') {
-        f.w = 80;
-        f.target = {'x':x+80+20, 'y':y+h, 'w':1, 'h':1};
-        f.val = 'label';
-        console.log(f);
-    }
-    else if(type === 'TEXT') {
-        f.val = 'text';
-        f.w = 80;
-    }
-    else if(type === 'TEXTBOX') {
-        f.w = 80;
-        f.linked = -1;
-    }
-    else if(type === 'CHECKBOX') {
-        f.linked = -1;
-    }
-    invalidate();
-    features[idx] = new Feature(f, 1);
-
 }
 
 function cloneSelected() {
@@ -1029,10 +546,9 @@ function setEvents(on) {
     if(on) {
         canvas.onmousedown = onDown;
         canvas.onmouseup = onUp;
-        canvas.ondblclick = myDblClick;
         canvas.onmousemove = onMove;
         document.onkeypress = onKey;
-        document.onkeydown = onControlKey;
+        document.onkeydown = onNonCharKey;
         window.oncontextmenu = function() {return false;};
         initContextMenu();
         
@@ -1040,7 +556,6 @@ function setEvents(on) {
     else{
         canvas.onmousedown = undefined;
         canvas.onmouseup =  undefined;
-        canvas.ondblclick = undefined;
         canvas.onmousemove = undefined;
         document.onkeypress = undefined;
         document.onkeydown = undefined;
@@ -1051,12 +566,14 @@ function setEvents(on) {
 // initialize our canvas, add a ghost canvas, set draw loop
 // then add everything we want to intially exist on the canvas
 function initVerify() {
+    // Initialise listeners on toolpanel
     $("#input").hide();
+    $('#process').unbind('click');
+    $("#process").hide();
+
     $('#undo').show();
     $('#undo').attr("disabled", "disabled");
     $('#undo').click(restoreState);
-    $('#process').unbind('click');
-    $("#process").hide();
     $("#prevbutton").show();
     $("#prevbutton").click(preview);
     $("#done").click(save);
@@ -1066,6 +583,12 @@ function initVerify() {
     $("#showresults").click(function() {
         setEvents($("#showresults").is(':checked'));
     });
+
+    // Textbox retsrictions change
+    $('#max_len').keyup(onTBRestrChng);
+    $('#min_len').keyup(onTBRestrChng);
+    $('#not_empty').change(onTBRestrChng);
+
 
     contextmenu = document.createElement('contextmenu');
     ghostcanvas = document.createElement('canvas');
@@ -1108,13 +631,13 @@ function initVerify() {
 }
 
 function initCanvas() {
-    $("#done").hide();
+    $("#done").fadeOut();
     $('#done').unbind('click');
-    $("#prevbutton").hide();
+    $("#prevbutton").fadeOut();
     $('#prevbutton').unbind('click');
-    $("#process").show();
-    $("#process").click(upload);
-    $("#checkboxes").hide();    
+    $("#process").fadeIn();
+    $("#process").click(process);
+    $("#checkboxes").fadeOut();    
     scale = calc_scale(940, 0, image);
     HEIGHT = image.height*scale;
     WIDTH = image.width*scale;
@@ -1129,6 +652,43 @@ function initCanvas() {
     mainDrawOn = false;
 }
 
+
+/*
+    Feature factory creates new features and sets attributes
+*/
+function newFeature(type, x, h, w, h) {
+    var x = x || mx;
+    var y = y || my;
+    var w = w || 25;
+    var h = h || 25;
+
+    var idx = next_id++;
+    var f = {'x' : x, 'y' : y, 'w' : w, 'h' : h, 'type' : type};
+    
+    if(type === 'LABEL') {
+        f.w = 80;
+        f.target = {'x':x+80+20, 'y':y+h, 'w':1, 'h':1};
+        f.val = 'label';
+        console.log(f);
+    }
+    else if(type === 'TEXT') {
+        f.val = 'text';
+        f.w = 80;
+    }
+    else if(type === 'TEXTBOX') {
+        f.w = 80;
+        f.linked = -1;
+        f.max_len = 0;
+        f.min_len = 0;
+        f.not_empty = false;
+    }
+    else if(type === 'CHECKBOX') {
+        f.linked = -1;
+    }
+    invalidate();
+    features[idx] = new Feature(f, 1);
+
+}
 
 function initFeatures(json) {
     for(var id in json) {
@@ -1151,12 +711,12 @@ function initFeatures(json) {
     history = [];
     //saveState();
     initVerify();
-    $("#throbber").hide();
+    $("#throbber").fadeOut();
 }
 
-function upload() {
+function process() {
 
-    $("#throbber").show();
+    $("#throbber").fadeIn();
 
     // Resize image    
     submit_scale = calc_scale(IMG_UPLOAD_MIN_X, IMG_UPLOAD_MIN_Y, image);
@@ -1183,8 +743,8 @@ function upload() {
     var post = $.post(url, params, initFeatures, 'json');
 
     post.error(function() {
-        alert("Something terrible happened. I cannot upload your form");
-        $("#throbber").hide();
+        alert("Something terrible happened. I cannot process your form");
+        $("#throbber").fadeOut();
     });
 }
 
@@ -1203,9 +763,9 @@ function isLabelTargetsValid() {
 function preview() {
     if($("#prevbutton").val() === 'Edit') {
         $("#prevbutton").val('Preview');
-        $("#canvas2").show();
-        $("#preview").hide();
-        $("#checkboxes").show();
+        $("#canvas2").fadeIn();
+        $("#preview").fadeOut();
+        $("#checkboxes").fadeIn();
         setEvents(true);
         return;
     }
@@ -1222,33 +782,33 @@ function preview() {
     // Avoid editing form during preview
     setEvents(false);
 
-    $("#throbber").show();
+    $("#throbber").fadeIn();
     var url = '/preview'
     var data = JSON.stringify(features);
     var params = {"_csrf":csrf, "features": data}
     var post = $.post(url, params, function(html) {
         $("#inpreview").html(html);
-        $("#preview").show();
-        $("#canvas2").hide();
+        $("#preview").fadeIn();
+        $("#canvas2").fadeOut();
         $("#prevbutton").val('Edit');
-        $("#checkboxes").hide();
-        $("#throbber").hide();
+        $("#checkboxes").fadeOut();
+        $("#throbber").fadeOut();
     }, "html");
 
     post.error(function() {
         alert("Something terrible happened. I cannot show you the preview");
-        $("#throbber").hide();
+        $("#throbber").fadeOut();
     });
 
 }
 
 function signUp(){
-    $("#throbber").show();
+    $("#throbber").fadeIn();
     var url = '/signup'
     var email = $('#email').val();
     var params = {"_csrf":csrf, "email":email }
     var post = $.post(url, params, function(json) {
-        $("#throbber").hide();
+        $("#throbber").fadeOut();
         if(json.success){
             console.log(json);
             $.modal.close();
@@ -1262,7 +822,7 @@ function signUp(){
 
     post.error(function() {
         alert("Something terrible happened. I cannot save your form");
-        $("#throbber").hide();
+        $("#throbber").fadeOut();
     });
 }
 
@@ -1313,7 +873,7 @@ function save() {
         return;
     }
 
-    $("#throbber").show();
+    $("#throbber").fadeIn();
 
     var url = '/save'
     var data = JSON.stringify(features);
@@ -1324,7 +884,7 @@ function save() {
 
     post.error(function() {
         alert("You crashed the server. I cannot save your form");
-        $("#throbber").hide();
+        $("#throbber").fadeOut();
     });
 }
 
