@@ -8,7 +8,7 @@
 	}
 </%def>
 
-<div class="grid_12">
+<div class="grid_9">
 <h2>Your form was created.</h2>
 
 <strong>Link to your form</strong>
@@ -22,7 +22,11 @@
 <br />
 <br />
 <a href="/form/${form['label']}">View your new form</a>
-<br />
-<a href="/myforms">View all your forms</a>
-<br/>
+
+</div>
+
+<div class="grid_3">
+	<a href="${request.application_url}/form/${form['label']}/qr.png">
+	<img src="${request.application_url}/form/${form['label']}/qr.png" width="205" height="205" vspace="50"/>
+	</a>
 </div>

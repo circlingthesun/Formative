@@ -1,6 +1,7 @@
 import json
 import base64
 from datetime import datetime
+from StringIO import StringIO
 
 from pyramid.view import view_config
 from pyramid.exceptions import NotFound
@@ -21,9 +22,10 @@ from pyramid_simpleform import Form
 from pyramid_simpleform.renderers import FormRenderer
 from formencode import Schema
 
+import pyqrcode
+
 from formative.security import authenticate
 from formative.resources import MForm
-
 
 @view_config(context='formative:resources.Root',
                     renderer='/derived/myforms.mak',
@@ -115,6 +117,24 @@ def view_form(form, request):
         "filled": {},
         "csrf":request.session.get_csrf_token()
         }
+
+@view_config(
+        context='formative:resources.Form',
+        name="qr.png"
+    )
+def qr_form(form, request):
+    '''Genarate qr code'''
+    url = "%s/mform/%s" % (request.application_url, form['label'])
+    qrcode = pyqrcode.MakeQRImage(url)
+    output = StringIO()
+    qrcode.save(output, format="PNG")
+    contents = output.getvalue()
+    output.close()
+
+    request.response.body = contents
+    request.response.content_type = 'image/png'
+    return request.response
+
 
 @view_config(
         context='formative:resources.Form',

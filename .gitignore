@@ -10,3 +10,4 @@ data/sessions
 build
 *~
 docs/_*
+.svn

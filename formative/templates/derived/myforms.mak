@@ -12,11 +12,14 @@
 <div class="grid_12">
 <h2>My Forms</h2>
 <hr />
+</div>
 % if forms.count() > 0:
 	<% i = 0 %>
 	<% paginator = h.Page(forms, request, 10, "c") %>
 	${paginator.pager() | n}
 	% for form in paginator.getslice():
+		<div class="grid_9">
+
 		<h3><a href="/form/${form['label']}">${form['title']}</a></h3>
 
 		<a href="/form/${form['label']}/submissions">
@@ -37,7 +40,13 @@
 		<br/>
 		<input id="mlink${i}" type="textfield" size="60" onclick="SelectAll('mlink${i}');" value="${request.application_url}/mform/${form['label']}">
 		<br /><br />
-		<hr />
+		</div>
+		<div class="grid_3">
+			<a href="${request.application_url}/form/${form['label']}/qr.png">
+			<img src="${request.application_url}/form/${form['label']}/qr.png" width="205" height="205" class="qr"/>
+			</a>
+		</div>
+		<hr class="grid_12" />
 		<% i = i+1 %>
 	% endfor
 	${paginator.pager() | n}

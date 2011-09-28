@@ -54,4 +54,8 @@ Once all dependencies have been installed Formative can be compiled and installe
 
 Once the has completed the server can be started with ``paster serve development.ini --reload`` or ``paster serve production.ini --reload``
 
-A formative.wsgi file is provided for those using other webservers that support WSGI such as nginx or Apache. 
+A formative.wsgi file is provided for those using other webservers that support WSGI such as nginx or Apache.
+
+
+svn checkout http://pyqrnative.googlecode.com/svn/trunk/ pyqrnative-read-only
+
