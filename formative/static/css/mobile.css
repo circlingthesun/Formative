@@ -1,0 +1,32 @@
+
+/* Session flash messages */
+#flash {
+    background: #ffc;
+    padding: 5px;
+    border: 1px dotted #000;
+    margin-bottom: 20px;
+    margin-left:auto;
+    margin-right:auto;
+}
+
+#flash p { margin: 0px; padding: 0px; }
+
+#flash-error {
+    background: #FF9494;
+    padding: 5px;
+    border: 1px dotted #000;
+    margin-bottom: 20px;
+    margin-left:auto;
+    margin-right:auto;
+}
+
+#flash-error p {
+    margin: 0px;
+    padding: 0px;
+}
+
+.error {
+    font-weight: bold;
+    color: #f00;
+    margin-bottom: 0;
+}
