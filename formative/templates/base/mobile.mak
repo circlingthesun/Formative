@@ -76,13 +76,6 @@
     <body>
 		
         <div id="page">
-    	    <div id="header">
-    	        <h1 id="name" class="grid_2"><a href="/" class="shadow_text">Formative</a></h1>
-    	    </div>
-
-            ${self.toolbox()}
-
-	    
             <div id="content" class="container_12">
             ${self.flash()}
 	        ${next.body()}
