@@ -114,14 +114,6 @@ def save(request):
     return {'id':form_label}
 
 
-@view_config(
-        context='formative:resources.Root',
-        renderer='/derived/submitted.mak',
-        name="submitted"
-    )
-def view_submitted(form, request):
-    return {}
-
 def parse(data):
     # New representation
     items = []

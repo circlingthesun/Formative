@@ -14,6 +14,16 @@ class Form(dict):
         self.__parent__ = None
 
 
+class MForm(dict):
+    def __init__(self, a_dict):
+        if not a_dict:
+            raise KeyError 
+        super(MForm, self).__init__(self)
+        self.update(a_dict)
+        self.__name__ = None
+        self.__parent__ = None
+
+
 class Account(dict):
     def __init__(self, request):
         user_id = authenticated_userid(request)
@@ -33,6 +43,16 @@ class Contact(object):
     def __init__(self, request):
         self.__name__ = None
         self.__parent__ = None
+
+
+class MForms(object):
+    def __init__(self, request):
+        self.collection = request.db.formschemas
+        self.request = request
+    
+    def __getitem__(self, path):
+        form = MForm(self.collection.find_one({"label": path.upper()}))
+        return _assign(form, path, self)
 
 class Forms(object):
     def __init__(self, request):
@@ -55,6 +75,7 @@ class Root(object):
     def __init__(self, request):
         self.children = {
                 'form': Forms,
+                'mform': MForms,
                 'account': Account,
                 'contact': Contact,
                 }

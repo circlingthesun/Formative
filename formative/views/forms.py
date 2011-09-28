@@ -22,6 +22,7 @@ from pyramid_simpleform.renderers import FormRenderer
 from formencode import Schema
 
 from formative.security import authenticate
+from formative.resources import MForm
 
 
 @view_config(context='formative:resources.Root',
@@ -44,6 +45,10 @@ def formsubmissions(request):
     return {"csrf":request.session.get_csrf_token()}
 
 
+@view_config(
+        context='formative:resources.MForm',
+        renderer='/derived/m_form.mak'
+    )
 @view_config(
         context='formative:resources.Form',
         renderer='/derived/form.mak'
@@ -100,6 +105,8 @@ def view_form(form, request):
         request.db.formsubmissions.save(submission)
 
         # Redirect to submitted page
+        if isinstance(form, MForm):
+            return HTTPFound('/m_submitted')
         return HTTPFound('/submitted')
     
     return {
@@ -190,3 +197,17 @@ def paper_del(form, request):
             return HTTPFound('/myforms')
     
     return {'item':form['title'], "renderer":FormRenderer(form2)}
+
+
+@view_config(
+        context='formative:resources.Root',
+        renderer='/derived/m_submitted.mak',
+        name="m_submitted"
+    )
+@view_config(
+        context='formative:resources.Root',
+        renderer='/derived/submitted.mak',
+        name="submitted"
+    )
+def view_submitted(form, request):
+    return {}
