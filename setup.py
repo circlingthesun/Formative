@@ -17,7 +17,7 @@ def pkgconfig(*packages, **kw):
     return kw
 
 # Install 3rd party QR code genarator
-call(['python', "3rdparty/pyqrcode/setup.py", "install"])
+call(['python', "setup.py", "install"], cwd='3rdparty/pyqrcode/')
 
 # Adds all external libraries with a pc file
 pkgstuff = pkgconfig('opencv')
