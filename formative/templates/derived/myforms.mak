@@ -51,6 +51,8 @@
 	% endfor
 	${paginator.pager() | n}
 % else:
+	<div class="grid_12">
 	<strong>No forms found. Perhaps create one and come back.</strong>
+	</div>
 % endif
 </div>

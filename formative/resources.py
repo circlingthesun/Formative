@@ -52,6 +52,13 @@ class MForms(object):
     
     def __getitem__(self, path):
         form = MForm(self.collection.find_one({"label": path.upper()}))
+
+        # Set permissions
+        self.__acl__ = [ (Allow, Everyone, 'view'),
+                (Allow, form['user_id'], 'account'),
+                (Allow, 'group:admin', 'edit'),
+                DENY_ALL ]
+
         return _assign(form, path, self)
 
 class Forms(object):
@@ -60,7 +67,15 @@ class Forms(object):
         self.request = request
     
     def __getitem__(self, path):
+
         form = Form(self.collection.find_one({"label": path.upper()}))
+
+        # Set permissions
+        self.__acl__ = [ (Allow, Everyone, 'view'),
+                (Allow, form['user_id'], 'account'),
+                (Allow, 'group:admin', 'edit'),
+                DENY_ALL ]    
+        
         return _assign(form, path, self)
 
 
@@ -71,6 +86,7 @@ class Root(object):
                 (Allow, Authenticated, 'account'),
                 (Allow, 'group:admin', 'edit'),
                 DENY_ALL ]
+
 
     def __init__(self, request):
         self.children = {
