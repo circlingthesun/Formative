@@ -55,7 +55,7 @@ class MForms(object):
 
         # Set permissions
         self.__acl__ = [ (Allow, Everyone, 'view'),
-                (Allow, form['user_id'], 'account'),
+                (Allow, str(form['user_id']), 'account'),
                 (Allow, 'group:admin', 'edit'),
                 DENY_ALL ]
 
@@ -72,10 +72,11 @@ class Forms(object):
 
         # Set permissions
         self.__acl__ = [ (Allow, Everyone, 'view'),
-                (Allow, form['user_id'], 'account'),
+                (Allow, str(form['user_id']), 'account'),
                 (Allow, 'group:admin', 'edit'),
                 DENY_ALL ]    
-        
+    
+
         return _assign(form, path, self)
 
 

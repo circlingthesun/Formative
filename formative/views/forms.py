@@ -106,6 +106,31 @@ def view_form(form, request):
 
         request.db.formsubmissions.save(submission)
 
+
+        # Send notification
+        _id = ObjectId(form['user_id'])
+        recipient = request.db.users.find_one(_id)['email']
+
+        mailer = request.registry['mailer']
+        office_email = request.registry.settings['office.email']
+        from_ = "%s <%s>" % ("Formative", office_email)
+        
+        url = "%s/form/%s/submissions" % (request.application_url, form['label'])
+
+        body = "Hi, \n\nSomeone has filled out your form titled '%s'.\n" % form['title']  +\
+                "To view submissions follow this link: %s\n\n" % url +\
+                "Kind Regards\nFormative"
+                
+        message = Message(
+                  subject='Form submitted',
+                  sender=office_email,
+                  recipients=[recipient],
+                  body=body,
+                  extra_headers = {"From": from_}
+                  )
+        
+        mailer.send_immediately(message)
+
         # Redirect to submitted page
         if isinstance(form, MForm):
             return HTTPFound('/m_submitted')

@@ -216,7 +216,7 @@ class AccountSchema(Schema):
     def validate_email(value_dict, state, validator):
         account = state.db.users.find_one({'email' : value_dict['email']})
 
-        if account and str(account['user_id']) != state.user_id:
+        if account and str(account['_id']) != state.user_id:
             return {'email': '"%s" belongs to another account' % value_dict['email']} 
         
     chained_validators = [SimpleFormValidator(validate_email)]
@@ -271,5 +271,8 @@ def account(user, request):
     # Fill in the users email
     if 'email' not in form.data:
         form.data['email'] = user['email'] 
+
+    # Remove password
+    form.data['password'] = ''
 
     return {"renderer":FormRenderer(form)}
