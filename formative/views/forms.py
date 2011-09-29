@@ -232,7 +232,7 @@ def paper_del(form, request):
                 request.db.formsubmissions.remove(sub)
 
             # remove schema
-            request.db.formschemas.remove(form)
+            request.db.formschemas.remove(form['_id'])
                 
 
             request.session.flash('Form deleted.', queue='info')

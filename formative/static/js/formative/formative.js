@@ -669,7 +669,6 @@ function newFeature(type, x, h, w, h) {
         f.w = 80;
         f.target = {'x':x+80+20, 'y':y+h, 'w':1, 'h':1};
         f.val = 'label';
-        console.log(f);
     }
     else if(type === 'TEXT') {
         f.val = 'text';
@@ -810,7 +809,6 @@ function signUp(){
     var post = $.post(url, params, function(json) {
         $("#throbber").fadeOut();
         if(json.success){
-            console.log(json);
             $.modal.close();
             logged_on=true;
             save();
