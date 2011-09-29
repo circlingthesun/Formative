@@ -534,6 +534,7 @@ function onTBRestrChng(e){
             mySel[i].min_len = 0;
 
         if(max_len === max_len && max_len === max_len &&
+                min_len !== 0 && max_len !==0 &&
                 min_len > max_len){
             mySel[i].min_len = 0;
             $('#min_len').val(0);

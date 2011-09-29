@@ -56,6 +56,3 @@ Once the has completed the server can be started with ``paster serve development
 
 A formative.wsgi file is provided for those using other webservers that support WSGI such as nginx or Apache.
 
-
-svn checkout http://pyqrnative.googlecode.com/svn/trunk/ pyqrnative-read-only
-

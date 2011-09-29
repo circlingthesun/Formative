@@ -886,6 +886,9 @@ function save() {
     });
 }
 
+/*
+    Calculates the factor to scale image to fit dimentions
+*/
 function calc_scale(max_x, max_y, img){
     var width = img.width;
     var height = img.height;
